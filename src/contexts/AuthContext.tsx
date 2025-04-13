@@ -11,6 +11,13 @@ import { User, LoginRequest, AuthContextType } from "@/interfaces/auth";
 import AuthService from "@/services/auth";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
+import { useToast } from "@/contexts/ToastContext";
+import { ToastType } from "@/components/atoms/Toast";
+
+// Navigation delay to allow toast to be visible
+const NAVIGATION_DELAY = 2000;
+// Toast duration should be longer than navigation delay
+const TOAST_DURATION = NAVIGATION_DELAY + 500;
 
 /**
  * Initial authentication context state
@@ -46,6 +53,7 @@ interface AuthProviderProps {
  */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const router = useRouter();
+  const { showToast, clearAllToasts } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +89,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   /**
+   * Navigate with delay function to ensure toast is seen
+   * @param path - Path to navigate to
+   * @param delay - Delay in milliseconds before navigation
+   */
+  const navigateWithDelay = (
+    path: string,
+    delay: number = NAVIGATION_DELAY
+  ) => {
+    setTimeout(() => {
+      router.push(path);
+    }, delay);
+  };
+
+  /**
    * Login handler
    * @description Authenticates user with provided credentials
    * @param credentials - Login credentials
@@ -90,52 +112,110 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     credentials: LoginRequest,
     remember: boolean = false
   ) => {
+    // Clear any existing toasts
+    clearAllToasts();
+
     setIsLoading(true);
     setError(null);
 
     try {
+      console.log("Attempting login with credentials:", {
+        email: credentials.email,
+        passwordLength: credentials.password?.length,
+      });
+
       const response = await AuthService.login(credentials);
+      console.log("Login response received:", {
+        status: "success",
+        hasUser: !!response.data?.user,
+        hasTokens: !!response.data?.tokens,
+      });
+
       const { user, tokens } = response.data;
 
+      if (!user || !tokens) {
+        console.error("Invalid response structure:", {
+          hasUser: !!user,
+          hasTokens: !!tokens,
+        });
+        throw new Error("Invalid server response");
+      }
+
       // Save authentication data
-      AuthService.saveTokens(
-        tokens.access_token,
-        tokens.refresh_token,
-        remember
-      );
+      try {
+        AuthService.saveTokens(
+          tokens.access_token,
+          tokens.refresh_token,
+          remember
+        );
+        console.log("Tokens saved successfully");
+      } catch (tokenError) {
+        console.error("Failed to save tokens:", tokenError);
+        throw new Error("Failed to save authentication data");
+      }
+
       setUser(user);
 
-      // Navigate to dashboard after successful login
-      router.push("/dashboard");
+      // Show success toast with longer duration to ensure visibility before navigation
+      showToast("Successfully logged in", "success", TOAST_DURATION);
+      console.log("Success toast shown, will navigate after delay");
+
+      // Set isLoading to false before navigation
+      setIsLoading(false);
+
+      // Navigate to dashboard after a delay to ensure toast is visible
+      navigateWithDelay("/dashboard");
     } catch (err) {
+      console.error("Login error details:", err);
+
       // Handle different error cases
-      const error = err as AxiosError;
-      if (error.response) {
-        switch (error.response.status) {
-          case 400:
-            setError(
-              "Invalid credentials. Please check your email and password."
-            );
-            break;
-          case 401:
-            setError(
-              "Your account is not verified. Please check your email for verification instructions."
-            );
-            break;
-          case 404:
-            setError(
-              "Account not found. Please check your email or register for a new account."
-            );
-            break;
-          default:
-            setError("An error occurred during login. Please try again later.");
+      let errorMessage =
+        "An error occurred during login. Please try again later.";
+      const errorType: ToastType = "error";
+
+      if (err instanceof AxiosError) {
+        const error = err as AxiosError;
+
+        if (error.response) {
+          console.log("Error response status:", error.response.status);
+          console.log("Error response data:", error.response.data);
+
+          switch (error.response.status) {
+            case 400:
+              errorMessage =
+                "Invalid credentials. Please check your email and password.";
+              break;
+            case 401:
+              errorMessage =
+                "Your account is not verified. Please check your email for verification instructions.";
+              break;
+            case 404:
+              errorMessage =
+                "Account not found. Please check your email or register for a new account.";
+              break;
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.log("No response received from server");
+          errorMessage = "Server did not respond. Please try again later.";
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log("Error setting up request:", error.message);
+          errorMessage =
+            "Failed to connect to the server. Please check your connection.";
         }
       } else {
-        setError(
-          "Network error. Please check your internet connection and try again."
-        );
+        // Not an Axios error
+        console.log("Non-Axios error:", err);
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
       }
-    } finally {
+
+      setError(errorMessage);
+
+      // Show error toast with longer duration
+      showToast(errorMessage, errorType, 6000);
       setIsLoading(false);
     }
   };
@@ -145,9 +225,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * @description Clears user session and redirects to login page
    */
   const logout = () => {
+    // Clear any existing toasts
+    clearAllToasts();
+
     AuthService.clearTokens();
     setUser(null);
-    router.push("/login");
+
+    // Show info toast with longer duration to ensure visibility
+    showToast("You have been logged out", "info", TOAST_DURATION);
+
+    // Navigate to login page after a delay to ensure toast is visible
+    navigateWithDelay("/login");
   };
 
   return (

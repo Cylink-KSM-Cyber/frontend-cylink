@@ -12,17 +12,15 @@ export interface LoginRequest {
  * @description Represents user data returned from API
  */
 export interface User {
-  id: number;
+  username: string;
   email: string;
-  name: string;
   created_at: string;
   updated_at: string;
-  is_verified: boolean;
 }
 
 /**
  * Interface for authentication tokens
- * @description Contains access and refresh tokens
+ * @description Contains access and refresh tokens (original interface)
  */
 export interface AuthTokens {
   access_token: string;
@@ -30,12 +28,32 @@ export interface AuthTokens {
 }
 
 /**
- * Interface for login response data
+ * Interface for actual API authentication tokens
+ * @description Matches the actual API response structure for tokens
+ */
+export interface ApiAuthTokens {
+  type: string;
+  access: string;
+  refresh: string;
+  expiresAt: string | null;
+}
+
+/**
+ * Interface for login response data (original interface)
  * @description Contains user data and authentication tokens
  */
 export interface LoginResponseData {
   user: User;
   tokens: AuthTokens;
+}
+
+/**
+ * Interface for actual API login response data
+ * @description Matches the actual API response structure
+ */
+export interface ApiLoginResponseData {
+  user: User;
+  token: ApiAuthTokens;
 }
 
 /**
@@ -50,10 +68,16 @@ export interface ApiResponse<T> {
 }
 
 /**
- * Type for login response
+ * Type for login response based on original interface
  * @description API response for login endpoint
  */
 export type LoginResponse = ApiResponse<LoginResponseData>;
+
+/**
+ * Type for actual API login response
+ * @description API response matching the actual structure
+ */
+export type ApiLoginResponse = ApiResponse<ApiLoginResponseData>;
 
 /**
  * Interface for authentication context

@@ -1,5 +1,6 @@
 import React from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 /**
  * Provider properties
@@ -17,7 +18,11 @@ interface ProvidersProps {
  * @returns Providers component
  */
 const Providers: React.FC<ProvidersProps> = ({ children }) => {
-  return <AuthProvider>{children}</AuthProvider>;
+  return (
+    <AuthProvider>
+      <ToastProvider>{children}</ToastProvider>
+    </AuthProvider>
+  );
 };
 
 export default Providers;

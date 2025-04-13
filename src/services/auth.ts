@@ -1,5 +1,9 @@
 import { post } from "./api";
-import { LoginRequest, LoginResponse } from "@/interfaces/auth";
+import {
+  LoginRequest,
+  ApiLoginResponse,
+  LoginResponse,
+} from "@/interfaces/auth";
 
 /**
  * Authentication service for login, registration, and other auth operations
@@ -12,7 +16,43 @@ const AuthService = {
    * @returns Promise with login response data
    */
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    return await post<LoginResponse>("/api/v1/auth/login", credentials);
+    try {
+      // Call API with original request structure
+      const apiResponse = await post<ApiLoginResponse>(
+        "/api/v1/auth/login",
+        credentials
+      );
+      console.log("Raw API response:", apiResponse);
+
+      // Validate response structure (for the actual API response)
+      if (!apiResponse?.data?.user || !apiResponse?.data?.token) {
+        console.error("Invalid login response structure:", apiResponse);
+        throw new Error("Invalid response from server");
+      }
+
+      if (!apiResponse.data.token.access || !apiResponse.data.token.refresh) {
+        console.error("Missing tokens in response:", apiResponse.data.token);
+        throw new Error("Authentication tokens missing in response");
+      }
+
+      // Convert the API response to our expected format
+      const formattedResponse: LoginResponse = {
+        status: apiResponse.status,
+        message: apiResponse.message,
+        data: {
+          user: apiResponse.data.user,
+          tokens: {
+            access_token: apiResponse.data.token.access,
+            refresh_token: apiResponse.data.token.refresh,
+          },
+        },
+      };
+
+      return formattedResponse;
+    } catch (error) {
+      console.error("Login service error:", error);
+      throw error;
+    }
   },
 
   /**
@@ -28,15 +68,28 @@ const AuthService = {
   ): void => {
     if (typeof window === "undefined") return;
 
-    localStorage.setItem("accessToken", accessToken);
-    localStorage.setItem("refreshToken", refreshToken);
+    if (!accessToken || !refreshToken) {
+      console.error("Attempting to save invalid tokens:", {
+        hasAccessToken: !!accessToken,
+        hasRefreshToken: !!refreshToken,
+      });
+      throw new Error("Cannot save invalid authentication tokens");
+    }
 
-    // Set session expiration based on remember me option
-    if (remember) {
-      // Store a flag to indicate "remember me" was selected
-      localStorage.setItem("rememberMe", "true");
-    } else {
-      localStorage.removeItem("rememberMe");
+    try {
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+
+      // Set session expiration based on remember me option
+      if (remember) {
+        // Store a flag to indicate "remember me" was selected
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        localStorage.removeItem("rememberMe");
+      }
+    } catch (error) {
+      console.error("Error saving tokens to localStorage:", error);
+      throw new Error("Failed to save authentication data");
     }
   },
 
@@ -46,9 +99,13 @@ const AuthService = {
   clearTokens: (): void => {
     if (typeof window === "undefined") return;
 
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("rememberMe");
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("rememberMe");
+    } catch (error) {
+      console.error("Error clearing tokens from localStorage:", error);
+    }
   },
 
   /**
@@ -58,8 +115,13 @@ const AuthService = {
   isAuthenticated: (): boolean => {
     if (typeof window === "undefined") return false;
 
-    const token = localStorage.getItem("accessToken");
-    return !!token;
+    try {
+      const token = localStorage.getItem("accessToken");
+      return !!token;
+    } catch (error) {
+      console.error("Error checking authentication status:", error);
+      return false;
+    }
   },
 
   /**
@@ -69,7 +131,12 @@ const AuthService = {
   getAccessToken: (): string | null => {
     if (typeof window === "undefined") return null;
 
-    return localStorage.getItem("accessToken");
+    try {
+      return localStorage.getItem("accessToken");
+    } catch (error) {
+      console.error("Error retrieving access token:", error);
+      return null;
+    }
   },
 
   /**
@@ -79,7 +146,12 @@ const AuthService = {
   getRefreshToken: (): string | null => {
     if (typeof window === "undefined") return null;
 
-    return localStorage.getItem("refreshToken");
+    try {
+      return localStorage.getItem("refreshToken");
+    } catch (error) {
+      console.error("Error retrieving refresh token:", error);
+      return null;
+    }
   },
 };
 
