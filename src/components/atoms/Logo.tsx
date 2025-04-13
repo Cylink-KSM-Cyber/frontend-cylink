@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 /**
@@ -11,6 +14,8 @@ interface LogoProps {
   size?: "sm" | "md" | "lg";
   /** Whether to include link to homepage */
   withLink?: boolean;
+  /** Whether to show text with logo */
+  showText?: boolean;
   /** Custom className */
   className?: string;
 }
@@ -24,22 +29,44 @@ interface LogoProps {
 const Logo: React.FC<LogoProps> = ({
   size = "md",
   withLink = true,
+  showText = true,
   className = "",
 }) => {
-  const sizeClasses = {
+  // Logo image dimensions based on size
+  const dimensions = {
+    sm: { width: 24, height: 24 },
+    md: { width: 32, height: 32 },
+    lg: { width: 48, height: 48 },
+  };
+
+  // Text size classes
+  const textSizeClasses = {
     sm: "text-xl",
-    md: "text-3xl",
-    lg: "text-5xl",
+    md: "text-2xl",
+    lg: "text-4xl",
   };
 
   const logoContent = (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`font-bold ${sizeClasses[size]} ${className}`}
+      className={`flex items-center font-bold ${className}`}
     >
-      <span>Cy</span>
-      <span className="text-black">Link</span>
+      <Image
+        src="/logo/logo-cylink.png"
+        alt="CyLink Logo"
+        width={dimensions[size].width}
+        height={dimensions[size].height}
+        className="mr-2"
+        priority
+      />
+
+      {showText && (
+        <div className={textSizeClasses[size]}>
+          <span>Cy</span>
+          <span className="text-black">Link</span>
+        </div>
+      )}
     </motion.div>
   );
 

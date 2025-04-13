@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, forwardRef } from "react";
+import React, { useState, forwardRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
 /**
@@ -49,14 +49,34 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const [focused, setFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [inputValue, setInputValue] = useState<string>(
+      (props.value as string) || ""
+    );
+
+    // Update internal value state when props value changes
+    useEffect(() => {
+      if (props.value !== undefined) {
+        setInputValue(props.value as string);
+      }
+    }, [props.value]);
 
     const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
-    const hasValue = props.value !== undefined && props.value !== "";
+    const hasValue = inputValue !== undefined && inputValue !== "";
     const isError = !!error;
 
     // Toggle password visibility
-    const handleTogglePassword = () => {
+    const handleTogglePassword = (e: React.MouseEvent) => {
+      e.preventDefault(); // Prevent form submission
+      e.stopPropagation(); // Prevent event bubble
       setShowPassword(!showPassword);
+    };
+
+    // Handle input change
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value);
+      if (props.onChange) {
+        props.onChange(e);
+      }
     };
 
     // Determine input type for password fields
@@ -103,6 +123,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             setFocused(false);
             props.onBlur?.(e);
           }}
+          onChange={handleChange}
+          value={inputValue}
           type={inputType}
           {...props}
         />

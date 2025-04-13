@@ -30,7 +30,9 @@ const LoginContainer: React.FC<LoginContainerProps> = ({ className = "" }) => {
     >
       <div className="px-8 pt-8 pb-6">
         <div className="text-center mb-6">
-          <Logo size="md" withLink={false} />
+          <div className="flex justify-center">
+            <Logo size="lg" withLink={false} showText={true} />
+          </div>
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
