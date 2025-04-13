@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, forwardRef, useEffect } from "react";
+import React, { useState, forwardRef } from "react";
 import { motion } from "framer-motion";
 
 /**
@@ -43,51 +43,46 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       className = "",
       id,
       showPasswordToggle = false,
+      type = "text",
+      onFocus,
+      onBlur,
       ...props
     },
     ref
   ) => {
+    // State for input focus and password visibility
     const [focused, setFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [inputValue, setInputValue] = useState<string>(
-      (props.value as string) || ""
-    );
 
-    // Update internal value state when props value changes
-    useEffect(() => {
-      if (props.value !== undefined) {
-        setInputValue(props.value as string);
-      }
-    }, [props.value]);
-
+    // Generate unique ID for input
     const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
-    const hasValue = inputValue !== undefined && inputValue !== "";
     const isError = !!error;
 
     // Toggle password visibility
     const handleTogglePassword = (e: React.MouseEvent) => {
-      e.preventDefault(); // Prevent form submission
-      e.stopPropagation(); // Prevent event bubble
+      e.preventDefault();
+      e.stopPropagation();
       setShowPassword(!showPassword);
     };
 
-    // Handle input change
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value);
-      if (props.onChange) {
-        props.onChange(e);
-      }
+    // Handle input focus
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      setFocused(true);
+      if (onFocus) onFocus(e);
+    };
+
+    // Handle input blur
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+      setFocused(false);
+      if (onBlur) onBlur(e);
     };
 
     // Determine input type for password fields
-    const inputType =
-      props.type === "password" && showPassword ? "text" : props.type;
+    const inputType = type === "password" && showPassword ? "text" : type;
 
     // Adjust padding based on icons
     const inputPaddingClasses = `py-2 px-3 ${startIcon ? "pl-10" : ""} ${
-      endIcon || (props.type === "password" && showPasswordToggle)
-        ? "pr-10"
-        : ""
+      endIcon || (type === "password" && showPasswordToggle) ? "pr-10" : ""
     }`;
 
     return (
@@ -97,7 +92,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className={`absolute left-2 transition-all duration-200 pointer-events-none ${
-              focused || hasValue
+              focused ||
+              (props.value !== undefined && String(props.value).length > 0)
                 ? "text-xs -top-2 bg-white px-1 text-black"
                 : "text-gray-500 top-2 left-3"
             } ${isError ? "text-red-500" : ""}`}
@@ -115,16 +111,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
               ? "border-red-500 focus:border-red-500 focus:ring-red-200"
               : "border-gray-300"
           }`}
-          onFocus={(e) => {
-            setFocused(true);
-            props.onFocus?.(e);
-          }}
-          onBlur={(e) => {
-            setFocused(false);
-            props.onBlur?.(e);
-          }}
-          onChange={handleChange}
-          value={inputValue}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           type={inputType}
           {...props}
         />
@@ -137,7 +125,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
 
         {/* End icon or password toggle */}
-        {((endIcon && !showPasswordToggle) || props.type !== "password") &&
+        {((endIcon && !showPasswordToggle) || type !== "password") &&
           endIcon && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
               {endIcon}
@@ -145,7 +133,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
 
         {/* Password toggle */}
-        {props.type === "password" && showPasswordToggle && (
+        {type === "password" && showPasswordToggle && (
           <button
             type="button"
             onClick={handleTogglePassword}
