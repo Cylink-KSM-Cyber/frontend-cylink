@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, forwardRef } from "react";
+import React, { useState, forwardRef, useEffect } from "react";
 import { motion } from "framer-motion";
 
 /**
@@ -46,6 +46,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
       type = "text",
       onFocus,
       onBlur,
+      onChange,
+      value,
+      defaultValue,
       ...props
     },
     ref
@@ -53,6 +56,15 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     // State for input focus and password visibility
     const [focused, setFocused] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [hasValue, setHasValue] = useState<boolean>(
+      !!value || !!defaultValue || false
+    );
+
+    // Effect to update hasValue when value prop changes
+    useEffect(() => {
+      // Check if value exists and is not empty
+      setHasValue(!!value && String(value).length > 0);
+    }, [value]);
 
     // Generate unique ID for input
     const inputId = id || `input-${Math.random().toString(36).substring(2, 9)}`;
@@ -74,7 +86,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     // Handle input blur
     const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
       setFocused(false);
+      // Check if input has value on blur
+      setHasValue(!!e.target.value);
       if (onBlur) onBlur(e);
+    };
+
+    // Handle input change
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // Update hasValue based on current input value
+      setHasValue(!!e.target.value);
+      if (onChange) onChange(e);
     };
 
     // Determine input type for password fields
@@ -92,8 +113,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={inputId}
             className={`absolute left-2 transition-all duration-200 pointer-events-none ${
-              focused ||
-              (props.value !== undefined && String(props.value).length > 0)
+              focused || hasValue
                 ? "text-xs -top-2 bg-white px-1 text-black"
                 : "text-gray-500 top-2 left-3"
             } ${isError ? "text-red-500" : ""}`}
@@ -113,7 +133,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           }`}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          onChange={handleChange}
           type={inputType}
+          value={value}
+          defaultValue={defaultValue}
           {...props}
         />
 
