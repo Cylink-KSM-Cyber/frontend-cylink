@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import DashboardHeader from "@/components/organisms/DashboardHeader";
 import DashboardTabs, { TabPanel } from "@/components/organisms/DashboardTabs";
 import StatsSummary from "@/components/molecules/StatsSummary";
@@ -6,7 +9,8 @@ import UrlsTable from "@/components/molecules/UrlsTable";
 import QrCodeGrid from "@/components/molecules/QrCodeGrid";
 import Pagination from "@/components/molecules/Pagination";
 import { RiLinkM, RiQrCodeLine, RiLineChartLine } from "react-icons/ri";
-import { Url, QrCode, DashboardStats } from "../../interfaces/url";
+import { Url, QrCode, DashboardStats } from "@/interfaces/url";
+import { useSidebar } from "@/contexts/SidebarContext";
 
 /**
  * Prop types for DashboardTemplate component
@@ -135,8 +139,16 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   onDeleteQr,
   onQrPreview,
 }) => {
+  // Get query params and router for updating URL
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const tabParam = searchParams.get("tab");
+
+  // Get sidebar context
+  const { activeItemId } = useSidebar();
+
   // State for active tab
-  const [activeTab, setActiveTab] = useState("urls");
+  const [activeTab, setActiveTab] = useState(tabParam || "urls");
 
   // Tab definitions
   const tabs = [
@@ -145,29 +157,57 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
     { id: "analytics", label: "Analytics", icon: <RiLineChartLine /> },
   ];
 
+  // Handle tab change
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+
+    // Update URL query parameter
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.push(`/dashboard?${params.toString()}`);
+  };
+
+  // Sync with sidebar active item
+  useEffect(() => {
+    if (
+      activeItemId === "urls" ||
+      activeItemId === "qrcodes" ||
+      activeItemId === "analytics"
+    ) {
+      setActiveTab(activeItemId);
+    }
+  }, [activeItemId]);
+
+  // Sync with URL query parameter
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      <div className="container mx-auto px-4 py-8">
+    <div className="bg-transparent">
+      <div className="container mx-auto px-2 sm:px-4">
         {/* Header Section */}
         <DashboardHeader
           userName={userName}
           onSearch={activeTab === "urls" ? onSearch : undefined}
           onCreateClick={onCreateUrl}
-          className="mb-8"
+          className="mb-6"
         />
 
         {/* Stats Summary */}
         <StatsSummary
           stats={stats}
           isLoading={isStatsLoading}
-          className="mb-8"
+          className="mb-6"
         />
 
         {/* Tabs */}
         <DashboardTabs
           tabs={tabs}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
           className="mb-6"
         />
 

@@ -1,11 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import DashboardTemplate from "@/components/templates/DashboardTemplate";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useUrls } from "@/hooks/useUrls";
 import { useQrCodes } from "@/hooks/useQrCodes";
 import { Url, QrCode } from "@/interfaces/url";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSidebar } from "@/contexts/SidebarContext";
+import UserStatsCard from "@/components/molecules/UserStatsCard";
+import "@/styles/dashboard.css";
 
 /**
  * Dashboard page
@@ -13,6 +18,16 @@ import { Url, QrCode } from "@/interfaces/url";
  * @returns Dashboard page component
  */
 export default function DashboardPage() {
+  // Get user from auth context
+  const { user } = useAuth();
+
+  // Get sidebar context to sync with tab changes
+  const { setActiveItemId } = useSidebar();
+
+  // Get tab from URL query params
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+
   // Initialize search state
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -124,6 +139,15 @@ export default function DashboardPage() {
     console.log("Create new URL");
   };
 
+  // Set initial active tab based on URL params
+  useEffect(() => {
+    if (tabParam) {
+      setActiveItemId(tabParam);
+    } else {
+      setActiveItemId("dashboard");
+    }
+  }, [tabParam, setActiveItemId]);
+
   // If there are errors, we could show error states
   // For now, we'll just log them and continue with available data
   if (statsError) console.error("Stats error:", statsError);
@@ -131,40 +155,63 @@ export default function DashboardPage() {
   if (qrCodesError) console.error("QR codes error:", qrCodesError);
 
   return (
-    <DashboardTemplate
-      userName="John Doe" // In a real app, this would come from auth context
-      stats={
-        stats || {
-          totalUrls: 0,
-          totalClicks: 0,
-          conversionRate: 0,
-          qrCodesGenerated: 0,
-          activeUrls: 0,
-          urlsCreatedToday: 0,
-          averageClicksPerUrl: 0,
+    <div className="py-6">
+      {/* User Stats Card */}
+      <div className="mb-8">
+        <UserStatsCard
+          userName={user?.username || "User"}
+          stats={
+            stats || {
+              totalUrls: 0,
+              totalClicks: 0,
+              conversionRate: 0,
+              qrCodesGenerated: 0,
+              activeUrls: 0,
+              urlsCreatedToday: 0,
+              averageClicksPerUrl: 0,
+            }
+          }
+          isLoading={isStatsLoading}
+          joinDate={user?.created_at}
+        />
+      </div>
+
+      {/* Dashboard Template */}
+      <DashboardTemplate
+        userName={user?.username || "User"}
+        stats={
+          stats || {
+            totalUrls: 0,
+            totalClicks: 0,
+            conversionRate: 0,
+            qrCodesGenerated: 0,
+            activeUrls: 0,
+            urlsCreatedToday: 0,
+            averageClicksPerUrl: 0,
+          }
         }
-      }
-      urls={urls}
-      isUrlsLoading={isUrlsLoading}
-      isStatsLoading={isStatsLoading}
-      currentUrlPage={pagination.page}
-      totalUrlPages={pagination.totalPages}
-      onUrlPageChange={handleUrlPageChange}
-      onUrlSortChange={handleUrlSortChange}
-      urlSortBy={urlSort.sortBy}
-      urlSortDirection={urlSort.sortDirection}
-      qrCodes={qrCodes}
-      isQrCodesLoading={isQrCodesLoading}
-      onSearch={handleSearch}
-      onCreateUrl={handleCreateUrl}
-      onCopyUrl={handleCopyUrl}
-      onGenerateQr={handleGenerateQr}
-      onEditUrl={handleEditUrl}
-      onDeleteUrl={handleDeleteUrl}
-      onDownloadQr={handleDownloadQr}
-      onEditQr={handleEditQr}
-      onDeleteQr={handleDeleteQr}
-      onQrPreview={handleQrPreview}
-    />
+        urls={urls}
+        isUrlsLoading={isUrlsLoading}
+        isStatsLoading={isStatsLoading}
+        currentUrlPage={pagination.page}
+        totalUrlPages={pagination.totalPages}
+        onUrlPageChange={handleUrlPageChange}
+        onUrlSortChange={handleUrlSortChange}
+        urlSortBy={urlSort.sortBy}
+        urlSortDirection={urlSort.sortDirection}
+        qrCodes={qrCodes}
+        isQrCodesLoading={isQrCodesLoading}
+        onSearch={handleSearch}
+        onCreateUrl={handleCreateUrl}
+        onCopyUrl={handleCopyUrl}
+        onGenerateQr={handleGenerateQr}
+        onEditUrl={handleEditUrl}
+        onDeleteUrl={handleDeleteUrl}
+        onDownloadQr={handleDownloadQr}
+        onEditQr={handleEditQr}
+        onDeleteQr={handleDeleteQr}
+        onQrPreview={handleQrPreview}
+      />
+    </div>
   );
 }

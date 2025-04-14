@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { SidebarProvider } from "@/contexts/SidebarContext";
 
 /**
  * Provider properties
@@ -20,7 +23,9 @@ interface ProvidersProps {
 const Providers: React.FC<ProvidersProps> = ({ children }) => {
   return (
     <AuthProvider>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        <SidebarProvider>{children}</SidebarProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 };

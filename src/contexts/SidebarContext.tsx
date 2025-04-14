@@ -1,52 +1,97 @@
-import React, { createContext, useContext } from "react";
-import { SidebarContextType } from "@/interfaces/sidebar";
-import { useSidebar } from "@/hooks/useSidebar";
-import { sidebarNavItems } from "@/config/sidebar";
+"use client";
 
-// Create sidebar context with default values
-const SidebarContext = createContext<SidebarContextType>({
-  isCollapsed: false,
-  toggleSidebar: () => {},
-  isMobileOpen: false,
-  toggleMobileSidebar: () => {},
-  activeItemId: "",
-  setActiveItemId: () => {},
-});
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { SidebarContextType } from "@/interfaces/sidebar";
 
 /**
- * Sidebar context provider props
+ * Context for managing sidebar state throughout the application
+ */
+const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+
+/**
+ * Props for SidebarProvider component
  */
 interface SidebarProviderProps {
+  /**
+   * Child components
+   */
   children: React.ReactNode;
 }
 
 /**
- * Sidebar Context Provider
- * @description Provides sidebar state and functionality to components
+ * Sidebar Provider Component
+ * @description Provides sidebar state and methods to all child components
  */
 export const SidebarProvider: React.FC<SidebarProviderProps> = ({
   children,
 }) => {
-  // Use the sidebar hook for state management
-  const sidebarState = useSidebar(sidebarNavItems, false);
+  // State for sidebar collapse
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  // State for mobile sidebar visibility
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  // State for active navigation item
+  const [activeItemId, setActiveItemId] = useState("dashboard");
+
+  // Router hooks
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Toggle sidebar collapsed state
+  const toggleSidebar = () => {
+    setIsCollapsed((prev) => !prev);
+  };
+
+  // Toggle mobile sidebar open/closed state
+  const toggleMobileSidebar = () => {
+    setIsMobileOpen((prev) => !prev);
+  };
+
+  // Update active item based on URL
+  useEffect(() => {
+    // Set active item based on pathname and search params
+    if (pathname === "/dashboard") {
+      const tab = searchParams.get("tab");
+      if (tab) {
+        setActiveItemId(tab);
+      } else {
+        setActiveItemId("dashboard");
+      }
+    } else if (pathname === "/settings") {
+      setActiveItemId("settings");
+    }
+  }, [pathname, searchParams]);
+
+  // Close mobile sidebar on route change
+  useEffect(() => {
+    setIsMobileOpen(false);
+  }, [pathname]);
+
+  // Context value
+  const value: SidebarContextType = {
+    isCollapsed,
+    toggleSidebar,
+    isMobileOpen,
+    toggleMobileSidebar,
+    activeItemId,
+    setActiveItemId,
+  };
 
   return (
-    <SidebarContext.Provider value={sidebarState}>
-      {children}
-    </SidebarContext.Provider>
+    <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>
   );
 };
 
 /**
- * Custom hook to use sidebar context
- * @description Provides access to sidebar context
- * @returns Sidebar context state and methods
+ * Custom hook to use the sidebar context
+ * @returns Sidebar context values and methods
+ * @throws Error if used outside of SidebarProvider
  */
-export const useSidebarContext = (): SidebarContextType => {
+export const useSidebar = (): SidebarContextType => {
   const context = useContext(SidebarContext);
 
   if (context === undefined) {
-    throw new Error("useSidebarContext must be used within a SidebarProvider");
+    throw new Error("useSidebar must be used within a SidebarProvider");
   }
 
   return context;

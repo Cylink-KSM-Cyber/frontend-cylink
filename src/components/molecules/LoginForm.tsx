@@ -135,7 +135,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
         <Button
           type="submit"
           fullWidth
-          isLoading={isLoading}
           disabled={isLoading}
           className="login-button"
         >
