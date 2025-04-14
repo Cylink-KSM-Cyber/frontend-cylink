@@ -17,6 +17,26 @@ import {
 import { NavItem, UserProfileProps } from "@/interfaces/sidebar";
 import { useSidebar } from "@/contexts/SidebarContext";
 
+/**
+ * Theme constants for consistent styling across the sidebar
+ * These values are paired with appropriate Tailwind classes
+ */
+const THEME = {
+  // Active state styling
+  ACTIVE_BG_CLASS: "bg-black",
+  ACTIVE_TEXT_CLASS: "text-white",
+
+  // Badge styling
+  BADGE_BG_CLASS: "bg-gray-200",
+  BADGE_TEXT_CLASS: "text-black",
+
+  // Button styling for mobile
+  MOBILE_BUTTON_CLASS: "bg-black text-white",
+
+  // Logo text color
+  LOGO_TEXT_CLASS: "text-black",
+};
+
 // User profile component
 const UserProfile: React.FC<UserProfileProps> = ({
   name,
@@ -58,7 +78,11 @@ const UserProfile: React.FC<UserProfileProps> = ({
   );
 };
 
-// Navigation item component
+/**
+ * Navigation item component
+ * @description Renders a navigation item in the sidebar with active state styling
+ * Uses consistent theme variables for colors
+ */
 const NavItemComponent: React.FC<{
   item: NavItem;
   isActive: boolean;
@@ -72,13 +96,15 @@ const NavItemComponent: React.FC<{
         isCollapsed ? "justify-center" : ""
       } ${
         isActive
-          ? "bg-blue-50 text-blue-600"
+          ? `${THEME.ACTIVE_BG_CLASS} ${THEME.ACTIVE_TEXT_CLASS}`
           : "text-gray-700 hover:bg-gray-100"
       } rounded-lg transition-all duration-200`}
       onClick={onClick}
     >
       <span
-        className={`text-xl ${isActive ? "text-blue-600" : "text-gray-500"}`}
+        className={`text-xl ${
+          isActive ? THEME.ACTIVE_TEXT_CLASS : "text-gray-500"
+        }`}
       >
         {item.icon}
       </span>
@@ -87,7 +113,9 @@ const NavItemComponent: React.FC<{
         <>
           <span className="ml-3 text-sm font-medium">{item.label}</span>
           {item.badge && (
-            <span className="ml-auto bg-blue-100 text-blue-800 text-xs font-medium px-2 py-0.5 rounded">
+            <span
+              className={`ml-auto ${THEME.BADGE_BG_CLASS} ${THEME.BADGE_TEXT_CLASS} text-xs font-medium px-2 py-0.5 rounded`}
+            >
               {item.badge}
             </span>
           )}
@@ -132,6 +160,7 @@ interface SidebarProps {
 /**
  * Sidebar Component
  * @description Main sidebar navigation component for dashboard
+ * Uses logo from public/logo/logo-cylink.png and consistent theme styling
  */
 const Sidebar: React.FC<SidebarProps> = ({
   userName,
@@ -235,9 +264,32 @@ const Sidebar: React.FC<SidebarProps> = ({
             isCollapsed ? "justify-center" : "justify-between"
           }`}
         >
-          {!isCollapsed && (
+          {!isCollapsed ? (
             <Link href="/dashboard" className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">CyLink</span>
+              <div className="flex items-center">
+                <Image
+                  src="/logo/logo-cylink.png"
+                  alt="CyLink Logo"
+                  width={32}
+                  height={32}
+                  className="mr-2"
+                />
+                <span className={`text-xl font-bold ${THEME.LOGO_TEXT_CLASS}`}>
+                  CyLink
+                </span>
+              </div>
+            </Link>
+          ) : (
+            <Link
+              href="/dashboard"
+              className="flex items-center justify-center"
+            >
+              <Image
+                src="/logo/logo-cylink.png"
+                alt="CyLink Logo"
+                width={28}
+                height={28}
+              />
             </Link>
           )}
 
@@ -291,7 +343,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {/* Mobile toggle button - only visible on small screens */}
       <button
-        className="fixed z-20 bottom-4 right-4 lg:hidden p-3 bg-blue-600 text-white rounded-full shadow-lg"
+        className={`fixed z-20 bottom-4 right-4 lg:hidden p-3 ${THEME.ACTIVE_BG_CLASS} ${THEME.ACTIVE_TEXT_CLASS} rounded-full shadow-lg`}
         onClick={toggleMobileSidebar}
       >
         {isMobileOpen ? (
