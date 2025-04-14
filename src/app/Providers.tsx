@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
@@ -24,7 +24,9 @@ const Providers: React.FC<ProvidersProps> = ({ children }) => {
   return (
     <AuthProvider>
       <ToastProvider>
-        <SidebarProvider>{children}</SidebarProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <SidebarProvider>{children}</SidebarProvider>
+        </Suspense>
       </ToastProvider>
     </AuthProvider>
   );
