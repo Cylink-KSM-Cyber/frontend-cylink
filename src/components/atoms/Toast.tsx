@@ -98,7 +98,7 @@ const Toast: React.FC<ToastProps> = ({
           className={`w-full max-w-md shadow-lg ${className}`}
         >
           <div
-            className={`flex items-center p-4 rounded-lg shadow-md border-2 ${bg} ${border}`}
+            className={`flex items-center gap-2 p-4 rounded-lg shadow-md border-2 ${bg} ${border}`}
           >
             <div className="mr-3 text-xl">{icon}</div>
             <div className={`flex-1 ${text} font-medium`}>{message}</div>
