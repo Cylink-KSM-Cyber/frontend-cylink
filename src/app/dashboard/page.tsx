@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import DashboardTemplate from "../../components/templates/DashboardTemplate";
-import { useDashboardStats } from "../../hooks/useDashboardStats";
-import { useUrls } from "../../hooks/useUrls";
-import { useQrCodes } from "../../hooks/useQrCodes";
-import { Url, QrCode } from "../../interfaces/url";
+import DashboardTemplate from "@/components/templates/DashboardTemplate";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useUrls } from "@/hooks/useUrls";
+import { useQrCodes } from "@/hooks/useQrCodes";
+import { Url, QrCode } from "@/interfaces/url";
 
 /**
  * Dashboard page
