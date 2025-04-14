@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import AuthService from "@/services/auth";
 import { LoginRequest, User } from "@/interfaces/auth";
 import { AxiosError } from "axios";
+import { useToast } from "@/contexts/ToastContext";
 
 /**
  * Custom hook for authentication
@@ -11,6 +12,7 @@ import { AxiosError } from "axios";
  */
 const useAuth = () => {
   const router = useRouter();
+  const { showToast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,7 @@ const useAuth = () => {
    */
   const login = useCallback(
     async (credentials: LoginRequest, remember: boolean = false) => {
+      console.log("Login attempt started", { email: credentials.email });
       setIsLoading(true);
       setError(null);
 
@@ -38,43 +41,48 @@ const useAuth = () => {
         );
         setUser(user);
 
-        // Navigate to dashboard after successful login
-        router.push("/dashboard");
+        // Show success toast and delay navigation
+        console.log("Login successful, showing success toast");
+        showToast("Successfully logged in", "success");
+
+        // Delay navigation to allow toast to be visible
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 1500);
       } catch (err) {
         // Handle different error cases
         const error = err as AxiosError;
+        let errorMessage =
+          "An error occurred during login. Please try again later.";
+
         if (error.response) {
           switch (error.response.status) {
             case 400:
-              setError(
-                "Invalid credentials. Please check your email and password."
-              );
+              errorMessage =
+                "Invalid credentials. Please check your email and password.";
               break;
             case 401:
-              setError(
-                "Your account is not verified. Please check your email for verification instructions."
-              );
+              errorMessage =
+                "Your account is not verified. Please check your email for verification instructions.";
               break;
             case 404:
-              setError(
-                "Account not found. Please check your email or register for a new account."
-              );
+              errorMessage =
+                "Account not found. Please check your email or register for a new account.";
               break;
-            default:
-              setError(
-                "An error occurred during login. Please try again later."
-              );
           }
         } else {
-          setError(
-            "Network error. Please check your internet connection and try again."
-          );
+          errorMessage =
+            "Network error. Please check your internet connection and try again.";
         }
+
+        setError(errorMessage);
+        // Show error toast
+        showToast(errorMessage, "error");
       } finally {
         setIsLoading(false);
       }
     },
-    [router]
+    [router, showToast]
   );
 
   /**
@@ -84,8 +92,9 @@ const useAuth = () => {
   const logout = useCallback(() => {
     AuthService.clearTokens();
     setUser(null);
+    showToast("You have been logged out", "info");
     router.push("/login");
-  }, [router]);
+  }, [router, showToast]);
 
   return {
     user,
