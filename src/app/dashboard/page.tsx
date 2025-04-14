@@ -9,7 +9,6 @@ import { useQrCodes } from "@/hooks/useQrCodes";
 import { Url, QrCode } from "@/interfaces/url";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
-import UserStatsCard from "@/components/molecules/UserStatsCard";
 import "@/styles/dashboard.css";
 
 /**
@@ -156,26 +155,6 @@ export default function DashboardPage() {
 
   return (
     <div className="py-6">
-      {/* User Stats Card */}
-      <div className="mb-8">
-        <UserStatsCard
-          userName={user?.username || "User"}
-          stats={
-            stats || {
-              totalUrls: 0,
-              totalClicks: 0,
-              conversionRate: 0,
-              qrCodesGenerated: 0,
-              activeUrls: 0,
-              urlsCreatedToday: 0,
-              averageClicksPerUrl: 0,
-            }
-          }
-          isLoading={isStatsLoading}
-          joinDate={user?.created_at}
-        />
-      </div>
-
       {/* Dashboard Template */}
       <DashboardTemplate
         userName={user?.username || "User"}
