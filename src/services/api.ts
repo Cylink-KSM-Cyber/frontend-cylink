@@ -1,4 +1,5 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import Cookies from "js-cookie";
 
 /**
  * Base API configuration
@@ -20,16 +21,19 @@ const api = axios.create({
 const isBrowser = () => typeof window !== "undefined";
 
 /**
- * Get token safely from localStorage
+ * Get token safely from Cookies
  * @returns The token or null if not available
  */
-const getToken = (): string | null => {
+export const getToken = (): string | null => {
   if (!isBrowser()) return null;
 
   try {
-    return localStorage.getItem("accessToken");
+    const token = Cookies.get("accessToken");
+    console.log(token);
+
+    return token === undefined ? null : token;
   } catch (error) {
-    console.error("Error retrieving token from localStorage:", error);
+    console.error("Error retrieving token from Cookies:", error);
     return null;
   }
 };
@@ -104,8 +108,8 @@ api.interceptors.response.use(
         if (error.response.status === 401) {
           if (isBrowser()) {
             try {
-              localStorage.removeItem("accessToken");
-              localStorage.removeItem("refreshToken");
+              Cookies.remove("accessToken");
+              Cookies.remove("refreshToken");
             } catch (storageError) {
               console.error("Error removing tokens:", storageError);
             }

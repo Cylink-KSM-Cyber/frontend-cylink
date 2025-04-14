@@ -45,10 +45,7 @@ const useAuth = () => {
         console.log("Login successful, showing success toast");
         showToast("Successfully logged in", "success");
 
-        // Delay navigation to allow toast to be visible
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1500);
+        router.push("/dashboard");
       } catch (err) {
         // Handle different error cases
         const error = err as AxiosError;
