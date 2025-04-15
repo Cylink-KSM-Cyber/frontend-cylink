@@ -54,6 +54,7 @@ const DeleteUrlModal: React.FC<DeleteUrlModalProps> = ({
       onClose={onCancel}
       variant="danger"
       size="sm"
+      overlayStyle="glassmorphism"
       footer={
         <>
           <Button variant="secondary" onClick={onCancel} disabled={isDeleting}>
