@@ -34,12 +34,25 @@ interface ModalProps {
   footer?: React.ReactNode;
   /** Optional CSS classes */
   className?: string;
+  /** Overlay style variant */
+  overlayStyle?: "default" | "glassmorphism";
 }
 
 /**
  * Modal component
  * @description A responsive modal dialog with customizable properties
  * @param props - Modal properties
+ * @param props.title - Modal title
+ * @param props.children - Modal content
+ * @param props.isOpen - Whether the modal is open
+ * @param props.onClose - Function to close the modal
+ * @param props.size - Modal size (sm, md, lg, xl)
+ * @param props.variant - Modal variant (default, danger, success, warning)
+ * @param props.closeOnOverlayClick - Whether to close on overlay click
+ * @param props.closeOnEsc - Whether to close on escape key
+ * @param props.footer - Optional footer content
+ * @param props.className - Optional CSS classes
+ * @param props.overlayStyle - Overlay style variant (default, glassmorphism)
  * @returns Modal component
  */
 const Modal: React.FC<ModalProps> = ({
@@ -53,6 +66,7 @@ const Modal: React.FC<ModalProps> = ({
   closeOnEsc = true,
   footer,
   className = "",
+  overlayStyle = "default",
 }) => {
   const overlayRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -131,7 +145,18 @@ const Modal: React.FC<ModalProps> = ({
     }
   };
 
+  // Get overlay style classes
+  const getOverlayClasses = () => {
+    switch (overlayStyle) {
+      case "glassmorphism":
+        return "fixed inset-0 backdrop-blur-[6px] bg-gradient-to-br from-black/30 via-black/20 to-black/30 [@supports_not_(backdrop-filter:blur(0))]:bg-black/50";
+      default:
+        return "fixed inset-0 bg-black bg-opacity-40";
+    }
+  };
+
   const variantClasses = getVariantClasses();
+  const overlayClasses = getOverlayClasses();
 
   return (
     <AnimatePresence>
@@ -139,17 +164,25 @@ const Modal: React.FC<ModalProps> = ({
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <motion.div
             ref={overlayRef}
-            className="fixed inset-0 bg-black bg-opacity-40 transition-opacity"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            className={`${overlayClasses} transition-all`}
+            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            animate={{
+              opacity: 1,
+              backdropFilter:
+                overlayStyle === "glassmorphism" ? "blur(6px)" : "blur(0px)",
+            }}
+            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
+            transition={{ duration: 0.3 }}
             onClick={handleOverlayClick}
           >
             <div className="flex min-h-full items-center justify-center p-4">
               <motion.div
                 ref={modalRef}
-                className={`${getSizeClasses()} w-full rounded-lg bg-white shadow-xl ${className}`}
+                className={`${getSizeClasses()} w-full rounded-lg bg-white ${
+                  overlayStyle === "glassmorphism"
+                    ? "shadow-2xl shadow-black/20 ring-1 ring-black/5"
+                    : "shadow-xl"
+                } ${className}`}
                 initial={{ opacity: 0, scale: 0.95, y: -20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}

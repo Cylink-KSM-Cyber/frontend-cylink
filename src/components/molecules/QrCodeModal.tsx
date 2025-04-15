@@ -183,6 +183,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
       variant="default"
       size="lg"
       footer={renderFooterButtons()}
+      overlayStyle="glassmorphism"
     >
       <div className="flex flex-col lg:flex-row gap-6">
         {/* QR Code Preview */}
