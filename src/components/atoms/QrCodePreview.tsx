@@ -3,7 +3,6 @@
 import React from "react";
 import Image from "next/image";
 import QRCode from "react-qr-code";
-import KsmLogo from "./KsmLogo";
 
 /**
  * Props for QrCodePreview component
@@ -87,9 +86,9 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
     );
   }
 
-  // Calculate logo size relative to QR code size
+  // Calculate logo size relative to QR code size (25% of QR size)
   const logoSize = Math.round(size * 0.25);
-  const logoPadding = Math.round(size * 0.05);
+  const logoContainerSize = Math.round(logoSize * 1.4); // 40% padding around logo
 
   // Show QR code with react-qr-code
   return (
@@ -112,17 +111,82 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
         <div
           className="absolute flex items-center justify-center rounded-full"
           style={{
-            width: logoSize + logoPadding * 2,
-            height: logoSize + logoPadding * 2,
+            width: logoContainerSize,
+            height: logoContainerSize,
             backgroundColor,
-            boxShadow: "0 0 8px rgba(0, 0, 0, 0.1)",
+            boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <KsmLogo color={foregroundColor} width={logoSize} height={logoSize} />
+          <Image
+            src="/logo/logo-ksm.svg"
+            alt="KSM Logo"
+            width={logoSize}
+            height={logoSize}
+            style={{
+              filter:
+                foregroundColor !== "#000000"
+                  ? `brightness(0) saturate(100%) ${getColorFilterForSvg(
+                      foregroundColor
+                    )}`
+                  : undefined,
+            }}
+          />
         </div>
       )}
     </div>
   );
 };
+
+/**
+ * Helper function to generate CSS filter for coloring SVG
+ * @param hexColor - Hex color to convert to CSS filter
+ * @returns CSS filter string
+ */
+function getColorFilterForSvg(hexColor: string): string {
+  // For black, no filter needed
+  if (hexColor === "#000000") return "";
+
+  // For common colors, use predefined filters
+  switch (hexColor.toLowerCase()) {
+    case "#ff0000":
+      return "invert(16%) sepia(98%) saturate(6451%) hue-rotate(358deg) brightness(97%) contrast(113%)"; // Red
+    case "#0000ff":
+      return "invert(8%) sepia(98%) saturate(6418%) hue-rotate(248deg) brightness(89%) contrast(143%)"; // Blue
+    case "#00ff00":
+      return "invert(72%) sepia(67%) saturate(5985%) hue-rotate(71deg) brightness(128%) contrast(122%)"; // Green
+    case "#9400d3":
+      return "invert(14%) sepia(87%) saturate(5242%) hue-rotate(281deg) brightness(83%) contrast(130%)"; // Purple
+    case "#1e90ff":
+      return "invert(49%) sepia(98%) saturate(1501%) hue-rotate(188deg) brightness(96%) contrast(104%)"; // Dodger Blue
+    default:
+      return `invert(38%) sepia(74%) saturate(1000%) hue-rotate(${getHueRotation(
+        hexColor
+      )}deg) brightness(92%) contrast(95%)`;
+  }
+}
+
+/**
+ * Calculate hue rotation for a hex color
+ * @param hexColor - Hex color to calculate hue rotation for
+ * @returns Hue rotation in degrees
+ */
+function getHueRotation(hexColor: string): number {
+  // Simple approximate hue rotation calculation
+  // Convert hex to RGB
+  const r = parseInt(hexColor.slice(1, 3), 16) / 255;
+  const g = parseInt(hexColor.slice(3, 5), 16) / 255;
+  const b = parseInt(hexColor.slice(5, 7), 16) / 255;
+
+  // Get the hue angle (simplified version)
+  let hue = 0;
+  if (r >= g && g >= b) hue = 60 * ((g - b) / (r - b));
+  else if (g > r && r >= b) hue = 60 * (2 - (r - b) / (g - b));
+  else if (g >= b && b > r) hue = 60 * (2 + (b - r) / (g - r));
+  else if (b > g && g > r) hue = 60 * (4 - (g - r) / (b - r));
+  else if (b > r && r >= g) hue = 60 * (4 + (r - g) / (b - g));
+  else if (r >= b && b > g) hue = 60 * (6 - (b - g) / (r - g));
+
+  return Math.round(hue);
+}
 
 export default QrCodePreview;
