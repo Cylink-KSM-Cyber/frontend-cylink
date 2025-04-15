@@ -191,7 +191,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "urls",
       label: "My URLs",
-      path: "/dashboard?tab=urls",
+      path: "/dashboard/urls",
       icon: <RiLinkM />,
     },
     {

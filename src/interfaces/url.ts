@@ -3,17 +3,18 @@
  * @description Defines the structure of a shortened URL entity
  */
 export interface Url {
-  id: string;
-  originalUrl: string;
-  shortUrl: string;
+  id: number;
+  original_url: string;
+  short_code: string;
+  short_url: string;
   title?: string;
   description?: string;
-  createdAt: string;
-  updatedAt: string;
-  expiresAt?: string;
+  created_at: string;
+  updated_at: string;
+  expiry_date?: string;
   clicks: number;
-  status: "active" | "expired" | "inactive";
-  userId: string;
+  is_active: boolean;
+  user_id: number;
   customDomain?: string;
   tags?: string[];
   clickTrend?: number; // Percentage change in clicks (e.g., +15%)
@@ -24,8 +25,8 @@ export interface Url {
  * @description Defines the structure of a QR code entity
  */
 export interface QrCode {
-  id: string;
-  urlId: string;
+  id: number;
+  urlId: number;
   imageUrl: string;
   createdAt: string;
   updatedAt: string;
@@ -123,8 +124,8 @@ export interface DashboardStats {
 export interface UrlFilter {
   search?: string;
   status?: "active" | "expired" | "inactive" | "all";
-  sortBy?: "createdAt" | "clicks" | "lastClicked";
-  sortDirection?: "asc" | "desc";
+  sortBy?: "created_at" | "clicks" | "title";
+  sortOrder?: "asc" | "desc";
   page: number;
   limit: number;
   tags?: string[];
@@ -144,6 +145,24 @@ export interface PaginatedResponse<T> {
     total: number;
     page: number;
     limit: number;
-    totalPages: number;
+    total_pages: number;
+  };
+}
+
+/**
+ * URL API Response Interface
+ * @description Defines the structure of URL API response
+ */
+export interface UrlApiResponse {
+  status: number;
+  message: string;
+  data: {
+    urls: Url[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      total_pages: number;
+    };
   };
 }

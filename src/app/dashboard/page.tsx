@@ -32,8 +32,8 @@ export default function DashboardPage() {
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
-    sortBy: "createdAt" as "createdAt" | "clicks" | "lastClicked",
-    sortDirection: "desc" as "asc" | "desc",
+    sortBy: "created_at" as "created_at" | "clicks" | "title",
+    sortOrder: "desc" as "asc" | "desc",
   });
 
   // Fetch dashboard stats data
@@ -56,7 +56,7 @@ export default function DashboardPage() {
     limit: 10,
     search: searchQuery,
     sortBy: urlSort.sortBy,
-    sortDirection: urlSort.sortDirection,
+    sortOrder: urlSort.sortOrder,
   });
 
   // Fetch QR code data
@@ -80,14 +80,14 @@ export default function DashboardPage() {
 
   // Handle URL sort changes
   const handleUrlSortChange = (column: string, direction: "asc" | "desc") => {
-    const sortBy = column as "createdAt" | "clicks" | "lastClicked";
-    setUrlSort({ sortBy, sortDirection: direction });
-    updateFilter({ sortBy, sortDirection: direction });
+    const sortBy = column as "created_at" | "clicks" | "title";
+    setUrlSort({ sortBy, sortOrder: direction });
+    updateFilter({ sortBy, sortOrder: direction });
   };
 
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
-    navigator.clipboard.writeText(`https://${url.shortUrl}`);
+    navigator.clipboard.writeText(`https://${url.short_url}`);
   };
 
   // Handle URL edit
@@ -105,7 +105,7 @@ export default function DashboardPage() {
   // Handle QR code generation
   const handleGenerateQr = (url: Url) => {
     // This would typically open a modal for QR code customization
-    generateQrCode(url.id);
+    generateQrCode(String(url.id));
   };
 
   // Handle QR code download
@@ -123,7 +123,7 @@ export default function DashboardPage() {
   // Handle QR code delete
   const handleDeleteQr = (qrCode: QrCode) => {
     // In a real app, this would show a confirmation dialog
-    deleteQrCode(qrCode.id);
+    deleteQrCode(String(qrCode.id));
   };
 
   // Handle QR code preview
@@ -169,16 +169,16 @@ export default function DashboardPage() {
             averageClicksPerUrl: 0,
           }
         }
-        urls={urls}
+        urls={urls || []}
         isUrlsLoading={isUrlsLoading}
         isStatsLoading={isStatsLoading}
-        currentUrlPage={pagination.page}
-        totalUrlPages={pagination.totalPages}
+        currentUrlPage={pagination?.page || 1}
+        totalUrlPages={pagination?.total_pages || 1}
         onUrlPageChange={handleUrlPageChange}
         onUrlSortChange={handleUrlSortChange}
         urlSortBy={urlSort.sortBy}
-        urlSortDirection={urlSort.sortDirection}
-        qrCodes={qrCodes}
+        urlSortDirection={urlSort.sortOrder}
+        qrCodes={qrCodes || []}
         isQrCodesLoading={isQrCodesLoading}
         onSearch={handleSearch}
         onCreateUrl={handleCreateUrl}

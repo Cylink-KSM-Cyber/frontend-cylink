@@ -103,8 +103,8 @@ export const useQrCodes = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const newQrCode: QrCode = {
-        id: `qr-new-${Date.now()}`,
-        urlId,
+        id: Date.now(),
+        urlId: parseInt(urlId) || 0,
         imageUrl: `https://placehold.co/200x200?text=New+QR+Code`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

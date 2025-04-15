@@ -69,7 +69,7 @@ interface UrlsTableProps {
 const UrlsTable: React.FC<UrlsTableProps> = ({
   urls,
   isLoading = false,
-  sortBy = "createdAt",
+  sortBy = "created_at",
   sortDirection = "desc",
   onSortChange,
   onCopy,
@@ -78,7 +78,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   onDelete,
   className = "",
 }) => {
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
 
   // Handle sort click
   const handleSortClick = (column: string) => {
@@ -196,23 +196,23 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSortClick("originalUrl")}
+                onClick={() => handleSortClick("original_url")}
               >
-                Original URL {getSortIndicator("originalUrl")}
+                Original URL {getSortIndicator("original_url")}
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSortClick("shortUrl")}
+                onClick={() => handleSortClick("short_url")}
               >
-                Short URL {getSortIndicator("shortUrl")}
+                Short URL {getSortIndicator("short_url")}
               </th>
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSortClick("createdAt")}
+                onClick={() => handleSortClick("created_at")}
               >
-                Created {getSortIndicator("createdAt")}
+                Created {getSortIndicator("created_at")}
               </th>
               <th
                 scope="col"
@@ -224,9 +224,9 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSortClick("status")}
+                onClick={() => handleSortClick("is_active")}
               >
-                Status {getSortIndicator("status")}
+                Status {getSortIndicator("is_active")}
               </th>
               <th
                 scope="col"
@@ -241,7 +241,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
               <tr key={url.id} className="hover:bg-[#F5F5F5] transition-colors">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-[#333333]">
-                    {truncateUrl(url.originalUrl)}
+                    {truncateUrl(url.original_url)}
                   </div>
                   {url.title && (
                     <div className="text-xs text-[#607D8B]">{url.title}</div>
@@ -250,18 +250,18 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <a
-                      href={`https://${url.shortUrl}`}
+                      href={`https://${url.short_url}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-black hover:text-[#607D8B] transition-colors flex items-center"
                     >
-                      {url.shortUrl} <RiExternalLinkLine className="ml-1" />
+                      {url.short_url} <RiExternalLinkLine className="ml-1" />
                     </a>
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-[#333333]">
-                    {formatDate(url.createdAt)}
+                    {formatDate(url.created_at)}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -290,7 +290,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <StatusBadge status={url.status} />
+                  <StatusBadge status={url.is_active ? "active" : "inactive"} />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-1">
