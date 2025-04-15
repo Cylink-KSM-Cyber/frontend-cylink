@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useToast } from "@/contexts/ToastContext";
 import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
+import QrCodeModal from "@/components/molecules/QrCodeModal";
 import "@/styles/dashboard.css";
 
 /**
@@ -39,6 +40,10 @@ export default function DashboardPage() {
   // Delete URL modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [urlToDelete, setUrlToDelete] = useState<Url | null>(null);
+
+  // QR Code modal state
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
@@ -78,7 +83,6 @@ export default function DashboardPage() {
     isLoading: isQrCodesLoading,
     error: qrCodesError,
     deleteQrCode,
-    generateQrCode,
   } = useQrCodes();
 
   // Handle search query changes
@@ -140,8 +144,17 @@ export default function DashboardPage() {
 
   // Handle QR code generation
   const handleGenerateQr = (url: Url) => {
-    // This would typically open a modal for QR code customization
-    generateQrCode(String(url.id));
+    setUrlForQrCode(url);
+    setQrModalOpen(true);
+  };
+
+  // Close QR code modal
+  const handleCloseQrModal = () => {
+    setQrModalOpen(false);
+    // Wait for modal close animation to finish
+    setTimeout(() => {
+      setUrlForQrCode(null);
+    }, 300);
   };
 
   // Handle QR code download
@@ -190,22 +203,22 @@ export default function DashboardPage() {
   if (qrCodesError) console.error("QR codes error:", qrCodesError);
   if (deleteError) console.error("Delete error:", deleteError);
 
+  // Default stats if none are available
+  const dashboardStats = stats || {
+    totalUrls: 0,
+    totalClicks: 0,
+    conversionRate: 0,
+    qrCodesGenerated: 0,
+    activeUrls: 0,
+    urlsCreatedToday: 0,
+    averageClicksPerUrl: 0,
+  };
+
   return (
-    <div className="py-6">
-      {/* Dashboard Template */}
+    <>
       <DashboardTemplate
         userName={user?.username || "User"}
-        stats={
-          stats || {
-            totalUrls: 0,
-            totalClicks: 0,
-            conversionRate: 0,
-            qrCodesGenerated: 0,
-            activeUrls: 0,
-            urlsCreatedToday: 0,
-            averageClicksPerUrl: 0,
-          }
-        }
+        stats={dashboardStats}
         urls={urls || []}
         isUrlsLoading={isUrlsLoading}
         isStatsLoading={isStatsLoading}
@@ -237,6 +250,13 @@ export default function DashboardPage() {
         onCancel={cancelDeleteUrl}
         isDeleting={isDeleting}
       />
-    </div>
+
+      {/* QR Code Modal */}
+      <QrCodeModal
+        url={urlForQrCode}
+        isOpen={qrModalOpen}
+        onClose={handleCloseQrModal}
+      />
+    </>
   );
 }
