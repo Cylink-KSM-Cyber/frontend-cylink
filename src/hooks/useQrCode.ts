@@ -125,13 +125,16 @@ export const useQrCode = () => {
       setError(null);
 
       try {
+        // Convert logo_size from decimal (0.25) to integer percentage (25)
+        const logoSizePercentage = Math.round(logoSize * 100);
+
         const requestData: QrCodeGenerateRequest = {
           url_id: url.id,
           short_code: url.short_code,
           color: selectedForegroundColor.hex,
           background_color: selectedBackgroundColor.hex,
           include_logo: includeLogoChecked,
-          logo_size: logoSize,
+          logo_size: logoSizePercentage, // Send as integer percentage
           size: qrSize,
         };
 
