@@ -4,7 +4,6 @@ import React, { useEffect } from "react";
 import { Url } from "@/interfaces/url";
 import Modal from "@/components/atoms/Modal";
 import Button from "@/components/atoms/Button";
-import ColorSelector from "@/components/atoms/ColorSelector";
 import QrCodePreview from "@/components/atoms/QrCodePreview";
 import { useQrCode } from "@/hooks/useQrCode";
 import { RiQrCodeLine, RiDownload2Line, RiShareLine } from "react-icons/ri";
@@ -166,12 +165,12 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
       isOpen={isOpen}
       onClose={onClose}
       variant="default"
-      size="md"
+      size="lg"
       footer={renderFooterButtons()}
     >
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* QR Code Preview */}
-        <div className="flex items-center justify-center md:w-1/2">
+        <div className="flex items-center justify-center lg:w-1/2">
           <QrCodePreview
             foregroundColor={selectedForegroundColor?.hex || "#000000"}
             backgroundColor={selectedBackgroundColor?.hex || "#FFFFFF"}
@@ -180,11 +179,12 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
             isLoading={isLoading || isGenerating}
             value={`https://${url.short_url}`}
             errorCorrectionLevel={errorCorrectionLevel as "L" | "M" | "Q" | "H"}
+            size={280}
           />
         </div>
 
         {/* Customization Options */}
-        <div className="md:w-1/2">
+        <div className="lg:w-1/2">
           {!generatedQrUrl ? (
             <div>
               <h3 className="text-lg font-medium text-gray-900 mb-3">
@@ -192,22 +192,54 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
               </h3>
 
               {/* Foreground Color Selection */}
-              <ColorSelector
-                label="Foreground Color"
-                colors={foregroundColors}
-                selectedColor={selectedForegroundColor}
-                onSelect={setSelectedForegroundColor}
-                disabled={isLoading || isGenerating}
-              />
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Foreground Color
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {foregroundColors.map((color) => (
+                    <button
+                      key={color.hex}
+                      type="button"
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        selectedForegroundColor?.hex === color.hex
+                          ? "border-blue-500 shadow-md scale-110"
+                          : "border-gray-200"
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                      onClick={() => setSelectedForegroundColor(color)}
+                      disabled={isLoading || isGenerating}
+                      title={color.name}
+                      aria-label={`Select ${color.name} color`}
+                    />
+                  ))}
+                </div>
+              </div>
 
               {/* Background Color Selection */}
-              <ColorSelector
-                label="Background Color"
-                colors={backgroundColors}
-                selectedColor={selectedBackgroundColor}
-                onSelect={setSelectedBackgroundColor}
-                disabled={isLoading || isGenerating}
-              />
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Background Color
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {backgroundColors.map((color) => (
+                    <button
+                      key={color.hex}
+                      type="button"
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        selectedBackgroundColor?.hex === color.hex
+                          ? "border-blue-500 shadow-md scale-110"
+                          : "border-gray-200"
+                      }`}
+                      style={{ backgroundColor: color.hex }}
+                      onClick={() => setSelectedBackgroundColor(color)}
+                      disabled={isLoading || isGenerating}
+                      title={color.name}
+                      aria-label={`Select ${color.name} color`}
+                    />
+                  ))}
+                </div>
+              </div>
 
               {/* Logo Inclusion Toggle */}
               <div className="mb-4">
