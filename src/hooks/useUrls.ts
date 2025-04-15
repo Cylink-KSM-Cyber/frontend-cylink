@@ -34,17 +34,35 @@ export const useUrls = (
   const fetchUrlData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    console.log("Fetching URLs with filter:", filter);
 
     try {
       const response = await fetchUrls(filter);
       console.log("URL API response:", response);
-      setUrls(response.data.urls);
-      setPagination(response.data.pagination);
+
+      if (response && response.data) {
+        console.log("URLs from API:", response.data);
+        console.log("URLs count:", response.data.length);
+
+        setUrls(response.data);
+
+        if (response.pagination) {
+          console.log("Pagination data:", response.pagination);
+          setPagination(response.pagination);
+        }
+
+        console.log("State updated with URLs, count:", response.data.length);
+      } else {
+        console.error("Unexpected API response structure:", response);
+        setError(new Error("Unexpected API response structure"));
+        setUrls([]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err : new Error("Failed to fetch URLs"));
       console.error("Failed to fetch URLs:", err);
     } finally {
       setIsLoading(false);
+      console.log("Loading state set to false");
     }
   }, [filter]);
 

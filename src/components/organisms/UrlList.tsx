@@ -29,6 +29,7 @@ const UrlList = () => {
     updateFilter({ page });
   };
 
+  // Show loading state only when initially loading data
   if (isLoading && urls.length === 0) {
     return (
       <div className="p-6 flex justify-center">
@@ -52,7 +53,9 @@ const UrlList = () => {
     );
   }
 
-  if (urls.length === 0) {
+  // Only show empty state when we're not loading and have no URLs
+  if (!isLoading && urls.length === 0) {
+    console.log("Rendering empty state - urls array is empty and not loading");
     return (
       <div className="p-6 bg-gray-50 rounded-lg text-center">
         <h3 className="font-semibold mb-2">No URLs Found</h3>

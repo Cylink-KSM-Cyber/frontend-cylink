@@ -157,8 +157,11 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
     );
   }
 
-  // If no URLs, show empty state
-  if (urls.length === 0) {
+  // If no URLs and not loading, show empty state
+  if (!isLoading && urls.length === 0) {
+    console.log(
+      "UrlsTable: Rendering empty state - urls array is empty and not loading"
+    );
     return (
       <div
         className={`bg-white rounded-lg shadow-sm p-8 text-center ${className}`}

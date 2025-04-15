@@ -156,13 +156,11 @@ export interface PaginatedResponse<T> {
 export interface UrlApiResponse {
   status: number;
   message: string;
-  data: {
-    urls: Url[];
-    pagination: {
-      total: number;
-      page: number;
-      limit: number;
-      total_pages: number;
-    };
+  data: Url[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
   };
 }
