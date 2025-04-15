@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import QRCode from "react-qr-code";
 import KsmLogo from "./KsmLogo";
 
 /**
@@ -32,6 +33,14 @@ interface QrCodePreviewProps {
    * Whether the component is in loading state
    */
   isLoading?: boolean;
+  /**
+   * Value to encode in the QR code (for preview)
+   */
+  value?: string;
+  /**
+   * Error correction level (L: 7%, M: 15%, Q: 25%, H: 30%)
+   */
+  errorCorrectionLevel?: "L" | "M" | "Q" | "H";
 }
 
 /**
@@ -45,6 +54,8 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
   size = 300,
   generatedQrUrl = null,
   isLoading = false,
+  value = "https://example.com",
+  errorCorrectionLevel = "H",
 }) => {
   // If we have a generated QR URL, display it instead of the preview
   if (generatedQrUrl) {
@@ -76,94 +87,38 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
     );
   }
 
-  // Show preview with placeholder QR pattern and colored logo
+  // Calculate logo size relative to QR code size
+  const logoSize = Math.round(size * 0.25);
+  const logoPadding = Math.round(size * 0.05);
+
+  // Show QR code with react-qr-code
   return (
     <div
       className="relative flex items-center justify-center rounded-lg overflow-hidden"
-      style={{ backgroundColor, width: size, height: size }}
+      style={{ width: size, height: size, backgroundColor }}
     >
-      {/* Placeholder QR code pattern */}
-      <div className="grid grid-cols-7 gap-2 p-6 w-full h-full">
-        {/* Top-left position detection pattern */}
-        <div
-          className="col-span-2 row-span-2 rounded-lg"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-
-        {/* Top-right position detection pattern */}
-        <div
-          className="col-start-6 col-span-2 row-span-2 rounded-lg"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-
-        {/* Bottom-left position detection pattern */}
-        <div
-          className="col-span-2 row-start-6 row-span-2 rounded-lg"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-
-        {/* Random QR code-like pattern */}
-        <div
-          className="col-start-3 row-start-1 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-4 row-start-2 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-2 row-start-3 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-5 row-start-3 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-1 row-start-4 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-3 row-start-4 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-6 row-start-4 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-2 row-start-5 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-4 row-start-5 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-7 row-start-5 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-3 row-start-6 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-        <div
-          className="col-start-5 row-start-7 rounded"
-          style={{ backgroundColor: foregroundColor }}
-        ></div>
-      </div>
+      {/* The QR Code */}
+      <QRCode
+        value={value}
+        size={size - 20} // Slight padding
+        fgColor={foregroundColor}
+        bgColor={backgroundColor}
+        level={errorCorrectionLevel}
+        style={{ maxWidth: "100%", maxHeight: "100%" }}
+      />
 
       {/* Logo overlay */}
       {includeLogoChecked && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="p-4 rounded-full" style={{ backgroundColor }}>
-            <KsmLogo
-              color={foregroundColor}
-              width={60}
-              height={60}
-              className="transform scale-90"
-            />
-          </div>
+        <div
+          className="absolute flex items-center justify-center rounded-full"
+          style={{
+            width: logoSize + logoPadding * 2,
+            height: logoSize + logoPadding * 2,
+            backgroundColor,
+            boxShadow: "0 0 8px rgba(0, 0, 0, 0.1)",
+          }}
+        >
+          <KsmLogo color={foregroundColor} width={logoSize} height={logoSize} />
         </div>
       )}
     </div>

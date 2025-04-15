@@ -23,6 +23,16 @@ interface QrCodeModalProps {
 }
 
 /**
+ * Error correction level options
+ */
+const ERROR_CORRECTION_OPTIONS = [
+  { value: "L", label: "Low (7%)", description: "Best for clean environments" },
+  { value: "M", label: "Medium (15%)", description: "Balanced recovery" },
+  { value: "Q", label: "Quartile (25%)", description: "Better recovery" },
+  { value: "H", label: "High (30%)", description: "Best with logo overlay" },
+];
+
+/**
  * QrCodeModal Component
  * @description Modal for QR code generation with customization options
  */
@@ -33,6 +43,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
     selectedForegroundColor,
     selectedBackgroundColor,
     includeLogoChecked,
+    errorCorrectionLevel,
     qrSize,
     isLoading,
     isGenerating,
@@ -41,6 +52,7 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
     setSelectedForegroundColor,
     setSelectedBackgroundColor,
     setIncludeLogoChecked,
+    setErrorCorrectionLevel,
     loadColors,
     generateQrCodeForUrl,
     resetQrCode,
@@ -166,6 +178,8 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
             includeLogoChecked={includeLogoChecked}
             generatedQrUrl={generatedQrUrl}
             isLoading={isLoading || isGenerating}
+            value={`https://${url.short_url}`}
+            errorCorrectionLevel={errorCorrectionLevel as "L" | "M" | "Q" | "H"}
           />
         </div>
 
@@ -209,6 +223,33 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
                     Include KSM Logo
                   </span>
                 </label>
+              </div>
+
+              {/* Error Correction Level */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Error Correction Level
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {ERROR_CORRECTION_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setErrorCorrectionLevel(option.value)}
+                      disabled={isLoading || isGenerating}
+                      className={`p-2 text-left text-sm rounded border ${
+                        errorCorrectionLevel === option.value
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="font-medium">{option.label}</div>
+                      <div className="text-xs text-gray-500">
+                        {option.description}
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* URL Info */}
