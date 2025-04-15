@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Url } from "../../interfaces/url";
-import StatusBadge from "../atoms/StatusBadge";
-import ButtonIcon from "../atoms/ButtonIcon";
-import Button from "../atoms/Button";
+import { Url } from "@/interfaces/url";
+import StatusBadge from "@/components/atoms/StatusBadge";
+import ButtonIcon from "@/components/atoms/ButtonIcon";
+import Button from "@/components/atoms/Button";
 
 // Icon imports
 import {
