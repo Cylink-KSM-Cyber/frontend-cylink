@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { Url } from "@/interfaces/url";
 import Modal from "@/components/atoms/Modal";
 import Button from "@/components/atoms/Button";
 import QrCodePreview from "@/components/atoms/QrCodePreview";
 import { useQrCode } from "@/hooks/useQrCode";
 import { RiQrCodeLine, RiDownload2Line, RiShareLine } from "react-icons/ri";
+import { useRouter } from "next/navigation";
 
 /**
  * QrCodeModal props
@@ -36,6 +37,9 @@ const ERROR_CORRECTION_OPTIONS = [
  * @description Modal for QR code generation with customization options
  */
 const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
+  const router = useRouter();
+  const qrGeneratedRef = useRef(false);
+
   const {
     foregroundColors,
     backgroundColors,
@@ -62,8 +66,20 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
     if (isOpen) {
       loadColors();
       resetQrCode();
+      qrGeneratedRef.current = false;
     }
   }, [isOpen, loadColors, resetQrCode]);
+
+  // Effect to refresh page after QR generation
+  useEffect(() => {
+    if (generatedQrUrl && !qrGeneratedRef.current) {
+      qrGeneratedRef.current = true;
+      // Refresh page after toast is shown (1.3 seconds)
+      setTimeout(() => {
+        router.refresh();
+      }, 1300);
+    }
+  }, [generatedQrUrl, router]);
 
   // Handle Generate QR Code button click
   const handleGenerateClick = async () => {

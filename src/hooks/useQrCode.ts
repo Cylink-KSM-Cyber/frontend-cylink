@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { QrCodeColor, QrCodeGenerateRequest } from "@/interfaces/qrcode";
 import { fetchQrCodeColors, generateQrCode } from "@/services/qrcode";
 import { Url } from "@/interfaces/url";
+import { useToast } from "@/contexts/ToastContext";
 
 /**
  * Default QR code foreground and background colors
@@ -37,6 +38,9 @@ export const useQrCode = () => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [generatedQrUrl, setGeneratedQrUrl] = useState<string | null>(null);
+
+  // Toast context
+  const { showToast } = useToast();
 
   /**
    * Set default colors when no API colors are available
@@ -110,6 +114,7 @@ export const useQrCode = () => {
   /**
    * Generate QR code for URL
    * @param url - URL to generate QR code for
+   * @returns URL of generated QR code image or null if generation failed
    */
   const generateQrCodeForUrl = useCallback(
     async (url: Url) => {
@@ -118,7 +123,7 @@ export const useQrCode = () => {
 
       if (!selectedForegroundColor || !selectedBackgroundColor) {
         setError(new Error("Please select colors for your QR code"));
-        return;
+        return null;
       }
 
       setIsGenerating(true);
@@ -140,11 +145,20 @@ export const useQrCode = () => {
 
         const response = await generateQrCode(requestData);
         setGeneratedQrUrl(response.data.image_url);
+
+        // Display success toast with white background
+        showToast("QR Code berhasil dibuat", "white", 4000);
+
         return response.data.image_url;
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to generate QR code")
-        );
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to generate QR code";
+
+        setError(err instanceof Error ? err : new Error(errorMessage));
+
+        // Display error toast
+        showToast(errorMessage, "error", 4000);
+
         console.error("Error generating QR code:", err);
         return null;
       } finally {
@@ -158,6 +172,7 @@ export const useQrCode = () => {
       logoSize,
       qrSize,
       setDefaultColorsIfNeeded,
+      showToast,
     ]
   );
 
