@@ -29,6 +29,8 @@ interface ToastProps {
   onClose: () => void;
   /** Auto-close duration in milliseconds */
   duration?: number;
+  /** Whether to use white toast style */
+  isWhite?: boolean;
   /** Custom class name */
   className?: string;
 }
@@ -45,6 +47,7 @@ const Toast: React.FC<ToastProps> = ({
   isVisible,
   onClose,
   duration = 3000,
+  isWhite = false,
   className = "",
 }) => {
   // Auto-close toast after duration
@@ -60,28 +63,46 @@ const Toast: React.FC<ToastProps> = ({
   // Toast style configurations based on type
   const toastStyles = {
     success: {
-      bg: "bg-green-100",
-      border: "border-green-300",
-      text: "text-green-800",
-      icon: <FiCheckCircle className="w-5 h-5 text-green-500" />,
+      bg: isWhite ? "bg-white" : "bg-green-100",
+      border: isWhite ? "border-gray-200" : "border-green-300",
+      text: isWhite ? "text-green-600" : "text-green-800",
+      icon: (
+        <FiCheckCircle
+          className={`w-5 h-5 ${isWhite ? "text-green-500" : "text-green-500"}`}
+        />
+      ),
     },
     error: {
-      bg: "bg-red-100",
-      border: "border-red-300",
-      text: "text-red-800",
-      icon: <FiXCircle className="w-5 h-5 text-red-500" />,
+      bg: isWhite ? "bg-white" : "bg-red-100",
+      border: isWhite ? "border-gray-200" : "border-red-300",
+      text: isWhite ? "text-red-600" : "text-red-800",
+      icon: (
+        <FiXCircle
+          className={`w-5 h-5 ${isWhite ? "text-red-500" : "text-red-500"}`}
+        />
+      ),
     },
     warning: {
-      bg: "bg-yellow-100",
-      border: "border-yellow-300",
-      text: "text-yellow-800",
-      icon: <FiAlertCircle className="w-5 h-5 text-yellow-500" />,
+      bg: isWhite ? "bg-white" : "bg-yellow-100",
+      border: isWhite ? "border-gray-200" : "border-yellow-300",
+      text: isWhite ? "text-yellow-600" : "text-yellow-800",
+      icon: (
+        <FiAlertCircle
+          className={`w-5 h-5 ${
+            isWhite ? "text-yellow-500" : "text-yellow-500"
+          }`}
+        />
+      ),
     },
     info: {
-      bg: "bg-blue-100",
-      border: "border-blue-300",
-      text: "text-blue-800",
-      icon: <FiInfo className="w-5 h-5 text-blue-500" />,
+      bg: isWhite ? "bg-white" : "bg-blue-100",
+      border: isWhite ? "border-gray-200" : "border-blue-300",
+      text: isWhite ? "text-blue-600" : "text-blue-800",
+      icon: (
+        <FiInfo
+          className={`w-5 h-5 ${isWhite ? "text-blue-500" : "text-blue-500"}`}
+        />
+      ),
     },
   };
 
@@ -98,7 +119,7 @@ const Toast: React.FC<ToastProps> = ({
           className={`w-full max-w-md shadow-lg ${className}`}
         >
           <div
-            className={`flex items-center gap-2 p-4 rounded-lg shadow-md border-2 ${bg} ${border}`}
+            className={`flex items-center gap-2 p-4 rounded-lg shadow-md border ${bg} ${border}`}
           >
             <div className="mr-3 text-xl">{icon}</div>
             <div className={`flex-1 ${text} font-medium`}>{message}</div>

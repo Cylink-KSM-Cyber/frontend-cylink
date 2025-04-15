@@ -1,10 +1,24 @@
-import { get } from "./api";
+import { get, del } from "./api";
 import { UrlApiResponse, UrlFilter } from "@/interfaces/url";
 
 /**
  * URL Service
  * @description Service for interacting with URL-related API endpoints
  */
+
+/**
+ * Delete URL response interface
+ * @interface DeleteUrlResponse
+ */
+export interface DeleteUrlResponse {
+  status: number;
+  message: string;
+  data: {
+    id: number;
+    short_code: string;
+    deleted_at: string;
+  };
+}
 
 /**
  * Builds query parameters for URL API calls
@@ -59,4 +73,15 @@ export const fetchUrls = async (
   console.log("Full endpoint:", endpoint);
 
   return get<UrlApiResponse>(endpoint);
+};
+
+/**
+ * Delete URL by ID
+ * @param id - ID of the URL to delete
+ * @returns Promise with the API response
+ */
+export const deleteUrlById = async (id: number): Promise<DeleteUrlResponse> => {
+  console.log(`Deleting URL with ID: ${id}`);
+  const endpoint = `/api/v1/urls/${id}`;
+  return del<DeleteUrlResponse>(endpoint);
 };

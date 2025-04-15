@@ -66,6 +66,7 @@ export const useUrls = (
     }
   }, [filter]);
 
+  // Fetch URLs when filter changes
   useEffect(() => {
     fetchUrlData();
   }, [fetchUrlData]);
@@ -77,16 +78,16 @@ export const useUrls = (
   const updateFilter = (newFilter: Partial<UrlFilter>) => {
     console.log("Updating filter with:", newFilter);
 
-    // Membuat salinan objek newFilter untuk modifikasi
+    // Create a copy of newFilter for modification
     const updatedNewFilter = { ...newFilter };
 
-    // Memeriksa apakah ada nilai di properti sortBy yang tidak valid
+    // Check if sortBy contains an invalid value
     if (
       "sortBy" in updatedNewFilter &&
       updatedNewFilter.sortBy &&
       !["created_at", "clicks", "title"].includes(updatedNewFilter.sortBy)
     ) {
-      // Reset ke nilai default jika tidak valid
+      // Reset to default value if invalid
       updatedNewFilter.sortBy = "created_at";
       console.log("Invalid sortBy value detected, reset to created_at");
     }
@@ -104,48 +105,12 @@ export const useUrls = (
   };
 
   /**
-   * Delete a URL
-   * @param id - ID of URL to delete
+   * Manually refresh URL data
    */
-  const deleteUrl = async (id: number) => {
-    try {
-      // This will be replaced with actual API call
-      // For now, just simulate deletion
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setUrls((prevUrls) => prevUrls.filter((url) => url.id !== id));
-      setPagination((prev) => ({
-        ...prev,
-        total: prev.total - 1,
-        total_pages: Math.ceil((prev.total - 1) / filter.limit),
-      }));
-      return true;
-    } catch (err) {
-      console.error(`Failed to delete URL ${id}:`, err);
-      return false;
-    }
-  };
-
-  /**
-   * Update URL active status
-   * @param id - ID of URL to update
-   * @param isActive - New active status
-   */
-  const updateUrlStatus = async (id: number, isActive: boolean) => {
-    try {
-      // This will be replaced with actual API call
-      // For now, just simulate updating
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setUrls((prevUrls) =>
-        prevUrls.map((url) =>
-          url.id === id ? { ...url, is_active: isActive } : url
-        )
-      );
-      return true;
-    } catch (err) {
-      console.error(`Failed to update URL ${id} status:`, err);
-      return false;
-    }
-  };
+  const refreshUrls = useCallback(() => {
+    console.log("Manually refreshing URLs");
+    return fetchUrlData();
+  }, [fetchUrlData]);
 
   return {
     urls,
@@ -154,8 +119,8 @@ export const useUrls = (
     pagination,
     filter,
     updateFilter,
-    refreshUrls: fetchUrlData,
-    deleteUrl,
-    updateUrlStatus,
+    refreshUrls,
   };
 };
+
+export default useUrls;

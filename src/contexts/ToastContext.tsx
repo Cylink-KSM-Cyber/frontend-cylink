@@ -11,12 +11,17 @@ import React, {
 import Toast, { ToastType } from "@/components/atoms/Toast";
 
 /**
+ * Extended Toast type to include "white" variant
+ */
+export type ExtendedToastType = ToastType | "white";
+
+/**
  * Toast data interface
  * @interface ToastData
  */
 interface ToastData {
   message: string;
-  type: ToastType;
+  type: ExtendedToastType;
   id: string;
   duration: number;
 }
@@ -26,7 +31,11 @@ interface ToastData {
  * @interface ToastContextType
  */
 interface ToastContextType {
-  showToast: (message: string, type: ToastType, duration?: number) => string;
+  showToast: (
+    message: string,
+    type: ExtendedToastType,
+    duration?: number
+  ) => string;
   hideToast: (id: string) => void;
   clearAllToasts: () => void;
 }
@@ -70,7 +79,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
    * @returns The ID of the created toast
    */
   const showToast = useCallback(
-    (message: string, type: ToastType, duration = 4000): string => {
+    (message: string, type: ExtendedToastType, duration = 4000): string => {
       const id = `toast-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
       console.log(`Creating toast: ${id}, message: ${message}, type: ${type}`);
 
@@ -111,10 +120,11 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
           <div key={toast.id} className="pointer-events-auto">
             <Toast
               message={toast.message}
-              type={toast.type}
+              type={toast.type as ToastType}
               isVisible={true}
               onClose={() => hideToast(toast.id)}
               duration={toast.duration}
+              isWhite={toast.type === "white"}
             />
           </div>
         ))}

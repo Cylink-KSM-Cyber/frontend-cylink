@@ -6,9 +6,12 @@ import DashboardTemplate from "@/components/templates/DashboardTemplate";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useUrls } from "@/hooks/useUrls";
 import { useQrCodes } from "@/hooks/useQrCodes";
+import { useDeleteUrl } from "@/hooks/useDeleteUrl";
 import { Url, QrCode } from "@/interfaces/url";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
+import { useToast } from "@/contexts/ToastContext";
+import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
 import "@/styles/dashboard.css";
 
 /**
@@ -23,12 +26,19 @@ export default function DashboardPage() {
   // Get sidebar context to sync with tab changes
   const { setActiveItemId } = useSidebar();
 
+  // Get toast context for notifications
+  const { showToast } = useToast();
+
   // Get tab from URL query params
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
 
   // Initialize search state
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Delete URL modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [urlToDelete, setUrlToDelete] = useState<Url | null>(null);
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
@@ -50,7 +60,7 @@ export default function DashboardPage() {
     error: urlsError,
     pagination,
     updateFilter,
-    deleteUrl,
+    refreshUrls,
   } = useUrls({
     page: 1,
     limit: 10,
@@ -58,6 +68,9 @@ export default function DashboardPage() {
     sortBy: urlSort.sortBy,
     sortOrder: urlSort.sortOrder,
   });
+
+  // URL deletion hook
+  const { deleteUrl, isDeleting, error: deleteError } = useDeleteUrl();
 
   // Fetch QR code data
   const {
@@ -88,6 +101,7 @@ export default function DashboardPage() {
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
     navigator.clipboard.writeText(`https://${url.short_url}`);
+    showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
 
   // Handle URL edit
@@ -96,10 +110,32 @@ export default function DashboardPage() {
     console.log("Edit URL:", url.id);
   };
 
-  // Handle URL delete
+  // Open delete confirmation modal
   const handleDeleteUrl = (url: Url) => {
-    // In a real app, this would show a confirmation dialog
-    deleteUrl(url.id);
+    setUrlToDelete(url);
+    setDeleteModalOpen(true);
+  };
+
+  // Confirm URL deletion
+  const confirmDeleteUrl = async (url: Url) => {
+    const success = await deleteUrl(url.id);
+
+    if (success) {
+      // Close modal
+      setDeleteModalOpen(false);
+      setUrlToDelete(null);
+
+      // Wait 1.3 seconds as requested before refreshing
+      setTimeout(() => {
+        refreshUrls();
+      }, 1300);
+    }
+  };
+
+  // Cancel URL deletion
+  const cancelDeleteUrl = () => {
+    setDeleteModalOpen(false);
+    setUrlToDelete(null);
   };
 
   // Handle QR code generation
@@ -152,6 +188,7 @@ export default function DashboardPage() {
   if (statsError) console.error("Stats error:", statsError);
   if (urlsError) console.error("URLs error:", urlsError);
   if (qrCodesError) console.error("QR codes error:", qrCodesError);
+  if (deleteError) console.error("Delete error:", deleteError);
 
   return (
     <div className="py-6">
@@ -190,6 +227,15 @@ export default function DashboardPage() {
         onEditQr={handleEditQr}
         onDeleteQr={handleDeleteQr}
         onQrPreview={handleQrPreview}
+      />
+
+      {/* Delete URL Modal */}
+      <DeleteUrlModal
+        url={urlToDelete}
+        isOpen={deleteModalOpen}
+        onConfirm={confirmDeleteUrl}
+        onCancel={cancelDeleteUrl}
+        isDeleting={isDeleting}
       />
     </div>
   );
