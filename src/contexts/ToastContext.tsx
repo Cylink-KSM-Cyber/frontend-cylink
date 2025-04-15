@@ -56,6 +56,17 @@ interface ToastProviderProps {
 }
 
 /**
+ * Convert extended toast type to standard toast type
+ * @param type - Extended toast type
+ * @returns Standard toast type
+ */
+const getBaseToastType = (type: ExtendedToastType): ToastType => {
+  // If "white", use "success" as the base type
+  // This can be changed to any of the base types as needed
+  return type === "white" ? "success" : type;
+};
+
+/**
  * Toast provider component
  * @description Provider for toast notifications
  * @param props - Provider properties
@@ -120,7 +131,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
           <div key={toast.id} className="pointer-events-auto">
             <Toast
               message={toast.message}
-              type={toast.type as ToastType}
+              type={getBaseToastType(toast.type)}
               isVisible={true}
               onClose={() => hideToast(toast.id)}
               duration={toast.duration}
