@@ -187,7 +187,8 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
           {/* QR Code Info */}
           <div className="p-4">
             <h3 className="text-base font-medium text-[#333333] mb-1">
-              {qrCode.title || `QR Code ${qrCode.id.substring(0, 6)}`}
+              {qrCode.title ||
+                `QR Code ${qrCode.id.toString().substring(0, 6)}`}
             </h3>
             <p className="text-xs text-[#607D8B] mb-2">
               Created: {formatDate(qrCode.createdAt)}
