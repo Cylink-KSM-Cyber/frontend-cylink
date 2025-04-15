@@ -149,7 +149,8 @@ const Modal: React.FC<ModalProps> = ({
   const getOverlayClasses = () => {
     switch (overlayStyle) {
       case "glassmorphism":
-        return "fixed inset-0 backdrop-blur-[6px] bg-gradient-to-br from-black/30 via-black/20 to-black/30 [@supports_not_(backdrop-filter:blur(0))]:bg-black/50";
+        // Lighter implementation with reduced blur
+        return "fixed inset-0 backdrop-blur-[2px] bg-black/25 [@supports_not_(backdrop-filter:blur(0))]:bg-black/50";
       default:
         return "fixed inset-0 bg-black bg-opacity-40";
     }
@@ -164,15 +165,11 @@ const Modal: React.FC<ModalProps> = ({
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <motion.div
             ref={overlayRef}
-            className={`${overlayClasses} transition-all`}
-            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-            animate={{
-              opacity: 1,
-              backdropFilter:
-                overlayStyle === "glassmorphism" ? "blur(6px)" : "blur(0px)",
-            }}
-            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-            transition={{ duration: 0.3 }}
+            className={`${overlayClasses} transition-opacity`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             onClick={handleOverlayClick}
           >
             <div className="flex min-h-full items-center justify-center p-4">
@@ -180,13 +177,16 @@ const Modal: React.FC<ModalProps> = ({
                 ref={modalRef}
                 className={`${getSizeClasses()} w-full rounded-lg bg-white ${
                   overlayStyle === "glassmorphism"
-                    ? "shadow-2xl shadow-black/20 ring-1 ring-black/5"
+                    ? "shadow-xl shadow-black/10 ring-1 ring-black/5"
                     : "shadow-xl"
                 } ${className}`}
-                initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                initial={{ opacity: 0, scale: 0.98, y: -5 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                transition={{ duration: 0.25 }}
+                exit={{ opacity: 0, scale: 0.96, y: 5 }}
+                transition={{
+                  duration: 0.15,
+                  ease: [0.2, 0.9, 0.4, 1],
+                }}
               >
                 {/* Header */}
                 <div
