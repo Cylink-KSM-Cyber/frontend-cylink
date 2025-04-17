@@ -148,7 +148,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   const { activeItemId } = useSidebar();
 
   // State for active tab
-  const [activeTab, setActiveTab] = useState(tabParam || "urls");
+  const [activeTab, setActiveTab] = useState(tabParam ?? "urls");
 
   // Tab definitions
   const tabs = [
