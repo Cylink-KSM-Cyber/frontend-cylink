@@ -218,13 +218,13 @@ export default function DashboardPage() {
   return (
     <>
       <DashboardTemplate
-        userName={user?.username || "User"}
+        userName={user?.username ?? "User"}
         stats={dashboardStats}
-        urls={urls || []}
+        urls={urls ?? []}
         isUrlsLoading={isUrlsLoading}
         isStatsLoading={isStatsLoading}
-        currentUrlPage={pagination?.page || 1}
-        totalUrlPages={pagination?.total_pages || 1}
+        currentUrlPage={pagination?.page ?? 1}
+        totalUrlPages={pagination?.total_pages ?? 1}
         onUrlPageChange={handleUrlPageChange}
         onUrlSortChange={handleUrlSortChange}
         urlSortBy={urlSort.sortBy}
