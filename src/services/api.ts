@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
  * @description Axios instance with base configuration for API calls
  */
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL ?? "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -31,7 +31,7 @@ export const getToken = (): string | null => {
     const token = Cookies.get("accessToken");
     console.log(token);
 
-    return token === undefined ? null : token;
+    return token ?? null;
   } catch (error) {
     console.error("Error retrieving token from Cookies:", error);
     return null;
@@ -60,7 +60,9 @@ api.interceptors.request.use(
   },
   (error) => {
     console.error("Request interceptor rejection:", error);
-    return Promise.reject(error);
+    return Promise.reject(
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
 );
 
