@@ -31,11 +31,7 @@ export const useTotalUrls = () => {
       const response = await get<UrlTotalCountResponse>(endpoint);
       console.log("Total URLs API response:", response);
 
-      if (
-        response &&
-        response.pagination &&
-        typeof response.pagination.total === "number"
-      ) {
+      if (typeof response?.pagination?.total === "number") {
         console.log("Setting total URLs to:", response.pagination.total);
         setTotalUrls(response.pagination.total);
       } else {
