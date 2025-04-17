@@ -102,7 +102,7 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className={`flex justify-center mt-8 ${className || ""}`}>
+    <div className={`flex justify-center mt-8 ${className ?? ""}`}>
       <nav className="flex items-center space-x-1">
         <button
           onClick={() => onPageChange(currentPage - 1)}
