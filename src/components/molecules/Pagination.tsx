@@ -32,48 +32,69 @@ const Pagination = ({
   onPageChange,
   className,
 }: PaginationProps) => {
+  // Generate simple page range for small pagination
+  const getSimpleRange = (total: number) => {
+    const pageNumbers = [];
+    for (let i = 1; i <= total; i++) {
+      pageNumbers.push(i);
+    }
+    return pageNumbers;
+  };
+
+  // Add start pages with ellipsis if needed
+  const addStartPages = (
+    startPage: number,
+    pageNumbers: (number | string)[]
+  ) => {
+    if (startPage > 1) {
+      pageNumbers.push(1);
+      if (startPage > 2) {
+        pageNumbers.push("ellipsis-start");
+      }
+    }
+  };
+
+  // Add end pages with ellipsis if needed
+  const addEndPages = (endPage: number, pageNumbers: (number | string)[]) => {
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        pageNumbers.push("ellipsis-end");
+      }
+      pageNumbers.push(totalPages);
+    }
+  };
+
   // Generate array of page numbers to display
   const getPageNumbers = () => {
-    const pageNumbers = [];
     const maxPagesToShow = 5;
 
     if (totalPages <= maxPagesToShow) {
       // Show all pages if there are 5 or fewer
-      for (let i = 1; i <= totalPages; i++) {
-        pageNumbers.push(i);
-      }
-    } else {
-      // Calculate range of pages to show
-      let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-      let endPage = startPage + maxPagesToShow - 1;
-
-      // Adjust if we're near the end
-      if (endPage > totalPages) {
-        endPage = totalPages;
-        startPage = Math.max(1, endPage - maxPagesToShow + 1);
-      }
-
-      // Add first page and ellipsis if needed
-      if (startPage > 1) {
-        pageNumbers.push(1);
-        if (startPage > 2) {
-          pageNumbers.push("ellipsis-start");
-        }
-      }
-
-      // Add page numbers
-      for (let i = startPage; i <= endPage; i++) {
-        pageNumbers.push(i);
-      }
-
-      // Add last page and ellipsis if needed
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          pageNumbers.push("ellipsis-end");
-        }
-        pageNumbers.push(totalPages);
-      }
+      return getSimpleRange(totalPages);
     }
+
+    const pageNumbers: (number | string)[] = [];
+
+    // Calculate range of pages to show
+    let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+    let endPage = startPage + maxPagesToShow - 1;
+
+    // Adjust if we're near the end
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxPagesToShow + 1);
+    }
+
+    // Add start section
+    addStartPages(startPage, pageNumbers);
+
+    // Add middle pages
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    // Add end section
+    addEndPages(endPage, pageNumbers);
 
     return pageNumbers;
   };
@@ -95,8 +116,10 @@ const Pagination = ({
           Previous
         </button>
 
-        {getPageNumbers().map((page, index) => (
-          <React.Fragment key={`page-${index}`}>
+        {getPageNumbers().map((page) => (
+          <React.Fragment
+            key={typeof page === "number" ? `page-${page}` : page}
+          >
             {page === "ellipsis-start" || page === "ellipsis-end" ? (
               <span className="px-3 py-1">...</span>
             ) : (
