@@ -71,6 +71,7 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
         value={stats.totalUrls}
         description="All time"
         icon={<RiLink className="h-6 w-6" />}
+        type="total-urls"
       />
 
       <StatCard
@@ -79,6 +80,7 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
         description={`Avg. ${stats.averageClicksPerUrl} per URL`}
         trend={10.8} // This would come from the API in a real implementation
         icon={<RiLineChartLine className="h-6 w-6" />}
+        type="total-clicks"
       />
 
       <StatCard
@@ -86,6 +88,7 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
         value={stats.qrCodesGenerated}
         description="Generated"
         icon={<RiQrCodeLine className="h-6 w-6" />}
+        type="qr-codes"
       />
 
       <StatCard
@@ -94,6 +97,7 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
         description="Clicks to conversions"
         trend={2.5} // This would come from the API in a real implementation
         icon={<RiPercentLine className="h-6 w-6" />}
+        type="conversion"
       />
     </div>
   );

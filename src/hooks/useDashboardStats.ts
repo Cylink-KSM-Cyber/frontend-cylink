@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DashboardStats } from "@/interfaces/url";
+import { useTotalUrls } from "@/hooks/useTotalUrls";
 
 /**
  * Custom hook for fetching and managing dashboard statistics
@@ -10,6 +11,18 @@ export const useDashboardStats = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
+  // Use the totalUrls hook to get real total URLs count from API
+  const {
+    totalUrls,
+    isLoading: isTotalUrlsLoading,
+    error: totalUrlsError,
+  } = useTotalUrls();
+
+  // Log the value of totalUrls for debugging
+  useEffect(() => {
+    console.log("Current totalUrls value in useDashboardStats:", totalUrls);
+  }, [totalUrls]);
+
   useEffect(() => {
     const fetchStats = async () => {
       setIsLoading(true);
@@ -18,8 +31,10 @@ export const useDashboardStats = () => {
       try {
         // This will be replaced with actual API call when integrated
         // For now, return mock data that matches the interface
+        console.log("Creating mockStats with totalUrls:", totalUrls);
         const mockStats: DashboardStats = {
-          totalUrls: 47,
+          // Use the real totalUrls from API
+          totalUrls: totalUrls,
           totalClicks: 1243,
           conversionRate: 3.2,
           qrCodesGenerated: 28,
@@ -27,23 +42,27 @@ export const useDashboardStats = () => {
           urlsCreatedToday: 3,
           averageClicksPerUrl: 26.4,
           mostClickedUrl: {
-            id: "1",
-            originalUrl:
+            id: 1,
+            original_url:
               "https://example.com/very/long/url/that/needs/shortening",
-            shortUrl: "cylink.co/abc123",
-            createdAt: new Date(
+            short_code: "abc123",
+            short_url: "cylink.co/abc123",
+            created_at: new Date(
               Date.now() - 1000 * 60 * 60 * 24 * 7
             ).toISOString(),
-            updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+            updated_at: new Date(
+              Date.now() - 1000 * 60 * 60 * 12
+            ).toISOString(),
             clicks: 156,
-            status: "active",
-            userId: "user1",
+            is_active: true,
+            user_id: 1,
             clickTrend: 12.5,
           },
         };
 
         // Simulate API delay
         await new Promise((resolve) => setTimeout(resolve, 800));
+        console.log("Setting stats with totalUrls:", mockStats.totalUrls);
         setStats(mockStats);
       } catch (err) {
         setError(
@@ -57,8 +76,12 @@ export const useDashboardStats = () => {
       }
     };
 
-    fetchStats();
-  }, []);
+    // Only fetch stats when totalUrls is loaded
+    if (!isTotalUrlsLoading) {
+      console.log("totalUrls loaded, fetching stats with value:", totalUrls);
+      fetchStats();
+    }
+  }, [totalUrls, isTotalUrlsLoading]);
 
   /**
    * Refresh dashboard statistics
@@ -71,7 +94,8 @@ export const useDashboardStats = () => {
     try {
       // This will be replaced with actual API call
       const mockStats: DashboardStats = {
-        totalUrls: 47,
+        // Use the real totalUrls from API
+        totalUrls: totalUrls,
         totalClicks: 1243,
         conversionRate: 3.2,
         qrCodesGenerated: 28,
@@ -79,17 +103,18 @@ export const useDashboardStats = () => {
         urlsCreatedToday: 3,
         averageClicksPerUrl: 26.4,
         mostClickedUrl: {
-          id: "1",
-          originalUrl:
+          id: 1,
+          original_url:
             "https://example.com/very/long/url/that/needs/shortening",
-          shortUrl: "cylink.co/abc123",
-          createdAt: new Date(
+          short_code: "abc123",
+          short_url: "cylink.co/abc123",
+          created_at: new Date(
             Date.now() - 1000 * 60 * 60 * 24 * 7
           ).toISOString(),
-          updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
+          updated_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
           clicks: 156,
-          status: "active",
-          userId: "user1",
+          is_active: true,
+          user_id: 1,
           clickTrend: 12.5,
         },
       };
@@ -108,5 +133,16 @@ export const useDashboardStats = () => {
     }
   };
 
-  return { stats, isLoading, error, refreshStats };
+  // Combine errors from both hooks
+  const combinedError = error || totalUrlsError;
+
+  // Loading is true if either hook is loading
+  const combinedIsLoading = isLoading || isTotalUrlsLoading;
+
+  return {
+    stats,
+    isLoading: combinedIsLoading,
+    error: combinedError,
+    refreshStats,
+  };
 };

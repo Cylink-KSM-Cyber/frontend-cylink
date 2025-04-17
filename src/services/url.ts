@@ -1,5 +1,5 @@
 import { get, del } from "./api";
-import { UrlApiResponse, UrlFilter } from "@/interfaces/url";
+import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
 
 /**
  * URL Service
@@ -19,6 +19,31 @@ export interface DeleteUrlResponse {
     deleted_at: string;
   };
 }
+
+/**
+ * Ensures short URLs have the correct format with a slash between host and code
+ * @param url - The URL to fix
+ * @returns Corrected URL with proper format
+ */
+export const fixShortUrl = (url: Url): Url => {
+  const fixedUrl = { ...url };
+
+  // Check if short_url exists and needs fixing (missing / between domain and code)
+  if (fixedUrl.short_url) {
+    const domainAndCode = fixedUrl.short_url.split("//");
+    if (domainAndCode.length > 1) {
+      const domain = domainAndCode[1].split(
+        /([a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)/
+      )[1];
+
+      if (domain && !fixedUrl.short_url.includes(domain + "/")) {
+        fixedUrl.short_url = fixedUrl.short_url.replace(domain, domain + "/");
+      }
+    }
+  }
+
+  return fixedUrl;
+};
 
 /**
  * Builds query parameters for URL API calls
@@ -72,7 +97,14 @@ export const fetchUrls = async (
   const endpoint = `/api/v1/urls${queryParams ? `?${queryParams}` : ""}`;
   console.log("Full endpoint:", endpoint);
 
-  return get<UrlApiResponse>(endpoint);
+  const response = await get<UrlApiResponse>(endpoint);
+
+  // Fix short URLs in the response if needed
+  if (response && response.data) {
+    response.data = response.data.map(fixShortUrl);
+  }
+
+  return response;
 };
 
 /**

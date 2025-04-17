@@ -164,3 +164,19 @@ export interface UrlApiResponse {
     total_pages: number;
   };
 }
+
+/**
+ * URL Total Count Response Interface
+ * @description Defines the structure for the total URLs count response
+ */
+export interface UrlTotalCountResponse {
+  status: number;
+  message: string;
+  data: Url[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    total_pages: number;
+  };
+}

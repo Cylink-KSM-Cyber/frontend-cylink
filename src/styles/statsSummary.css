@@ -1,0 +1,63 @@
+/* 
+ * Stats Summary custom styles
+ * These styles enhance the appearance of stat cards on the dashboard
+ */
+
+.stat-card {
+  transition: all 0.3s ease;
+  border-left: 4px solid transparent;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card-total-urls {
+  border-left-color: #3b82f6; /* blue-500 */
+}
+
+.stat-card-total-clicks {
+  border-left-color: #10b981; /* emerald-500 */
+}
+
+.stat-card-qr-codes {
+  border-left-color: #f59e0b; /* amber-500 */
+}
+
+.stat-card-conversion {
+  border-left-color: #ec4899; /* pink-500 */
+}
+
+.stat-card-icon {
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover .stat-card-icon {
+  transform: scale(1.15);
+}
+
+.stat-value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animation for number change */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.number-change {
+  animation: pulse 0.5s ease-in-out;
+}

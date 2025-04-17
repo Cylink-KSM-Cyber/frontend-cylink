@@ -142,7 +142,10 @@ export const get = async <T>(
   config?: AxiosRequestConfig
 ): Promise<T> => {
   try {
+    console.log(`Making GET request to ${url}`);
     const response = await api.get<T>(url, config);
+    console.log(`GET ${url} response status:`, response.status);
+    console.log(`GET ${url} response data:`, response.data);
     return response.data;
   } catch (error) {
     console.error(`GET ${url} failed:`, error);

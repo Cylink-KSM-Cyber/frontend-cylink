@@ -14,6 +14,7 @@ import { useToast } from "@/contexts/ToastContext";
 import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
 import QrCodeModal from "@/components/molecules/QrCodeModal";
 import "@/styles/dashboard.css";
+import "@/styles/statsSummary.css";
 
 /**
  * Dashboard page
