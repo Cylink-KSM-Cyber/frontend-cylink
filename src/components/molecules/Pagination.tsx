@@ -16,6 +16,10 @@ interface PaginationProps {
    * Function to call when page changes
    */
   onPageChange: (page: number) => void;
+  /**
+   * Optional CSS class name
+   */
+  className?: string;
 }
 
 /**
@@ -26,6 +30,7 @@ const Pagination = ({
   currentPage,
   totalPages,
   onPageChange,
+  className,
 }: PaginationProps) => {
   // Generate array of page numbers to display
   const getPageNumbers = () => {
@@ -76,7 +81,7 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex justify-center mt-8">
+    <div className={`flex justify-center mt-8 ${className || ""}`}>
       <nav className="flex items-center space-x-1">
         <button
           onClick={() => onPageChange(currentPage - 1)}
