@@ -74,12 +74,21 @@ const StatCard: React.FC<StatCardProps> = ({
     if (trend === undefined) return null;
 
     const isPositive = trend > 0;
-    const trendColor = isPositive
-      ? "text-[#009688]"
-      : trend < 0
-      ? "text-[#D32F2F]"
-      : "text-[#607D8B]";
-    const trendIcon = isPositive ? "↑" : trend < 0 ? "↓" : "→";
+    const isNegative = trend < 0;
+
+    let trendColor = "text-[#607D8B]"; // Neutral color by default
+    if (isPositive) {
+      trendColor = "text-[#009688]";
+    } else if (isNegative) {
+      trendColor = "text-[#D32F2F]";
+    }
+
+    let trendIcon = "→"; // Neutral icon by default
+    if (isPositive) {
+      trendIcon = "↑";
+    } else if (isNegative) {
+      trendIcon = "↓";
+    }
 
     return (
       <span className={`text-sm font-medium flex items-center ${trendColor}`}>
