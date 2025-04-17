@@ -54,8 +54,8 @@ const buildQueryParams = (filter: Partial<UrlFilter>): string => {
   const params = new URLSearchParams();
 
   // Add required parameters with default values if not provided
-  params.append("page", String(filter.page || 1));
-  params.append("limit", String(filter.limit || 10));
+  params.append("page", String(filter.page ?? 1));
+  params.append("limit", String(filter.limit ?? 10));
 
   // Make sure sortBy is set to a valid value
   const validSortByValues = ["created_at", "clicks", "title"];
@@ -94,13 +94,14 @@ export const fetchUrls = async (
   console.log("Original filter:", filter);
   const queryParams = buildQueryParams(filter);
   console.log("Query params:", queryParams);
-  const endpoint = `/api/v1/urls${queryParams ? `?${queryParams}` : ""}`;
+  const queryString = queryParams ? `?${queryParams}` : "";
+  const endpoint = `/api/v1/urls${queryString}`;
   console.log("Full endpoint:", endpoint);
 
   const response = await get<UrlApiResponse>(endpoint);
 
   // Fix short URLs in the response if needed
-  if (response && response.data) {
+  if (response?.data) {
     response.data = response.data.map(fixShortUrl);
   }
 
