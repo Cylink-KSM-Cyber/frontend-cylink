@@ -20,7 +20,7 @@ const UrlItem = ({ url, onDelete, onToggleStatus }: UrlItemProps) => {
   return (
     <div className="border rounded-lg p-4 mb-4 hover:shadow-md transition-all">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-lg">{url.title || "Untitled"}</h3>
+        <h3 className="font-semibold text-lg">{url.title ?? "Untitled"}</h3>
         <div className="flex space-x-2">
           <button
             onClick={() => onToggleStatus(url.id, !url.is_active)}
