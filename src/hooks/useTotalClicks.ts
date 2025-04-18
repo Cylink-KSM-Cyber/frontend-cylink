@@ -3,6 +3,88 @@ import { get } from "@/services/api";
 import { TotalClicksResponse, TotalClicksParams } from "@/interfaces/url";
 
 /**
+ * Prepare query parameters for total clicks API
+ * @param params - The API parameters
+ * @returns URLSearchParams object
+ */
+const prepareQueryParams = (params?: TotalClicksParams): URLSearchParams => {
+  const queryParams = new URLSearchParams();
+
+  if (!params) return queryParams;
+
+  if (params.start_date) queryParams.append("start_date", params.start_date);
+  if (params.end_date) queryParams.append("end_date", params.end_date);
+  if (params.comparison) queryParams.append("comparison", params.comparison);
+  if (params.custom_comparison_start)
+    queryParams.append(
+      "custom_comparison_start",
+      params.custom_comparison_start
+    );
+  if (params.custom_comparison_end)
+    queryParams.append("custom_comparison_end", params.custom_comparison_end);
+  if (params.group_by) queryParams.append("group_by", params.group_by);
+  if (params.page) queryParams.append("page", params.page.toString());
+  if (params.limit) queryParams.append("limit", params.limit.toString());
+
+  return queryParams;
+};
+
+/**
+ * Parse string or number value to number
+ * @param value - The value to parse
+ * @returns Parsed number or 0
+ */
+const parseNumericValue = (value: string | number | undefined): number => {
+  if (typeof value === "string") return parseFloat(value) || 0;
+  if (typeof value === "number") return value;
+  return 0;
+};
+
+/**
+ * Process API response data to ensure numeric values
+ * @param responseData - The API response data
+ * @returns Processed data with numeric values
+ */
+const processApiData = (
+  responseData: TotalClicksResponse["data"]
+): TotalClicksResponse["data"] => {
+  if (!responseData || !responseData.summary) return responseData;
+
+  return {
+    ...responseData,
+    summary: {
+      ...responseData.summary,
+      total_clicks: parseNumericValue(responseData.summary.total_clicks),
+      total_urls: parseNumericValue(responseData.summary.total_urls),
+      avg_clicks_per_url: parseNumericValue(
+        responseData.summary.avg_clicks_per_url
+      ),
+      comparison: {
+        ...responseData.summary.comparison,
+        total_clicks: {
+          ...responseData.summary.comparison.total_clicks,
+          current: parseNumericValue(
+            responseData.summary.comparison.total_clicks.current
+          ),
+          previous: parseNumericValue(
+            responseData.summary.comparison.total_clicks.previous
+          ),
+        },
+        avg_clicks_per_url: {
+          ...responseData.summary.comparison.avg_clicks_per_url,
+          current: parseNumericValue(
+            responseData.summary.comparison.avg_clicks_per_url.current
+          ),
+          previous: parseNumericValue(
+            responseData.summary.comparison.avg_clicks_per_url.previous
+          ),
+        },
+      },
+    },
+  };
+};
+
+/**
  * Custom hook for fetching total clicks analytics data
  * @param params - Request parameters for the total clicks API
  * @returns Object containing the total clicks data, loading state, error state, and refresh function
@@ -20,107 +102,19 @@ export const useTotalClicks = (params?: TotalClicksParams) => {
 
     try {
       // Prepare query parameters
-      const queryParams = new URLSearchParams();
-
-      if (params) {
-        if (params.start_date)
-          queryParams.append("start_date", params.start_date);
-        if (params.end_date) queryParams.append("end_date", params.end_date);
-        if (params.comparison)
-          queryParams.append("comparison", params.comparison);
-        if (params.custom_comparison_start)
-          queryParams.append(
-            "custom_comparison_start",
-            params.custom_comparison_start
-          );
-        if (params.custom_comparison_end)
-          queryParams.append(
-            "custom_comparison_end",
-            params.custom_comparison_end
-          );
-        if (params.group_by) queryParams.append("group_by", params.group_by);
-        if (params.page) queryParams.append("page", params.page.toString());
-        if (params.limit) queryParams.append("limit", params.limit.toString());
-      }
-
+      const queryParams = prepareQueryParams(params);
       const queryString = queryParams.toString();
       const endpoint = `/api/v1/urls/total-clicks${
         queryString ? `?${queryString}` : ""
       }`;
 
       console.log(`Fetching total clicks data from: ${endpoint}`);
-
       const response = await get<TotalClicksResponse>(endpoint);
-
       console.log("Total clicks data response:", response);
 
       if (response.status === 200 && response.data) {
         // Process the API response to ensure numeric values are properly parsed
-        const processedData = {
-          ...response.data,
-          summary: {
-            ...response.data.summary,
-            // Parse string values to numbers
-            total_clicks:
-              typeof response.data.summary.total_clicks === "string"
-                ? parseFloat(response.data.summary.total_clicks) || 0
-                : response.data.summary.total_clicks || 0,
-            total_urls:
-              typeof response.data.summary.total_urls === "string"
-                ? parseFloat(response.data.summary.total_urls) || 0
-                : response.data.summary.total_urls || 0,
-            avg_clicks_per_url:
-              typeof response.data.summary.avg_clicks_per_url === "string"
-                ? parseFloat(response.data.summary.avg_clicks_per_url) || 0
-                : response.data.summary.avg_clicks_per_url || 0,
-            comparison: {
-              ...response.data.summary.comparison,
-              total_clicks: {
-                ...response.data.summary.comparison.total_clicks,
-                // Parse string values to numbers
-                current:
-                  typeof response.data.summary.comparison.total_clicks
-                    .current === "string"
-                    ? parseFloat(
-                        response.data.summary.comparison.total_clicks.current
-                      ) || 0
-                    : response.data.summary.comparison.total_clicks.current ||
-                      0,
-                previous:
-                  typeof response.data.summary.comparison.total_clicks
-                    .previous === "string"
-                    ? parseFloat(
-                        response.data.summary.comparison.total_clicks.previous
-                      ) || 0
-                    : response.data.summary.comparison.total_clicks.previous ||
-                      0,
-              },
-              avg_clicks_per_url: {
-                ...response.data.summary.comparison.avg_clicks_per_url,
-                // Parse string values to numbers
-                current:
-                  typeof response.data.summary.comparison.avg_clicks_per_url
-                    .current === "string"
-                    ? parseFloat(
-                        response.data.summary.comparison.avg_clicks_per_url
-                          .current
-                      ) || 0
-                    : response.data.summary.comparison.avg_clicks_per_url
-                        .current || 0,
-                previous:
-                  typeof response.data.summary.comparison.avg_clicks_per_url
-                    .previous === "string"
-                    ? parseFloat(
-                        response.data.summary.comparison.avg_clicks_per_url
-                          .previous
-                      ) || 0
-                    : response.data.summary.comparison.avg_clicks_per_url
-                        .previous || 0,
-              },
-            },
-          },
-        };
-
+        const processedData = processApiData(response.data);
         console.log("Processed data:", processedData);
 
         // Set the processed data
