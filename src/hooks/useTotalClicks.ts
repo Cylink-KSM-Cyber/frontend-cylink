@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { get } from "@/services/api";
 import { TotalClicksResponse, TotalClicksParams } from "@/interfaces/url";
 
@@ -14,7 +14,7 @@ export const useTotalClicks = (params?: TotalClicksParams) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchTotalClicks = async () => {
+  const fetchTotalClicks = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -136,20 +136,11 @@ export const useTotalClicks = (params?: TotalClicksParams) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [params]);
 
   useEffect(() => {
     fetchTotalClicks();
-  }, [
-    params?.start_date,
-    params?.end_date,
-    params?.comparison,
-    params?.custom_comparison_start,
-    params?.custom_comparison_end,
-    params?.group_by,
-    params?.page,
-    params?.limit,
-  ]);
+  }, [fetchTotalClicks]);
 
   /**
    * Refresh total clicks data
