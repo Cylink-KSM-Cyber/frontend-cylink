@@ -97,6 +97,16 @@ export const useTotalClicks = (params?: TotalClicksParams) => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchTotalClicks = useCallback(async () => {
+    // Skip duplicate API calls if already loaded and not forced refresh
+    if (totalClicksData && !isLoading) {
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "Skipping duplicate total clicks API call, data already loaded"
+        );
+      }
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -108,14 +118,23 @@ export const useTotalClicks = (params?: TotalClicksParams) => {
         queryString ? `?${queryString}` : ""
       }`;
 
-      console.log(`Fetching total clicks data from: ${endpoint}`);
+      if (process.env.NODE_ENV === "development") {
+        console.log(`Fetching total clicks data from: ${endpoint}`);
+      }
+
       const response = await get<TotalClicksResponse>(endpoint);
-      console.log("Total clicks data response:", response);
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("Total clicks data response:", response);
+      }
 
       if (response.status === 200 && response.data) {
         // Process the API response to ensure numeric values are properly parsed
         const processedData = processApiData(response.data);
-        console.log("Processed data:", processedData);
+
+        if (process.env.NODE_ENV === "development") {
+          console.log("Processed data:", processedData);
+        }
 
         // Set the processed data
         setTotalClicksData(processedData);
@@ -130,17 +149,34 @@ export const useTotalClicks = (params?: TotalClicksParams) => {
     } finally {
       setIsLoading(false);
     }
-  }, [params]);
+  }, [
+    params, // Using params directly as a dependency
+    totalClicksData,
+    isLoading,
+  ]);
 
+  // Use a separate effect to trigger the initial fetch
   useEffect(() => {
-    fetchTotalClicks();
-  }, [fetchTotalClicks]);
+    console.log("useTotalClicks: Initial fetch trigger");
+
+    // Only fetch if we don't have data or params have changed
+    if (!totalClicksData || isLoading) {
+      fetchTotalClicks();
+    }
+
+    // Cleanup function
+    return () => {
+      // No cleanup needed
+    };
+  }, [fetchTotalClicks, totalClicksData, isLoading]);
 
   /**
    * Refresh total clicks data
    * @returns Promise that resolves when refresh is complete
    */
   const refreshTotalClicks = async () => {
+    // Reset the data to force a refresh
+    setTotalClicksData(null);
     await fetchTotalClicks();
   };
 

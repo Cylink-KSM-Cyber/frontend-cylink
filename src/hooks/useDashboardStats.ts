@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ExtendedDashboardStats } from "@/interfaces/url";
 import { useTotalUrls } from "@/hooks/useTotalUrls";
 import { useTotalClicks } from "@/hooks/useTotalClicks";
@@ -11,6 +11,10 @@ export const useDashboardStats = () => {
   const [stats, setStats] = useState<ExtendedDashboardStats | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [statsLoaded, setStatsLoaded] = useState<boolean>(false);
+
+  // Memoize the parameters to prevent unnecessary re-renders
+  const totalClicksParams = useMemo(() => ({ comparison: "30" } as const), []);
 
   // Use the totalUrls hook to get real total URLs count from API
   const {
@@ -24,22 +28,34 @@ export const useDashboardStats = () => {
     totalClicksData,
     isLoading: isTotalClicksLoading,
     error: totalClicksError,
-  } = useTotalClicks({ comparison: "30" });
+  } = useTotalClicks(totalClicksParams);
 
   // Log the value of totalUrls for debugging
   useEffect(() => {
-    console.log("Current totalUrls value in useDashboardStats:", totalUrls);
+    if (totalUrls !== undefined && process.env.NODE_ENV === "development") {
+      console.log("Current totalUrls value in useDashboardStats:", totalUrls);
+    }
   }, [totalUrls]);
 
   // Log the value of totalClicksData for debugging
   useEffect(() => {
-    console.log(
-      "Current totalClicksData in useDashboardStats:",
-      totalClicksData
-    );
+    if (totalClicksData && process.env.NODE_ENV === "development") {
+      console.log(
+        "Current totalClicksData in useDashboardStats:",
+        totalClicksData
+      );
+    }
   }, [totalClicksData]);
 
   useEffect(() => {
+    // Skip if we've already loaded stats and data hasn't changed
+    if (statsLoaded && stats && !isLoading) {
+      if (process.env.NODE_ENV === "development") {
+        console.log("Skipping fetchStats as stats are already loaded");
+      }
+      return;
+    }
+
     const fetchStats = async () => {
       setIsLoading(true);
       setError(null);
@@ -142,6 +158,7 @@ export const useDashboardStats = () => {
           mockStats.totalClicks
         );
         setStats(mockStats);
+        setStatsLoaded(true);
       } catch (err) {
         setError(
           err instanceof Error
@@ -155,7 +172,11 @@ export const useDashboardStats = () => {
     };
 
     // Only fetch stats when both totalUrls and totalClicksData are loaded
-    if (!isTotalUrlsLoading && !isTotalClicksLoading) {
+    if (
+      !isTotalUrlsLoading &&
+      !isTotalClicksLoading &&
+      (totalUrls !== undefined || totalClicksData !== null)
+    ) {
       console.log(
         "totalUrls and totalClicksData loaded, fetching stats with values:",
         totalUrls,
@@ -163,13 +184,22 @@ export const useDashboardStats = () => {
       );
       fetchStats();
     }
-  }, [totalUrls, isTotalUrlsLoading, totalClicksData, isTotalClicksLoading]);
+  }, [
+    totalUrls,
+    isTotalUrlsLoading,
+    totalClicksData,
+    isTotalClicksLoading,
+    stats,
+    isLoading,
+    statsLoaded,
+  ]);
 
   /**
    * Refresh dashboard statistics
    * @returns Promise that resolves when refresh is complete
    */
   const refreshStats = async () => {
+    setStatsLoaded(false); // Force a refresh by setting statsLoaded to false
     setIsLoading(true);
     setError(null);
 
@@ -232,6 +262,7 @@ export const useDashboardStats = () => {
 
       await new Promise((resolve) => setTimeout(resolve, 800));
       setStats(refreshedStats);
+      setStatsLoaded(true);
     } catch (err) {
       setError(
         err instanceof Error

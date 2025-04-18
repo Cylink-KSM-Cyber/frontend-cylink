@@ -78,15 +78,17 @@ const StatCard: React.FC<StatCardProps> = ({
     const trendValue =
       typeof trend === "number" ? trend : parseFloat(trend as string) || 0;
 
-    // Log trend value for debugging
-    console.log(
-      "StatCard - rendering trend:",
-      trendValue,
-      "original:",
-      trend,
-      "type:",
-      typeof trend
-    );
+    // Log trend value only in development
+    if (process.env.NODE_ENV === "development") {
+      console.log(
+        "StatCard - rendering trend:",
+        trendValue,
+        "original:",
+        trend,
+        "type:",
+        typeof trend
+      );
+    }
 
     const isPositive = trendValue > 0;
     const isNegative = trendValue < 0;

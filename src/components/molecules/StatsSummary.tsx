@@ -77,21 +77,26 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       ? stats.totalClicks.toLocaleString()
       : "0";
 
-  // Log values for debugging
-  console.log(
-    "StatsSummary - avgClicksPerUrl:",
-    avgClicksPerUrl,
-    "type:",
-    typeof avgClicksPerUrl
-  );
-  console.log("StatsSummary - formattedAvgClicks:", formattedAvgClicks);
-  console.log(
-    "StatsSummary - totalClicks:",
-    stats.totalClicks,
-    "type:",
-    typeof stats.totalClicks
-  );
-  console.log("StatsSummary - clicksChangePercentage:", clicksChangePercentage);
+  // Log values for debugging only in development
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "StatsSummary - avgClicksPerUrl:",
+      avgClicksPerUrl,
+      "type:",
+      typeof avgClicksPerUrl
+    );
+    console.log("StatsSummary - formattedAvgClicks:", formattedAvgClicks);
+    console.log(
+      "StatsSummary - totalClicks:",
+      stats.totalClicks,
+      "type:",
+      typeof stats.totalClicks
+    );
+    console.log(
+      "StatsSummary - clicksChangePercentage:",
+      clicksChangePercentage
+    );
+  }
 
   return (
     <div
