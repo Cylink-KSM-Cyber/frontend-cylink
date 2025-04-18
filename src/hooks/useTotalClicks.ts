@@ -48,7 +48,7 @@ const parseNumericValue = (value: string | number | undefined): number => {
 const processApiData = (
   responseData: TotalClicksResponse["data"]
 ): TotalClicksResponse["data"] => {
-  if (!responseData || !responseData.summary) return responseData;
+  if (!responseData?.summary) return responseData;
 
   return {
     ...responseData,
