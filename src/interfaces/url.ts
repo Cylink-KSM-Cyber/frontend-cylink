@@ -180,3 +180,95 @@ export interface UrlTotalCountResponse {
     total_pages: number;
   };
 }
+
+/**
+ * Total Clicks Response Interface
+ * @description Defines the structure of the total clicks API response
+ */
+export interface TotalClicksResponse {
+  status: number;
+  message: string;
+  data: {
+    summary: {
+      total_clicks: number;
+      total_urls: number;
+      avg_clicks_per_url: number;
+      analysis_period: {
+        start_date: string;
+        end_date: string;
+        days: number;
+      };
+      comparison: {
+        period_days: number;
+        previous_period: {
+          start_date: string;
+          end_date: string;
+        };
+        total_clicks: {
+          current: number;
+          previous: number;
+          change: number;
+          change_percentage: number;
+        };
+        avg_clicks_per_url: {
+          current: number;
+          previous: number;
+          change: number;
+          change_percentage: number;
+        };
+        active_urls: {
+          current: number;
+          previous: number;
+          change: number;
+          change_percentage: number;
+        };
+      };
+    };
+    time_series: {
+      data: Array<{
+        date: string;
+        clicks: number;
+        urls_count: number;
+        avg_clicks: number;
+      }>;
+      pagination: {
+        total_items: number;
+        total_pages: number;
+        current_page: number;
+        limit: number;
+      };
+    };
+    top_performing_days: Array<{
+      date: string;
+      clicks: number;
+      urls_count: number;
+      avg_clicks: number;
+    }>;
+  };
+}
+
+/**
+ * Total Clicks Parameters Interface
+ * @description Defines the parameters for the total clicks API request
+ */
+export interface TotalClicksParams {
+  start_date?: string;
+  end_date?: string;
+  comparison?: "7" | "14" | "30" | "90" | "custom";
+  custom_comparison_start?: string;
+  custom_comparison_end?: string;
+  group_by?: "day" | "week" | "month";
+  page?: number;
+  limit?: number;
+}
+
+/**
+ * Extended Dashboard Stats Interface
+ * @description Extends the dashboard stats with total clicks data
+ */
+export interface ExtendedDashboardStats extends DashboardStats {
+  totalClicksData?: {
+    avg_clicks_per_url: number;
+    change_percentage: number;
+  };
+}

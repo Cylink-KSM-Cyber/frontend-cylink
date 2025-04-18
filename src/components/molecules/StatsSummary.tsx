@@ -1,6 +1,6 @@
 import React from "react";
 import StatCard from "../atoms/StatCard";
-import { DashboardStats } from "../../interfaces/url";
+import { ExtendedDashboardStats } from "../../interfaces/url";
 
 // Icon imports
 import {
@@ -17,7 +17,7 @@ interface StatsSummaryProps {
   /**
    * Dashboard statistics data
    */
-  stats: DashboardStats;
+  stats: ExtendedDashboardStats;
   /**
    * Whether the data is loading
    */
@@ -62,6 +62,37 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
     );
   }
 
+  // Get the average clicks per URL and change percentage from total clicks data
+  const avgClicksPerUrl =
+    stats.totalClicksData?.avg_clicks_per_url ?? stats.averageClicksPerUrl;
+  const clicksChangePercentage = stats.totalClicksData?.change_percentage;
+
+  // Ensure avgClicksPerUrl is properly formatted as a number
+  const formattedAvgClicks =
+    typeof avgClicksPerUrl === "number" ? avgClicksPerUrl.toFixed(2) : "0.00";
+
+  // Format totalClicks for display
+  const totalClicksDisplay =
+    typeof stats.totalClicks === "number"
+      ? stats.totalClicks.toLocaleString()
+      : "0";
+
+  // Log values for debugging
+  console.log(
+    "StatsSummary - avgClicksPerUrl:",
+    avgClicksPerUrl,
+    "type:",
+    typeof avgClicksPerUrl
+  );
+  console.log("StatsSummary - formattedAvgClicks:", formattedAvgClicks);
+  console.log(
+    "StatsSummary - totalClicks:",
+    stats.totalClicks,
+    "type:",
+    typeof stats.totalClicks
+  );
+  console.log("StatsSummary - clicksChangePercentage:", clicksChangePercentage);
+
   return (
     <div
       className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}
@@ -76,9 +107,9 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
 
       <StatCard
         title="Total Clicks"
-        value={stats.totalClicks.toLocaleString()}
-        description={`Avg. ${stats.averageClicksPerUrl} per URL`}
-        trend={10.8} // This would come from the API in a real implementation
+        value={totalClicksDisplay}
+        description={`Avg. ${formattedAvgClicks} per URL`}
+        trend={clicksChangePercentage}
         icon={<RiLineChartLine className="h-6 w-6" />}
         type="total-clicks"
       />

@@ -15,6 +15,7 @@ import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
 import QrCodeModal from "@/components/molecules/QrCodeModal";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
+import "@/styles/totalClicks.css";
 
 /**
  * Dashboard page
@@ -213,6 +214,7 @@ export default function DashboardPage() {
     activeUrls: 0,
     urlsCreatedToday: 0,
     averageClicksPerUrl: 0,
+    totalClicksData: undefined,
   };
 
   return (

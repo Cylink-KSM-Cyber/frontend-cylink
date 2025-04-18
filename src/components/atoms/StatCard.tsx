@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "@/styles/statsSummary.css";
+import "@/styles/totalClicks.css";
 
 /**
  * Prop types for StatCard component
@@ -73,14 +74,29 @@ const StatCard: React.FC<StatCardProps> = ({
   const getTrendDisplay = () => {
     if (trend === undefined) return null;
 
-    const isPositive = trend > 0;
-    const isNegative = trend < 0;
+    // Ensure trend is a number
+    const trendValue =
+      typeof trend === "number" ? trend : parseFloat(trend as string) || 0;
 
-    let trendColor = "text-[#607D8B]"; // Neutral color by default
+    // Log trend value for debugging
+    console.log(
+      "StatCard - rendering trend:",
+      trendValue,
+      "original:",
+      trend,
+      "type:",
+      typeof trend
+    );
+
+    const isPositive = trendValue > 0;
+    const isNegative = trendValue < 0;
+    const isZero = trendValue === 0;
+
+    let trendClass = "trend-indicator trend-indicator-neutral";
     if (isPositive) {
-      trendColor = "text-[#009688]";
+      trendClass = "trend-indicator trend-indicator-positive";
     } else if (isNegative) {
-      trendColor = "text-[#D32F2F]";
+      trendClass = "trend-indicator trend-indicator-negative";
     }
 
     let trendIcon = "→"; // Neutral icon by default
@@ -90,11 +106,48 @@ const StatCard: React.FC<StatCardProps> = ({
       trendIcon = "↓";
     }
 
+    // Create tooltip text
+    const tooltipText = isZero
+      ? "No change from previous period"
+      : isPositive
+      ? "Increase from previous period"
+      : "Decrease from previous period";
+
     return (
-      <span className={`text-sm font-medium flex items-center ${trendColor}`}>
-        {trendIcon} {Math.abs(trend).toFixed(1)}%
+      <span className={`tooltip ${trendClass}`}>
+        {trendIcon} {Math.abs(trendValue).toFixed(1)}%
+        <span className="tooltip-text">{tooltipText}</span>
       </span>
     );
+  };
+
+  // Format the description to highlight the average clicks per URL
+  const formattedDescription = () => {
+    if (!description || !type || type !== "total-clicks") {
+      return description;
+    }
+
+    // Check if the description contains "Avg." - if so, parse and format
+    if (description.includes("Avg.")) {
+      const parts = description.split("Avg.");
+      const avgValue = parts[1].trim().split(" ")[0];
+      const rest = parts[1].trim().substring(avgValue.length);
+
+      // Check if avgValue is a valid number
+      const isValidNumber = !isNaN(parseFloat(avgValue));
+
+      return (
+        <>
+          Avg.{" "}
+          <span className="avg-clicks font-medium text-emerald-600">
+            {isValidNumber ? avgValue : "0.00"}
+          </span>
+          {rest}
+        </>
+      );
+    }
+
+    return description;
   };
 
   // Determine card type styling
@@ -115,7 +168,7 @@ const StatCard: React.FC<StatCardProps> = ({
             {value}
           </p>
           {description && (
-            <p className="text-xs text-[#607D8B]">{description}</p>
+            <p className="text-xs text-[#607D8B]">{formattedDescription()}</p>
           )}
           {getTrendDisplay()}
         </div>
