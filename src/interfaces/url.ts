@@ -267,8 +267,17 @@ export interface TotalClicksParams {
  * @description Extends the dashboard stats with total clicks data
  */
 export interface ExtendedDashboardStats extends DashboardStats {
+  /**
+   * Total clicks data from API
+   */
   totalClicksData?: {
+    /**
+     * Average clicks per URL from the API
+     */
     avg_clicks_per_url: number;
+    /**
+     * Percentage change in total clicks
+     */
     change_percentage: number;
   };
 }

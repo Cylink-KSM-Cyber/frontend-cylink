@@ -29,35 +29,65 @@
   color: #607d8b;
 }
 
-/* Enhanced total clicks card */
-.stat-card-total-clicks {
+/* Enhanced hover effects for all stat cards */
+/* Base styling for all stat cards with top border effect */
+.stat-card-total-clicks,
+.stat-card-total-urls,
+.stat-card-qr-codes,
+.stat-card-conversion {
   position: relative;
   overflow: hidden;
 }
 
-.stat-card-total-clicks::before {
+/* Top border animation for all cards */
+.stat-card-total-clicks::before,
+.stat-card-total-urls::before,
+.stat-card-qr-codes::before,
+.stat-card-conversion::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, #10b981, #34d399);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.3s ease;
 }
 
-.stat-card-total-clicks:hover::before {
+/* Individual color for each card type */
+.stat-card-total-clicks::before {
+  background: linear-gradient(90deg, #10b981, #34d399); /* emerald gradient */
+}
+
+.stat-card-total-urls::before {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa); /* blue gradient */
+}
+
+.stat-card-qr-codes::before {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24); /* amber gradient */
+}
+
+.stat-card-conversion::before {
+  background: linear-gradient(90deg, #ec4899, #f472b6); /* pink gradient */
+}
+
+/* Animation on hover for all cards */
+.stat-card-total-clicks:hover::before,
+.stat-card-total-urls:hover::before,
+.stat-card-qr-codes:hover::before,
+.stat-card-conversion:hover::before {
   transform: scaleX(1);
 }
 
-/* Animate average clicks value */
+/* Animate highlighted values */
+.highlight-value,
 .avg-clicks {
   display: inline-block;
   transition: all 0.3s ease;
 }
 
+.highlight-value:hover,
 .avg-clicks:hover {
   transform: scale(1.05);
 }

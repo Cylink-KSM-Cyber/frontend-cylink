@@ -3,6 +3,28 @@ import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 
 /**
+ * Prop types for highlighted value in description
+ */
+interface HighlightedValue {
+  /**
+   * Prefix before highlighted value (e.g., "Avg. ")
+   */
+  prefix: string;
+  /**
+   * The value to highlight (e.g., "99.69")
+   */
+  value: string | number;
+  /**
+   * Suffix after highlighted value (e.g., " per URL")
+   */
+  suffix: string;
+  /**
+   * Optional CSS color class for the highlighted value (defaults to the card type color)
+   */
+  color?: string;
+}
+
+/**
  * Prop types for StatCard component
  */
 interface StatCardProps {
@@ -34,7 +56,31 @@ interface StatCardProps {
    * Optional type for styling
    */
   type?: "total-urls" | "total-clicks" | "qr-codes" | "conversion";
+  /**
+   * Optional highlighted value in the description
+   */
+  highlightedValue?: HighlightedValue;
 }
+
+/**
+ * Get appropriate color class based on card type
+ * @param type - The card type
+ * @returns CSS color class
+ */
+const getColorByType = (type?: string): string => {
+  switch (type) {
+    case "total-urls":
+      return "text-blue-500";
+    case "total-clicks":
+      return "text-emerald-600";
+    case "qr-codes":
+      return "text-amber-500";
+    case "conversion":
+      return "text-pink-500";
+    default:
+      return "text-gray-600";
+  }
+};
 
 /**
  * StatCard Component
@@ -48,6 +94,7 @@ const StatCard: React.FC<StatCardProps> = ({
   icon,
   className = "",
   type,
+  highlightedValue,
 }) => {
   // State to track previous value for animation
   const [prevValue, setPrevValue] = useState<string | number>(value);
@@ -123,14 +170,28 @@ const StatCard: React.FC<StatCardProps> = ({
     );
   };
 
-  // Format the description to highlight the average clicks per URL
+  // Format the description to highlight values if present
   const formattedDescription = () => {
-    if (!description || !type || type !== "total-clicks") {
-      return description;
+    // If we have a dedicated highlighted value structure, use it
+    if (highlightedValue) {
+      const colorClass = highlightedValue.color || getColorByType(type);
+      return (
+        <>
+          {highlightedValue.prefix}{" "}
+          <span className={`highlight-value font-medium ${colorClass}`}>
+            {highlightedValue.value}
+          </span>
+          {highlightedValue.suffix}
+        </>
+      );
     }
 
-    // Check if the description contains "Avg." - if so, parse and format
-    if (description.includes("Avg.")) {
+    // Legacy support for "Avg." format in total-clicks (backward compatibility)
+    if (
+      description &&
+      type === "total-clicks" &&
+      description.includes("Avg.")
+    ) {
       const parts = description.split("Avg.");
       const avgValue = parts[1].trim().split(" ")[0];
       const rest = parts[1].trim().substring(avgValue.length);
@@ -169,7 +230,7 @@ const StatCard: React.FC<StatCardProps> = ({
           >
             {value}
           </p>
-          {description && (
+          {(description || highlightedValue) && (
             <p className="text-xs text-[#607D8B]">{formattedDescription()}</p>
           )}
           {getTrendDisplay()}
