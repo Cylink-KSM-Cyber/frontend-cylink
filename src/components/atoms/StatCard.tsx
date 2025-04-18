@@ -90,7 +90,6 @@ const StatCard: React.FC<StatCardProps> = ({
 
     const isPositive = trendValue > 0;
     const isNegative = trendValue < 0;
-    const isZero = trendValue === 0;
 
     let trendClass = "trend-indicator trend-indicator-neutral";
     if (isPositive) {
@@ -107,11 +106,12 @@ const StatCard: React.FC<StatCardProps> = ({
     }
 
     // Create tooltip text
-    const tooltipText = isZero
-      ? "No change from previous period"
-      : isPositive
-      ? "Increase from previous period"
-      : "Decrease from previous period";
+    let tooltipText = "No change from previous period";
+    if (isPositive) {
+      tooltipText = "Increase from previous period";
+    } else if (isNegative) {
+      tooltipText = "Decrease from previous period";
+    }
 
     return (
       <span className={`tooltip ${trendClass}`}>
