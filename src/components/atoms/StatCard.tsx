@@ -55,7 +55,14 @@ interface StatCardProps {
   /**
    * Optional type for styling
    */
-  type?: "total-urls" | "total-clicks" | "qr-codes" | "conversion";
+  type?:
+    | "total-urls"
+    | "total-clicks"
+    | "qr-codes"
+    | "conversion"
+    | "active-urls"
+    | "average-ctr"
+    | "top-performing";
   /**
    * Optional highlighted value in the description
    */
@@ -70,12 +77,15 @@ interface StatCardProps {
 const getColorByType = (type?: string): string => {
   switch (type) {
     case "total-urls":
+    case "active-urls":
       return "text-blue-500";
     case "total-clicks":
       return "text-emerald-600";
     case "qr-codes":
+    case "average-ctr":
       return "text-amber-500";
     case "conversion":
+    case "top-performing":
       return "text-pink-500";
     default:
       return "text-gray-600";
@@ -163,7 +173,7 @@ const StatCard: React.FC<StatCardProps> = ({
     }
 
     return (
-      <span className={`tooltip ${trendClass}`}>
+      <span className={`tooltip ${trendClass} mt-1`}>
         {trendIcon} {Math.abs(trendValue).toFixed(1)}%
         <span className="tooltip-text">{tooltipText}</span>
       </span>
@@ -216,6 +226,10 @@ const StatCard: React.FC<StatCardProps> = ({
   // Determine card type styling
   const cardTypeClass = type ? `stat-card-${type}` : "";
 
+  useEffect(() => {
+    console.log(cardTypeClass);
+  }, [cardTypeClass]);
+
   return (
     <div
       className={`bg-white p-6 rounded-lg shadow-sm stat-card ${cardTypeClass} ${className}`}
@@ -235,7 +249,9 @@ const StatCard: React.FC<StatCardProps> = ({
           )}
           {getTrendDisplay()}
         </div>
-        {icon && <div className="text-[#333333] stat-card-icon">{icon}</div>}
+        {icon && (
+          <div className="text-[#333333] stat-card-icon mt-1">{icon}</div>
+        )}
       </div>
     </div>
   );

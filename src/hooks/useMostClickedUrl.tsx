@@ -9,12 +9,12 @@ import { fetchUrls } from "@/services/url";
  * @param initialFilter - Initial filter settings
  * @returns URL data, loading state, and management functions
  */
-export const useUrls = (
+export const useMostClickedUrl = (
   initialFilter: UrlFilter = {
-    search: "tes",
+    search: "",
     page: 1,
-    limit: 10,
-    sortBy: "created_at",
+    limit: 100,
+    sortBy: "clicks",
     sortOrder: "desc",
   }
 ) => {
@@ -39,7 +39,7 @@ export const useUrls = (
 
     try {
       const response = await fetchUrls(filter);
-      console.log("URL API response:", response);
+      console.log("URL Mosdt Clicked API response:", response);
 
       if (response && response.data) {
         console.log("URLs from API:", response.data);
@@ -124,4 +124,4 @@ export const useUrls = (
   };
 };
 
-export default useUrls;
+export default useMostClickedUrl;

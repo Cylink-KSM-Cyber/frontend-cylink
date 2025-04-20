@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { useUrls } from "@/hooks/useUrls";
 import { UrlFilter as FilterType } from "@/interfaces/url";

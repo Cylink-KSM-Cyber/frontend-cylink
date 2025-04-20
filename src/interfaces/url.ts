@@ -279,5 +279,7 @@ export interface ExtendedDashboardStats extends DashboardStats {
      * Percentage change in total clicks
      */
     change_percentage: number;
+
+    data?: TotalClicksResponse["data"];
   };
 }

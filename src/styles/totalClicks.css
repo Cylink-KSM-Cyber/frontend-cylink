@@ -34,7 +34,10 @@
 .stat-card-total-clicks,
 .stat-card-total-urls,
 .stat-card-qr-codes,
-.stat-card-conversion {
+.stat-card-conversion,
+.stat-card-active-urls,
+.stat-card-top-performing,
+.stat-card-average-ctr {
   position: relative;
   overflow: hidden;
 }
@@ -43,7 +46,10 @@
 .stat-card-total-clicks::before,
 .stat-card-total-urls::before,
 .stat-card-qr-codes::before,
-.stat-card-conversion::before {
+.stat-card-conversion::before,
+.stat-card-active-urls::before,
+.stat-card-top-performing::before,
+.stat-card-average-ctr::before {
   content: "";
   position: absolute;
   top: 0;
@@ -60,15 +66,18 @@
   background: linear-gradient(90deg, #10b981, #34d399); /* emerald gradient */
 }
 
-.stat-card-total-urls::before {
+.stat-card-total-urls::before,
+.stat-card-active-urls::before {
   background: linear-gradient(90deg, #3b82f6, #60a5fa); /* blue gradient */
 }
 
-.stat-card-qr-codes::before {
+.stat-card-qr-codes::before,
+.stat-card-average-ctr::before {
   background: linear-gradient(90deg, #f59e0b, #fbbf24); /* amber gradient */
 }
 
-.stat-card-conversion::before {
+.stat-card-conversion::before,
+.stat-card-top-performing::before {
   background: linear-gradient(90deg, #ec4899, #f472b6); /* pink gradient */
 }
 
@@ -76,7 +85,10 @@
 .stat-card-total-clicks:hover::before,
 .stat-card-total-urls:hover::before,
 .stat-card-qr-codes:hover::before,
-.stat-card-conversion:hover::before {
+.stat-card-conversion:hover::before,
+.stat-card-active-urls:hover::before,
+.stat-card-top-performing:hover::before,
+.stat-card-average-ctr:hover::before {
   transform: scaleX(1);
 }
 
