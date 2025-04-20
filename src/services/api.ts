@@ -1,11 +1,12 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import Cookies from "js-cookie";
 
 /**
  * Base API configuration
  * @description Axios instance with base configuration for API calls
  */
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL || "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL ?? "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -20,16 +21,19 @@ const api = axios.create({
 const isBrowser = () => typeof window !== "undefined";
 
 /**
- * Get token safely from localStorage
+ * Get token safely from Cookies
  * @returns The token or null if not available
  */
-const getToken = (): string | null => {
+export const getToken = (): string | null => {
   if (!isBrowser()) return null;
 
   try {
-    return localStorage.getItem("accessToken");
+    const token = Cookies.get("accessToken");
+    console.log(token);
+
+    return token ?? null;
   } catch (error) {
-    console.error("Error retrieving token from localStorage:", error);
+    console.error("Error retrieving token from Cookies:", error);
     return null;
   }
 };
@@ -56,7 +60,9 @@ api.interceptors.request.use(
   },
   (error) => {
     console.error("Request interceptor rejection:", error);
-    return Promise.reject(error);
+    return Promise.reject(
+      error instanceof Error ? error : new Error(String(error))
+    );
   }
 );
 
@@ -104,8 +110,8 @@ api.interceptors.response.use(
         if (error.response.status === 401) {
           if (isBrowser()) {
             try {
-              localStorage.removeItem("accessToken");
-              localStorage.removeItem("refreshToken");
+              Cookies.remove("accessToken");
+              Cookies.remove("refreshToken");
             } catch (storageError) {
               console.error("Error removing tokens:", storageError);
             }
@@ -138,7 +144,10 @@ export const get = async <T>(
   config?: AxiosRequestConfig
 ): Promise<T> => {
   try {
+    console.log(`Making GET request to ${url}`);
     const response = await api.get<T>(url, config);
+    console.log(`GET ${url} response status:`, response.status);
+    console.log(`GET ${url} response data:`, response.data);
     return response.data;
   } catch (error) {
     console.error(`GET ${url} failed:`, error);

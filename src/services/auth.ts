@@ -4,6 +4,7 @@ import {
   ApiLoginResponse,
   LoginResponse,
 } from "@/interfaces/auth";
+import Cookies from "js-cookie";
 
 /**
  * Authentication service for login, registration, and other auth operations
@@ -77,18 +78,18 @@ const AuthService = {
     }
 
     try {
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken);
+      Cookies.set("accessToken", accessToken);
+      Cookies.set("refreshToken", refreshToken);
 
       // Set session expiration based on remember me option
       if (remember) {
         // Store a flag to indicate "remember me" was selected
-        localStorage.setItem("rememberMe", "true");
+        Cookies.set("rememberMe", "true");
       } else {
-        localStorage.removeItem("rememberMe");
+        Cookies.remove("rememberMe");
       }
     } catch (error) {
-      console.error("Error saving tokens to localStorage:", error);
+      console.error("Error saving tokens to Cookies:", error);
       throw new Error("Failed to save authentication data");
     }
   },
@@ -100,11 +101,11 @@ const AuthService = {
     if (typeof window === "undefined") return;
 
     try {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("rememberMe");
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
+      Cookies.remove("rememberMe");
     } catch (error) {
-      console.error("Error clearing tokens from localStorage:", error);
+      console.error("Error clearing tokens from Cookies:", error);
     }
   },
 
@@ -116,7 +117,7 @@ const AuthService = {
     if (typeof window === "undefined") return false;
 
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = Cookies.get("accessToken");
       return !!token;
     } catch (error) {
       console.error("Error checking authentication status:", error);
@@ -132,9 +133,10 @@ const AuthService = {
     if (typeof window === "undefined") return null;
 
     try {
-      return localStorage.getItem("accessToken");
+      const token = Cookies.get("accessToken");
+      return token === undefined ? null : token;
     } catch (error) {
-      console.error("Error retrieving access token:", error);
+      console.error("Error retrieving token from Cookies:", error);
       return null;
     }
   },
@@ -147,9 +149,10 @@ const AuthService = {
     if (typeof window === "undefined") return null;
 
     try {
-      return localStorage.getItem("refreshToken");
+      const token = Cookies.get("refreshToken");
+      return token === undefined ? null : token;
     } catch (error) {
-      console.error("Error retrieving refresh token:", error);
+      console.error("Error retrieving token from Cookies:", error);
       return null;
     }
   },

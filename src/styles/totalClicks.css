@@ -1,0 +1,132 @@
+/* 
+ * Total Clicks custom styles
+ * Enhances the visualization of total clicks data in the dashboard
+ */
+
+/* Enhance trend indicator visibility */
+.trend-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.trend-indicator-positive {
+  background-color: rgba(0, 150, 136, 0.1);
+  color: #009688;
+}
+
+.trend-indicator-negative {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: #d32f2f;
+}
+
+.trend-indicator-neutral {
+  background-color: rgba(96, 125, 139, 0.1);
+  color: #607d8b;
+}
+
+/* Enhanced hover effects for all stat cards */
+/* Base styling for all stat cards with top border effect */
+.stat-card-total-clicks,
+.stat-card-total-urls,
+.stat-card-qr-codes,
+.stat-card-conversion {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top border animation for all cards */
+.stat-card-total-clicks::before,
+.stat-card-total-urls::before,
+.stat-card-qr-codes::before,
+.stat-card-conversion::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+/* Individual color for each card type */
+.stat-card-total-clicks::before {
+  background: linear-gradient(90deg, #10b981, #34d399); /* emerald gradient */
+}
+
+.stat-card-total-urls::before {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa); /* blue gradient */
+}
+
+.stat-card-qr-codes::before {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24); /* amber gradient */
+}
+
+.stat-card-conversion::before {
+  background: linear-gradient(90deg, #ec4899, #f472b6); /* pink gradient */
+}
+
+/* Animation on hover for all cards */
+.stat-card-total-clicks:hover::before,
+.stat-card-total-urls:hover::before,
+.stat-card-qr-codes:hover::before,
+.stat-card-conversion:hover::before {
+  transform: scaleX(1);
+}
+
+/* Animate highlighted values */
+.highlight-value,
+.avg-clicks {
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.highlight-value:hover,
+.avg-clicks:hover {
+  transform: scale(1.05);
+}
+
+/* Enhanced tooltip styling */
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.tooltip .tooltip-text {
+  visibility: hidden;
+  width: 120px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.tooltip .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #333 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}

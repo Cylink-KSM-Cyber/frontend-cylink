@@ -3,91 +3,145 @@
 import React from "react";
 
 /**
- * Button properties
- * @interface ButtonProps
- * @extends React.ButtonHTMLAttributes<HTMLButtonElement>
+ * Prop types for Button component
  */
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Button variant */
-  variant?: "primary" | "secondary" | "outline" | "ghost";
-  /** Button size */
-  size?: "sm" | "md" | "lg";
-  /** Is button currently in loading state */
-  isLoading?: boolean;
-  /** Full width button */
-  fullWidth?: boolean;
-  /** Optional icon component to display */
-  icon?: React.ReactNode;
-  /** Icon position */
-  iconPosition?: "left" | "right";
-  /** Children elements */
+interface ButtonProps {
+  /**
+   * Button label content
+   */
   children: React.ReactNode;
+  /**
+   * Function to call when button is clicked
+   */
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  /**
+   * Button variant (determines styling)
+   */
+  variant?: "primary" | "secondary" | "outline" | "text" | "danger";
+  /**
+   * Button size
+   */
+  size?: "sm" | "md" | "lg";
+  /**
+   * Whether the button takes full width
+   */
+  fullWidth?: boolean;
+  /**
+   * Optional icon to display before text
+   */
+  startIcon?: React.ReactNode;
+  /**
+   * Optional icon to display after text
+   */
+  endIcon?: React.ReactNode;
+  /**
+   * Button type attribute
+   */
+  type?: "button" | "submit" | "reset";
+  /**
+   * Whether the button is disabled
+   */
+  disabled?: boolean;
+  /**
+   * Whether the button is in loading state
+   */
+  loading?: boolean;
+  /**
+   * Optional CSS classes to apply
+   */
+  className?: string;
 }
 
 /**
- * Button component
- * @description A customizable button component with various styles and states
- * @param props - Button properties
- * @returns Button component
+ * Button Component
+ * @description A versatile button component with multiple variants and states
  */
 const Button: React.FC<ButtonProps> = ({
+  children,
+  onClick,
   variant = "primary",
   size = "md",
-  isLoading = false,
   fullWidth = false,
-  icon,
-  iconPosition = "left",
+  startIcon,
+  endIcon,
+  type = "button",
+  disabled = false,
+  loading = false,
   className = "",
-  children,
-  disabled,
-  ...props
 }) => {
-  // Base styles
-  const baseClasses =
-    "font-medium rounded-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black flex items-center justify-center";
-
-  // Size classes
-  const sizeClasses = {
-    sm: "text-sm px-3 py-1.5",
-    md: "text-base px-4 py-2",
-    lg: "text-lg px-6 py-3",
+  // Determine size classes
+  const getSizeClasses = () => {
+    switch (size) {
+      case "sm":
+        return "px-3 py-1.5 text-xs";
+      case "lg":
+        return "px-6 py-3 text-base";
+      default: // md
+        return "px-4 py-2 text-sm";
+    }
   };
 
-  // Variant classes
-  const variantClasses = {
-    primary: "bg-black text-white hover:bg-gray-800 active:bg-gray-900",
-    secondary: "bg-gray-100 text-gray-800 hover:bg-gray-200 active:bg-gray-300",
-    outline:
-      "bg-transparent border border-black text-black hover:bg-black/5 active:bg-black/10",
-    ghost: "bg-transparent text-black hover:bg-black/5 active:bg-black/10",
+  // Determine variant classes
+  const getVariantClasses = () => {
+    switch (variant) {
+      case "primary":
+        return "bg-black text-white hover:bg-[#333333] focus:ring-black";
+      case "secondary":
+        return "bg-[#F5F5F5] text-black hover:bg-[#E0E0E0] focus:ring-[#333333]";
+      case "outline":
+        return "bg-transparent text-black border border-black hover:bg-[#F5F5F5] focus:ring-black";
+      case "text":
+        return "bg-transparent text-black hover:bg-[#F5F5F5] focus:ring-black";
+      case "danger":
+        return "bg-[#D32F2F] text-white hover:bg-[#C62828] focus:ring-[#D32F2F]";
+      default:
+        return "bg-black text-white hover:bg-[#333333] focus:ring-black";
+    }
   };
 
-  // Width class
-  const widthClass = fullWidth ? "w-full" : "";
-
-  // Disabled state
-  const disabledClasses =
-    disabled || isLoading ? "opacity-60 cursor-not-allowed" : "cursor-pointer";
+  // Loading spinner component
+  const LoadingSpinner = () => (
+    <svg
+      className="animate-spin -ml-1 mr-2 h-4 w-4"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      ></circle>
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+      ></path>
+    </svg>
+  );
 
   return (
     <button
-      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${widthClass} ${disabledClasses} ${className}`}
-      disabled={disabled || isLoading}
-      {...props}
+      type={type}
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={`
+        ${getSizeClasses()}
+        ${getVariantClasses()}
+        ${fullWidth ? "w-full" : ""}
+        font-medium rounded transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2
+        inline-flex items-center justify-center
+        ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""}
+        ${className}
+      `}
     >
-      {isLoading && (
-        <span className="mr-2">
-          <span className="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-        </span>
-      )}
-
-      {icon && iconPosition === "left" && !isLoading && (
-        <span className="mr-2">{icon}</span>
-      )}
-
+      {loading && <LoadingSpinner />}
+      {!loading && startIcon && <span className="mr-2">{startIcon}</span>}
       {children}
-
-      {icon && iconPosition === "right" && <span className="ml-2">{icon}</span>}
+      {!loading && endIcon && <span className="ml-2">{endIcon}</span>}
     </button>
   );
 };

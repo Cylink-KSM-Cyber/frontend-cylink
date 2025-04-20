@@ -47,7 +47,7 @@ interface LoginFormProps {
  * @returns Login form component
  */
 const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
-  const { login, isLoading, error: authError } = useAuth();
+  const { login, isLoading } = useAuth();
   // const { showToast } = useToast();
 
   // Form validation with react-hook-form and zod
@@ -124,22 +124,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
           </Link>
         </div>
 
-        {/* Auth error message */}
-        {authError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="p-3 rounded-md bg-red-50 text-red-500 text-sm"
-          >
-            {authError}
-          </motion.div>
-        )}
-
         {/* Submit button */}
         <Button
           type="submit"
           fullWidth
-          isLoading={isLoading}
           disabled={isLoading}
           className="login-button"
         >
