@@ -337,3 +337,34 @@ export interface ExtendedDashboardStats extends DashboardStats {
     data?: TotalClicksResponse["data"];
   };
 }
+
+export interface CreateUrlFormData {
+  originalUrl: string;
+  customCode?: string;
+  title: string;
+  expiryDate: string;
+}
+
+export interface CreateUrlFormResponse {
+  status: number;
+  message: string;
+  data: {
+    id: number;
+    original_url: string;
+    short_code: string;
+    short_url: string;
+    title: string;
+    clicks: number;
+    user_id: number;
+    created_at: string;
+    updated_at: string;
+    expiry_date: string;
+    is_active: boolean;
+  };
+}
+
+export interface CreateUrlModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: CreateUrlFormData) => void;
+}

@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  DashboardStats,
-  Url,
-  // UrlFilter as UrlFilterInterface,
-} from "@/interfaces/url";
-import React from "react";
+import type { DashboardStats, Url } from "@/interfaces/url";
+import type React from "react";
 import UrlStatsSummary from "../molecules/UrlStatsSummary";
 import UrlHeader from "../organisms/UrlHeader";
 import UrlsTable from "../molecules/UrlsTable";
@@ -133,9 +129,9 @@ const UrlTemplate: React.FC<UrlTemplateProps> = ({
           className="mb-6"
         />
 
-        <div className="flex flex-col sm:flex-row justify-between">
+        <div className="flex flex-col gap-6 sm:flex-row lg:justify-between">
           {onSearch && (
-            <div className="w-[50%]">
+            <div className="w-full lg:w-[50%] ">
               <SearchInput placeholder="Search URLs..." onSearch={onSearch} />
             </div>
           )}
@@ -145,15 +141,13 @@ const UrlTemplate: React.FC<UrlTemplateProps> = ({
               onFilterChange={onUrlFilterChange}
             />
           </div>
-          {onCreateUrl && (
-            <Button
-              variant="primary"
-              onClick={onCreateUrl}
-              startIcon={<RiAddLine className="h-4 w-4 cursor-pointer" />}
-            >
-              Create New URL
-            </Button>
-          )}
+          <Button
+            variant="primary"
+            onClick={() => onCreateUrl()}
+            startIcon={<RiAddLine className="max-h-4 max-w-4 cursor-pointer" />}
+          >
+            Create New URL
+          </Button>
         </div>
         <div className="mt-6">
           <UrlsTable

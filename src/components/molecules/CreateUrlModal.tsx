@@ -1,165 +1,212 @@
-import React, { useState } from "react";
-import { FiX, FiCalendar, FiLink } from "react-icons/fi";
+"use client";
 
+import type React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import Modal from "@/components/atoms/Modal";
+import Button from "@/components/atoms/Button";
+import { RiAddLine, RiLinkM } from "react-icons/ri";
+
+/**
+ * CreateUrlModalProps interface
+ * @interface CreateUrlModalProps
+ */
 interface CreateUrlModalProps {
+  /** Whether the modal is visible */
   isOpen: boolean;
+  /** Function to call when creation is canceled */
   onClose: () => void;
-  onSubmit: (data: {
-    title: string;
-    originalUrl: string;
-    customBackHalf?: string;
-    expiryDate?: string;
-    generateQR: boolean;
-    trackAnalytics: boolean;
-  }) => void;
+  /** Function to call when form is submitted */
+  onSubmit: (data: CreateUrlFormData) => void;
+  /** Whether creation is in progress */
+  isCreating?: boolean;
 }
 
+/**
+ * Form data structure
+ * @interface CreateUrlFormData
+ */
+export interface CreateUrlFormData {
+  title: string;
+  originalUrl: string;
+  customCode?: string;
+  expiryDate: string;
+}
+
+// Zod schema for form validation
+const createUrlSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  originalUrl: z.string().url("Please enter a valid URL"),
+  customCode: z.string().optional(),
+  expiryDate: z.string().min(1, "Expiry date is required"),
+});
+
+type CreateUrlFormSchema = z.infer<typeof createUrlSchema>;
+
+/**
+ * CreateUrlModal Component
+ * @description Modal for creating a new URL with form validation
+ */
 const CreateUrlModal: React.FC<CreateUrlModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  isCreating = false,
 }) => {
-  const [formData, setFormData] = useState({
-    title: "",
-    originalUrl: "",
-    customBackHalf: "",
-    expiryDate: "",
-    generateQR: false,
-    trackAnalytics: false,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CreateUrlFormSchema>({
+    resolver: zodResolver(createUrlSchema),
+    defaultValues: {
+      title: "",
+      originalUrl: "",
+      customCode: "",
+      expiryDate: "",
+    },
   });
 
-  if (!isOpen) return null;
+  const handleFormSubmit = (data: CreateUrlFormSchema) => {
+    onSubmit(data);
+    reset();
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
+  const handleCancel = () => {
+    reset();
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg w-full max-w-md p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Create New URL</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+    <Modal
+      title="Create New URL"
+      isOpen={isOpen}
+      onClose={handleCancel}
+      variant="default"
+      size="md"
+      overlayStyle="glassmorphism"
+      footer={
+        <>
+          <Button
+            variant="secondary"
+            onClick={handleCancel}
+            disabled={isCreating}
           >
-            <FiX className="w-5 h-5" />
-          </button>
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleSubmit(handleFormSubmit)}
+            disabled={isCreating}
+            loading={isCreating}
+            startIcon={<RiAddLine />}
+          >
+            {isCreating ? "Creating..." : "Create URL"}
+          </Button>
+        </>
+      }
+    >
+      <div className="flex flex-col py-2">
+        <div className="mb-4 flex justify-center">
+          <div className="rounded-full bg-blue-100 p-3 text-blue-600">
+            <RiLinkM className="h-6 w-6" />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Title
             </label>
             <input
               type="text"
+              id="title"
               placeholder="Enter a memorable title"
-              className="w-full px-3 py-2 border rounded-md"
-              value={formData.title}
-              onChange={(e) =>
-                setFormData({ ...formData, title: e.target.value })
-              }
-              required
+              {...register("title")}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.title.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="originalUrl"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Original URL
             </label>
             <input
               type="url"
+              id="originalUrl"
               placeholder="https://"
-              className="w-full px-3 py-2 border rounded-md"
-              value={formData.originalUrl}
-              onChange={(e) =>
-                setFormData({ ...formData, originalUrl: e.target.value })
-              }
-              required
+              {...register("originalUrl")}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
+            {errors.originalUrl && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.originalUrl.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="customCode"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Custom Back-half (Optional)
             </label>
             <div className="flex">
-              <span className="inline-flex items-center px-3 py-2 border border-r-0 rounded-l-md bg-gray-50 text-gray-500">
+              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                 cylink.co/
               </span>
               <input
                 type="text"
+                id="customCode"
                 placeholder="custom-url"
-                className="flex-1 px-3 py-2 border rounded-r-md"
-                value={formData.customBackHalf}
-                onChange={(e) =>
-                  setFormData({ ...formData, customBackHalf: e.target.value })
-                }
+                {...register("customCode")}
+                className="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
+            {errors.customCode && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.customCode.message}
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Expiry Date (Optional)
+            <label
+              htmlFor="expiryDate"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Expiry Date
             </label>
             <input
               type="date"
-              className="w-full px-3 py-2 border rounded-md"
-              value={formData.expiryDate}
-              onChange={(e) =>
-                setFormData({ ...formData, expiryDate: e.target.value })
-              }
+              id="expiryDate"
+              {...register("expiryDate")}
+              min={new Date().toISOString().split("T")[0]}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.generateQR}
-                onChange={(e) =>
-                  setFormData({ ...formData, generateQR: e.target.checked })
-                }
-                className="rounded text-blue-600"
-              />
-              <span className="text-sm text-gray-700">Generate QR Code</span>
-            </label>
-
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.trackAnalytics}
-                onChange={(e) =>
-                  setFormData({ ...formData, trackAnalytics: e.target.checked })
-                }
-                className="rounded text-blue-600"
-              />
-              <span className="text-sm text-gray-700">Track Analytics</span>
-            </label>
-          </div>
-
-          <div className="flex justify-end space-x-3 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 border rounded-md hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Create URL
-            </button>
+            {errors.expiryDate && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.expiryDate.message}
+              </p>
+            )}
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 };
 

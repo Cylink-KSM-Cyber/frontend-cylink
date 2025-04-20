@@ -15,7 +15,6 @@ export const useMostClickedUrl = (
     page: 1,
     limit: 100,
     sortBy: "clicks",
-    sortOrder: "desc",
   }
 ) => {
   const [urls, setUrls] = useState<Url[]>([]);
@@ -39,7 +38,7 @@ export const useMostClickedUrl = (
 
     try {
       const response = await fetchUrls(filter);
-      console.log("URL Mosdt Clicked API response:", response);
+      console.log("URL Most Clicked API response:", response);
 
       if (response && response.data) {
         console.log("URLs from API:", response.data);

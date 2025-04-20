@@ -1,14 +1,16 @@
 "use client";
 
+import CreateUrlModal from "@/components/molecules/CreateUrlModal";
 import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
 import QrCodeModal from "@/components/molecules/QrCodeModal";
 import UrlTemplate from "@/components/templates/URLsTemplate";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useToast } from "@/contexts/ToastContext";
+import { useCreateUrl } from "@/hooks/url/useCreateUrl";
 import { useDeleteUrl } from "@/hooks/useDeleteUrl";
 import { useUrls } from "@/hooks/useUrls";
 import { useUrlStats } from "@/hooks/useUrlStats";
-import { Url } from "@/interfaces/url";
+import type { CreateUrlFormData, Url } from "@/interfaces/url";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
@@ -37,6 +39,9 @@ export default function UrlsPage() {
   // Delete URL modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [urlToDelete, setUrlToDelete] = useState<Url | null>(null);
+
+  // Create URL modal state
+  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   // QR Code modal state
   const [qrModalOpen, setQrModalOpen] = useState(false);
@@ -72,6 +77,8 @@ export default function UrlsPage() {
     sortOrder: urlSort.sortOrder,
     status: urlFilters.status !== "all" ? urlFilters.status : undefined,
   });
+
+  const { createUrl, isCreating } = useCreateUrl();
 
   // URL deletion hook
   const { deleteUrl, isDeleting, error: deleteError } = useDeleteUrl();
@@ -151,6 +158,10 @@ export default function UrlsPage() {
     setUrlToDelete(null);
   };
 
+  const closeCreateUrl = () => {
+    setCreateModalOpen(false);
+  };
+
   // Handle QR code generation
   const handleGenerateQr = (url: Url) => {
     setUrlForQrCode(url);
@@ -169,7 +180,32 @@ export default function UrlsPage() {
   // Handle create new URL
   const handleCreateUrl = () => {
     // This would typically open a modal or navigate to a create page
-    console.log("Create new URL");
+    setCreateModalOpen(true);
+  };
+
+  // Add a new function to handle the actual form submission
+  const handleSubmitUrlForm = async (data: CreateUrlFormData) => {
+    try {
+      console.log("Form submitted:", data);
+
+      const response = await createUrl(data); // Call the hook's function
+
+      showToast(
+        `URL "${response.data.title}" created successfully`,
+        "success",
+        2000
+      );
+      setCreateModalOpen(false);
+      refreshUrls();
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Something went wrong",
+        "error",
+        3000
+      );
+    } finally {
+      setCreateModalOpen(false);
+    }
   };
 
   // Set initial active tab based on URL params
@@ -220,6 +256,14 @@ export default function UrlsPage() {
         onDeleteUrl={handleDeleteUrl}
         urlFilters={urlFilters}
         onUrlFilterChange={handleFilterChange}
+      />
+
+      {/* Create URL Modal */}
+      <CreateUrlModal
+        isOpen={createModalOpen}
+        onClose={closeCreateUrl}
+        onSubmit={handleSubmitUrlForm}
+        isCreating={isCreating}
       />
 
       {/* Delete URL Modal */}
