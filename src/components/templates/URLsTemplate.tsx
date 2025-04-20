@@ -1,6 +1,10 @@
 "use client";
 
-import { DashboardStats, Url } from "@/interfaces/url";
+import {
+  DashboardStats,
+  Url,
+  // UrlFilter as UrlFilterInterface,
+} from "@/interfaces/url";
 import React from "react";
 import UrlStatsSummary from "../molecules/UrlStatsSummary";
 import UrlHeader from "../organisms/UrlHeader";
@@ -9,6 +13,7 @@ import SearchInput from "../atoms/SearchInput";
 import { RiAddLine } from "react-icons/ri";
 import Button from "../atoms/Button";
 import Pagination from "../molecules/Pagination";
+import UrlFilter from "../molecules/UrlFilter";
 
 /**
  * Prop types for DashboardTemplate component
@@ -34,6 +39,17 @@ interface UrlTemplateProps {
    * Current page for URL pagination
    */
   currentUrlPage: number;
+  /**
+   * Current URL filters
+   */
+  urlFilters: {
+    status?: string;
+    limit?: number;
+  };
+  /**
+   * Function to call when any URL filter changes
+   */
+  onUrlFilterChange: (filterType: string, value: string | number) => void;
   /**
    * Total number of URL pages
    */
@@ -91,6 +107,8 @@ const UrlTemplate: React.FC<UrlTemplateProps> = ({
   isStatsLoading = false,
   currentUrlPage,
   totalUrlPages,
+  urlFilters,
+  onUrlFilterChange,
   onUrlPageChange,
   onUrlSortChange,
   urlSortBy,
@@ -121,6 +139,12 @@ const UrlTemplate: React.FC<UrlTemplateProps> = ({
               <SearchInput placeholder="Search URLs..." onSearch={onSearch} />
             </div>
           )}
+          <div>
+            <UrlFilter
+              filters={urlFilters}
+              onFilterChange={onUrlFilterChange}
+            />
+          </div>
           {onCreateUrl && (
             <Button
               variant="primary"

@@ -123,7 +123,7 @@ export interface DashboardStats {
  */
 export interface UrlFilter {
   search?: string;
-  status?: "active" | "expired" | "inactive" | "all";
+  status?: "active" | "expired" | "inactive" | "all" | string | undefined;
   sortBy?: "created_at" | "clicks" | "title";
   sortOrder?: "asc" | "desc";
   page: number;

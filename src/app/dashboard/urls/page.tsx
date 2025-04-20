@@ -42,6 +42,11 @@ export default function UrlsPage() {
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
 
+  const [urlFilters, setUrlFilters] = useState({
+    status: "all" as string,
+    limit: 10 as number,
+  });
+
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
     sortBy: "created_at" as "created_at" | "clicks" | "title",
@@ -61,10 +66,11 @@ export default function UrlsPage() {
     refreshUrls,
   } = useUrls({
     page: 1,
-    limit: 100,
+    limit: urlFilters.limit,
     search: searchQuery,
     sortBy: urlSort.sortBy,
     sortOrder: urlSort.sortOrder,
+    status: urlFilters.status !== "all" ? urlFilters.status : undefined,
   });
 
   // URL deletion hook
@@ -79,6 +85,18 @@ export default function UrlsPage() {
     } else {
       updateFilter({ search: "" });
     }
+  };
+
+  // Add handler for filter changes
+  const handleFilterChange = (filterType: string, value: string | number) => {
+    setUrlFilters((prev) => ({ ...prev, [filterType]: value }));
+
+    if (filterType === "status") {
+      updateFilter({ status: value !== "all" ? (value as string) : undefined });
+    } else if (filterType === "limit") {
+      updateFilter({ limit: value as number });
+    }
+    // Add more conditions for other filter types as needed
   };
 
   // Handle URL page changes
@@ -200,6 +218,8 @@ export default function UrlsPage() {
         onGenerateQr={handleGenerateQr}
         onEditUrl={handleEditUrl}
         onDeleteUrl={handleDeleteUrl}
+        urlFilters={urlFilters}
+        onUrlFilterChange={handleFilterChange}
       />
 
       {/* Delete URL Modal */}

@@ -1,99 +1,131 @@
+"use client";
+
 import React from "react";
-import { UrlFilter as FilterInterface } from "@/interfaces/url";
-import { RiFilter2Line } from "react-icons/ri";
+import { RiFilter2Line, RiListCheck2 } from "react-icons/ri";
+
+/**
+ * Filter options interface
+ */
+export interface FilterOptions {
+  status?: string;
+  limit?: number;
+  // You can add more filter types here in the future
+}
 
 /**
  * Props for the UrlFilter component
  */
 interface UrlFilterProps {
-  filter: FilterInterface;
-  onFilterChange: (newFilter: Partial<FilterInterface>) => void;
+  /**
+   * Current filter options
+   */
+  filters: FilterOptions;
+  /**
+   * Function to call when any filter changes
+   */
+  onFilterChange: (
+    filterType: keyof FilterOptions,
+    value: string | number
+  ) => void;
 }
 
 /**
  * URL Filter Component
- * @description A component that provides filtering and sorting controls for URLs
+ * @description A component that provides filtering and sorting controls for URLs with enhanced styling
  */
-const UrlFilter = ({ filter, onFilterChange }: UrlFilterProps) => {
+const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    const validValue = ["active", "expired", "inactive", "all"].includes(value)
-      ? (value as FilterInterface["status"])
-      : "all";
-
-    onFilterChange({ status: validValue });
-  };
-
-  const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    const validValue = ["created_at", "clicks", "title"].includes(value)
-      ? (value as FilterInterface["sortBy"])
-      : "created_at";
-
-    onFilterChange({ sortBy: validValue });
-  };
-
-  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    const validValue = ["asc", "desc"].includes(value)
-      ? (value as FilterInterface["sortOrder"])
-      : "desc";
-
-    onFilterChange({ sortOrder: validValue });
+    onFilterChange("status", value);
   };
 
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ limit: Number(e.target.value), page: 1 });
+    const value = parseInt(e.target.value, 10);
+    onFilterChange("limit", value);
   };
 
   return (
-    <div className="flex flex-wrap gap-2 items-center">
-      <div className="flex items-center gap-2 bg-white rounded-lg border border-[#E0E0E0] p-2">
-        <RiFilter2Line className="text-[#607D8B]" />
+    <div className="flex flex-wrap gap-3 items-center">
+      {/* Status Filter */}
+      <div className="relative flex items-center">
+        <div className="absolute left-3 pointer-events-none text-blue-500">
+          <RiFilter2Line className="w-5 h-5" />
+        </div>
         <select
-          value={filter.status || "all"}
+          value={filters.status || "all"}
           onChange={handleStatusChange}
-          className="bg-transparent border-none text-sm focus:ring-0 cursor-pointer"
+          className="bg-white border border-gray-200 rounded-lg pl-10 pr-8 py-2 text-sm shadow-sm hover:border-blue-400 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 cursor-pointer transition-all duration-200 appearance-none"
         >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="expired">Expired</option>
-          <option value="inactive">Inactive</option>
+          <option value="all" className="py-1">
+            All Status
+          </option>
+          <option value="active" className="text-green-600 py-1">
+            Active
+          </option>
+          <option value="expired" className="text-red-600 py-1">
+            Expired
+          </option>
+          <option value="inactive" className="text-gray-600 py-1">
+            Inactive
+          </option>
         </select>
+        <div className="absolute right-3 pointer-events-none">
+          <svg
+            className="w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 bg-white rounded-lg border border-[#E0E0E0] p-2">
+      {/* Limit Filter */}
+      <div className="relative flex items-center">
+        <div className="absolute left-3 pointer-events-none text-purple-500">
+          <RiListCheck2 className="w-5 h-5" />
+        </div>
         <select
-          value={filter.sortBy || "created_at"}
-          onChange={handleSortByChange}
-          className="bg-transparent border-none text-sm focus:ring-0 cursor-pointer"
-        >
-          <option value="created_at">Created Date</option>
-          <option value="clicks">Clicks</option>
-          <option value="title">Title</option>
-        </select>
-
-        <select
-          value={filter.sortOrder || "desc"}
-          onChange={handleSortOrderChange}
-          className="bg-transparent border-none text-sm focus:ring-0 cursor-pointer"
-        >
-          <option value="desc">Descending</option>
-          <option value="asc">Ascending</option>
-        </select>
-      </div>
-
-      <div className="flex items-center gap-2 bg-white rounded-lg border border-[#E0E0E0] p-2">
-        <select
-          value={filter.limit || 10}
+          value={filters.limit || 10}
           onChange={handleLimitChange}
-          className="bg-transparent border-none text-sm focus:ring-0 cursor-pointer"
+          className="bg-white border border-gray-200 rounded-lg pl-10 pr-8 py-2 text-sm shadow-sm hover:border-purple-400 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 cursor-pointer transition-all duration-200 appearance-none"
         >
-          <option value={5}>5 per page</option>
-          <option value={10}>10 per page</option>
-          <option value={25}>25 per page</option>
-          <option value={50}>50 per page</option>
+          <option value={5} className="py-1">
+            5 per page
+          </option>
+          <option value={10} className="py-1">
+            10 per page
+          </option>
+          <option value={25} className="py-1">
+            25 per page
+          </option>
+          <option value={50} className="py-1">
+            50 per page
+          </option>
         </select>
+        <div className="absolute right-3 pointer-events-none">
+          <svg
+            className="w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
+        </div>
       </div>
     </div>
   );
