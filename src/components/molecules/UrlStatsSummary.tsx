@@ -10,6 +10,7 @@ import {
   RiStarSLine,
 } from "react-icons/ri";
 import { useUrlStats } from "@/hooks/useUrlStats";
+import { useCtrStats } from "@/hooks/useCtr";
 
 /**
  * Prop types for StatsSummary component
@@ -39,6 +40,7 @@ const UrlStatsSummary: React.FC<UrlStatsSummaryProps> = ({
   className = "",
 }) => {
   const { urls } = useUrlStats();
+  const { ctrStats } = useCtrStats();
 
   // If loading, show skeleton cards
   if (isLoading) {
@@ -107,7 +109,7 @@ const UrlStatsSummary: React.FC<UrlStatsSummaryProps> = ({
 
       <StatCard
         title="Avg. CTR"
-        value={Math.round(stats.totalClicks / stats.totalUrls)}
+        value={ctrStats?.overall?.ctr ?? ""}
         description="Click-Through Rate Average Percentage"
         type="average-ctr"
         icon={<RiPercentLine className="h-6 w-6" />}
@@ -116,16 +118,10 @@ const UrlStatsSummary: React.FC<UrlStatsSummaryProps> = ({
       <StatCard
         title="Top Performing"
         value={`${urls[0]?.short_code}`}
-        description={`Top Performing URL with ${
-          stats.totalClicksData?.data?.top_performing_days[0]?.clicks ??
-          stats.mostClickedUrl?.clicks
-        } clicks`}
         type="top-performing"
         highlightedValue={{
           prefix: "Top Performing URL with",
-          value:
-            (stats.totalClicksData?.data?.top_performing_days[0]
-              ?.clicks as number) ?? stats.mostClickedUrl?.clicks,
+          value: (urls[0]?.clicks as number) ?? stats.mostClickedUrl?.clicks,
           suffix: " clicks",
         }}
         icon={<RiStarSLine className="h-6 w-6" />}
