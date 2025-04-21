@@ -280,4 +280,22 @@ export interface ExtendedDashboardStats extends DashboardStats {
      */
     change_percentage: number;
   };
+
+  /**
+   * Conversion data from API
+   */
+  conversionData?: {
+    /**
+     * Total conversions from the API
+     */
+    totalConversions: number;
+    /**
+     * Percentage change in conversion rate
+     */
+    changePercentage: number;
+    /**
+     * Top clicks count
+     */
+    topClicksCount: number;
+  };
 }

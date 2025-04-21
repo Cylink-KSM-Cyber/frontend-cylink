@@ -16,6 +16,7 @@ import QrCodeModal from "@/components/molecules/QrCodeModal";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
+import "@/styles/conversionStats.css";
 
 /**
  * Dashboard page
