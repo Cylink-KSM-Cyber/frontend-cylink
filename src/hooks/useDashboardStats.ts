@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { ExtendedDashboardStats } from "@/interfaces/url";
 import { useTotalUrls } from "@/hooks/useTotalUrls";
 import { useTotalClicks } from "@/hooks/useTotalClicks";
+import { useConversionRate } from "@/hooks/useConversionRate";
 
 /**
  * Custom hook for fetching and managing dashboard statistics
@@ -15,6 +16,7 @@ export const useDashboardStats = () => {
 
   // Memoize the parameters to prevent unnecessary re-renders
   const totalClicksParams = useMemo(() => ({ comparison: "30" } as const), []);
+  const conversionRateParams = useMemo(() => ({ comparison: 30 } as const), []);
 
   // Use the totalUrls hook to get real total URLs count from API
   const {
@@ -29,6 +31,13 @@ export const useDashboardStats = () => {
     isLoading: isTotalClicksLoading,
     error: totalClicksError,
   } = useTotalClicks(totalClicksParams);
+
+  // Use the conversionRate hook to get real conversion data from API
+  const {
+    conversionStats,
+    isLoading: isConversionRateLoading,
+    error: conversionRateError,
+  } = useConversionRate(conversionRateParams);
 
   // Log the value of totalUrls for debugging
   useEffect(() => {
@@ -46,6 +55,16 @@ export const useDashboardStats = () => {
       );
     }
   }, [totalClicksData]);
+
+  // Log the value of conversionStats for debugging
+  useEffect(() => {
+    if (conversionStats && process.env.NODE_ENV === "development") {
+      console.log(
+        "Current conversionStats in useDashboardStats:",
+        conversionStats
+      );
+    }
+  }, [conversionStats]);
 
   useEffect(() => {
     // Skip if we've already loaded stats and data hasn't changed
@@ -65,8 +84,10 @@ export const useDashboardStats = () => {
         console.log(
           "Creating stats with totalUrls:",
           totalUrls,
-          "and totalClicksData:",
-          totalClicksData
+          "totalClicksData:",
+          totalClicksData,
+          "and conversionStats:",
+          conversionStats
         );
 
         // Log specific values we're interested in
@@ -99,7 +120,9 @@ export const useDashboardStats = () => {
           // Use real total clicks data from API if available, otherwise use mock data
           totalClicks: totalClicksData?.summary?.total_clicks ?? 1243,
 
-          conversionRate: 3.2,
+          // Use conversion rate from API if available or fall back to mock data
+          conversionRate: conversionStats?.conversionRate ?? 3.2,
+
           qrCodesGenerated: 28,
           activeUrls:
             totalClicksData?.summary?.comparison?.active_urls?.current ?? 35,
@@ -121,7 +144,7 @@ export const useDashboardStats = () => {
             updated_at: new Date(
               Date.now() - 1000 * 60 * 60 * 12
             ).toISOString(),
-            clicks: 156,
+            clicks: conversionStats?.topClicksCount ?? 156,
             is_active: true,
             user_id: 1,
             clickTrend: 12.5,
@@ -139,6 +162,15 @@ export const useDashboardStats = () => {
                     ?.change_percentage ?? 0,
               }
             : undefined,
+
+          // Add the conversion data if available
+          conversionData: conversionStats
+            ? {
+                totalConversions: conversionStats.totalConversions,
+                changePercentage: conversionStats.conversionChangePercentage,
+                topClicksCount: conversionStats.topClicksCount,
+              }
+            : undefined,
         };
 
         console.log("Final stats object:", {
@@ -147,6 +179,7 @@ export const useDashboardStats = () => {
           avgClicksPerUrl: mockStats.averageClicksPerUrl,
           type2: typeof mockStats.averageClicksPerUrl,
           totalClicksData: mockStats.totalClicksData,
+          conversionData: mockStats.conversionData,
         });
 
         // Simulate API delay
@@ -171,16 +204,22 @@ export const useDashboardStats = () => {
       }
     };
 
-    // Only fetch stats when both totalUrls and totalClicksData are loaded
+    // Only fetch stats when all data is loaded
     if (
       !isTotalUrlsLoading &&
       !isTotalClicksLoading &&
-      (totalUrls !== undefined || totalClicksData !== null)
+      !isConversionRateLoading &&
+      (totalUrls !== undefined ||
+        totalClicksData !== null ||
+        conversionStats !== null)
     ) {
       console.log(
-        "totalUrls and totalClicksData loaded, fetching stats with values:",
+        "All data loaded, fetching stats with values - totalUrls:",
         totalUrls,
-        totalClicksData
+        "totalClicksData:",
+        totalClicksData,
+        "conversionStats:",
+        conversionStats
       );
       fetchStats();
     }
@@ -189,6 +228,8 @@ export const useDashboardStats = () => {
     isTotalUrlsLoading,
     totalClicksData,
     isTotalClicksLoading,
+    conversionStats,
+    isConversionRateLoading,
     stats,
     isLoading,
     statsLoaded,
@@ -212,7 +253,9 @@ export const useDashboardStats = () => {
         // Use real total clicks data from API if available, otherwise use mock data
         totalClicks: totalClicksData?.summary?.total_clicks ?? 1243,
 
-        conversionRate: 3.2,
+        // Use conversion rate from API if available or fall back to mock data
+        conversionRate: conversionStats?.conversionRate ?? 3.2,
+
         qrCodesGenerated: 28,
         activeUrls:
           totalClicksData?.summary?.comparison?.active_urls?.current ?? 35,
@@ -232,7 +275,7 @@ export const useDashboardStats = () => {
             Date.now() - 1000 * 60 * 60 * 24 * 7
           ).toISOString(),
           updated_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-          clicks: 156,
+          clicks: conversionStats?.topClicksCount ?? 156,
           is_active: true,
           user_id: 1,
           clickTrend: 12.5,
@@ -250,6 +293,15 @@ export const useDashboardStats = () => {
                   ?.change_percentage ?? 0,
             }
           : undefined,
+
+        // Add the conversion data if available
+        conversionData: conversionStats
+          ? {
+              totalConversions: conversionStats.totalConversions,
+              changePercentage: conversionStats.conversionChangePercentage,
+              topClicksCount: conversionStats.topClicksCount,
+            }
+          : undefined,
       };
 
       console.log("refreshStats - Final stats object:", {
@@ -258,6 +310,7 @@ export const useDashboardStats = () => {
         avgClicksPerUrl: refreshedStats.averageClicksPerUrl,
         type2: typeof refreshedStats.averageClicksPerUrl,
         totalClicksData: refreshedStats.totalClicksData,
+        conversionData: refreshedStats.conversionData,
       });
 
       await new Promise((resolve) => setTimeout(resolve, 800));
@@ -276,11 +329,15 @@ export const useDashboardStats = () => {
   };
 
   // Combine errors from hooks
-  const combinedError = error || totalUrlsError || totalClicksError;
+  const combinedError =
+    error || totalUrlsError || totalClicksError || conversionRateError;
 
   // Loading is true if any hook is loading
   const combinedIsLoading =
-    isLoading || isTotalUrlsLoading || isTotalClicksLoading;
+    isLoading ||
+    isTotalUrlsLoading ||
+    isTotalClicksLoading ||
+    isConversionRateLoading;
 
   return {
     stats,
