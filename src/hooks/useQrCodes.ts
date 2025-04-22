@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { QrCode } from "@/interfaces/url";
 import { fetchQrCodes } from "@/services/qrcode";
 import { QrCodeFilter } from "@/interfaces/qrcode";
+import { useToast } from "@/contexts/ToastContext";
 
 /**
  * Custom hook for fetching and managing QR Codes
@@ -27,6 +28,9 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
     total_pages: 1,
   });
 
+  // Get toast context
+  const { showToast } = useToast();
+
   useEffect(() => {
     const fetchQrCodesList = async () => {
       setIsLoading(true);
@@ -40,16 +44,23 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
         const mappedQrCodes: QrCode[] = response.data.map((qrCode) => ({
           id: qrCode.id,
           urlId: qrCode.url_id,
+          shortCode: qrCode.short_code,
+          shortUrl: qrCode.short_url,
           imageUrl: qrCode.qr_code_url || qrCode.png_url, // Use QR code URL or PNG URL as fallback
+          pngUrl: qrCode.png_url,
+          svgUrl: qrCode.svg_url,
           createdAt: qrCode.created_at,
           updatedAt: qrCode.updated_at,
-          scans: 0, // API doesn't provide scans count yet
+          scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
           title: qrCode.url?.title,
           description: qrCode.url?.original_url,
           customization: {
             foregroundColor: qrCode.color,
             backgroundColor: qrCode.background_color,
-            logoUrl: qrCode.include_logo ? "logo_placeholder" : undefined, // Placeholder
+            includeLogo: qrCode.include_logo,
+            logoSize: qrCode.logo_size,
+            size: qrCode.size,
+            logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
             cornerRadius: 0, // Not supported by API yet
           },
         }));
@@ -58,17 +69,18 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
         setQrCodes(mappedQrCodes);
         setPagination(response.pagination);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to fetch QR codes")
-        );
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch QR codes";
+        setError(err instanceof Error ? err : new Error(errorMessage));
         console.error("Failed to fetch QR codes:", err);
+        showToast(errorMessage, "error", 5000);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchQrCodesList();
-  }, [filter]);
+  }, [filter, showToast]);
 
   /**
    * Update filter parameters
@@ -135,41 +147,46 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
    * Refresh QR Code data
    */
   const refreshQrCodes = async () => {
-    setIsLoading(true);
-    setError(null);
-
     try {
-      // Get QR codes from API
+      // Get QR codes from API with current filter
       const response = await fetchQrCodes(filter);
 
       // Map API response to our internal QrCode type
       const mappedQrCodes: QrCode[] = response.data.map((qrCode) => ({
         id: qrCode.id,
         urlId: qrCode.url_id,
-        imageUrl: qrCode.qr_code_url || qrCode.png_url, // Use QR code URL or PNG URL as fallback
+        shortCode: qrCode.short_code,
+        shortUrl: qrCode.short_url,
+        imageUrl: qrCode.qr_code_url || qrCode.png_url,
+        pngUrl: qrCode.png_url,
+        svgUrl: qrCode.svg_url,
         createdAt: qrCode.created_at,
         updatedAt: qrCode.updated_at,
-        scans: 0, // API doesn't provide scans count yet
+        scans: qrCode.url?.clicks || 0,
         title: qrCode.url?.title,
         description: qrCode.url?.original_url,
         customization: {
           foregroundColor: qrCode.color,
           backgroundColor: qrCode.background_color,
-          logoUrl: qrCode.include_logo ? "logo_placeholder" : undefined, // Placeholder
-          cornerRadius: 0, // Not supported by API yet
+          includeLogo: qrCode.include_logo,
+          logoSize: qrCode.logo_size,
+          size: qrCode.size,
+          logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
+          cornerRadius: 0,
         },
       }));
 
       // Update state with mapped QR codes and pagination info
       setQrCodes(mappedQrCodes);
       setPagination(response.pagination);
+      return true;
     } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to refresh QR codes")
-      );
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to refresh QR codes";
+      setError(err instanceof Error ? err : new Error(errorMessage));
       console.error("Failed to refresh QR codes:", err);
-    } finally {
-      setIsLoading(false);
+      showToast(errorMessage, "error", 5000);
+      return false;
     }
   };
 
