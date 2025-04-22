@@ -14,10 +14,12 @@ import { useToast } from "@/contexts/ToastContext";
 import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
 import QrCodeModal from "@/components/molecules/QrCodeModal";
 import QrCodePreviewModal from "@/components/molecules/QrCodePreviewModal";
+import QrCodeEditModal from "@/components/molecules/QrCodeEditModal";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import "@/styles/conversionStats.css";
+import { useRouter } from "next/navigation";
 
 /**
  * Dashboard page
@@ -49,6 +51,10 @@ export default function DashboardPage() {
   // QR Code preview state
   const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
   const [selectedQrCode, setSelectedQrCode] = useState<QrCode | null>(null);
+
+  // QR Code edit state
+  const [qrEditOpen, setQrEditOpen] = useState(false);
+  const [qrCodeToEdit, setQrCodeToEdit] = useState<QrCode | null>(null);
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
@@ -209,8 +215,8 @@ export default function DashboardPage() {
 
   // Handle QR code edit
   const handleEditQr = (qrCode: QrCode) => {
-    // This would typically open a modal for QR code customization
-    console.log("Edit QR code:", qrCode.id);
+    setQrCodeToEdit(qrCode);
+    setQrEditOpen(true);
   };
 
   // Handle QR code delete
@@ -252,6 +258,8 @@ export default function DashboardPage() {
     averageClicksPerUrl: 0,
     totalClicksData: undefined,
   };
+
+  const router = useRouter();
 
   return (
     <>
@@ -302,6 +310,18 @@ export default function DashboardPage() {
         isOpen={qrPreviewOpen}
         onClose={() => setQrPreviewOpen(false)}
         onDownload={handleDownloadQr}
+      />
+
+      {/* QR Code Edit Modal */}
+      <QrCodeEditModal
+        qrCode={qrCodeToEdit}
+        isOpen={qrEditOpen}
+        onClose={() => setQrEditOpen(false)}
+        onUpdated={() => {
+          setTimeout(() => {
+            router.refresh();
+          }, 500);
+        }}
       />
     </>
   );
