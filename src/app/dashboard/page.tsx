@@ -176,8 +176,12 @@ export default function DashboardPage() {
 
   // Handle QR code preview
   const handleQrPreview = (qrCode: QrCode) => {
-    // This would typically open a modal with a larger preview
-    window.open(qrCode.imageUrl, "_blank");
+    // Open the QR code in a new window if it has a valid URL
+    if (qrCode.imageUrl || qrCode.pngUrl) {
+      window.open(qrCode.imageUrl || qrCode.pngUrl, "_blank");
+    } else {
+      console.log("Preview QR code:", qrCode.id);
+    }
   };
 
   // Handle create new URL
