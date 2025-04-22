@@ -12,6 +12,7 @@ import { RiDownload2Line } from "react-icons/ri";
  * @interface QrCodePreviewModalProps
  */
 interface QrCodePreviewModalProps {
+  x;
   /** The QR code to preview */
   qrCode: QrCode | null;
   /** Whether the modal is visible */
