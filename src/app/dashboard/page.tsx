@@ -37,9 +37,6 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
 
-  // Initialize search state
-  const [searchQuery, setSearchQuery] = useState("");
-
   // Delete URL modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [urlToDelete, setUrlToDelete] = useState<Url | null>(null);
@@ -72,7 +69,6 @@ export default function DashboardPage() {
   } = useUrls({
     page: 1,
     limit: 10,
-    search: searchQuery,
     sortBy: urlSort.sortBy,
     sortOrder: urlSort.sortOrder,
   });
@@ -92,11 +88,6 @@ export default function DashboardPage() {
     sortBy: "created_at",
     sortOrder: "desc",
   });
-
-  // Handle search query changes
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-  };
 
   // Handle URL page changes
   const handleUrlPageChange = (page: number) => {
@@ -239,7 +230,6 @@ export default function DashboardPage() {
         urlSortDirection={urlSort.sortOrder}
         qrCodes={qrCodes || []}
         isQrCodesLoading={isQrCodesLoading}
-        onSearch={handleSearch}
         onCreateUrl={handleCreateUrl}
         onCopyUrl={handleCopyUrl}
         onGenerateQr={handleGenerateQr}

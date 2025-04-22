@@ -69,10 +69,6 @@ interface DashboardTemplateProps {
    */
   isQrCodesLoading?: boolean;
   /**
-   * Function to call when search input changes
-   */
-  onSearch: (value: string) => void;
-  /**
    * Function to call when create URL button is clicked
    */
   onCreateUrl: () => void;
@@ -128,7 +124,6 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   urlSortDirection,
   qrCodes,
   isQrCodesLoading = false,
-  onSearch,
   onCreateUrl,
   onCopyUrl,
   onGenerateQr,
@@ -189,12 +184,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
     <div className="bg-transparent">
       <div className="container mx-auto px-2 sm:px-4">
         {/* Header Section */}
-        <DashboardHeader
-          userName={userName}
-          onSearch={activeTab === "urls" ? onSearch : undefined}
-          onCreateClick={onCreateUrl}
-          className="mb-6"
-        />
+        <DashboardHeader userName={userName} className="mb-6" />
 
         {/* Stats Summary */}
         <StatsSummary
@@ -215,6 +205,15 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
         <div className="mb-8">
           {/* URLs Tab */}
           <TabPanel id="urls" activeTab={activeTab}>
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={onCreateUrl}
+                className="flex items-center gap-2 bg-black hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <RiLinkM className="h-4 w-4" />
+                Create New URL
+              </button>
+            </div>
             <UrlsTable
               urls={urls}
               isLoading={isUrlsLoading}
