@@ -194,9 +194,10 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
             includeLogoChecked={includeLogoChecked}
             generatedQrUrl={generatedQrUrl}
             isLoading={isLoading || isGenerating}
-            value={`https://${url.short_url}`}
+            value={url.short_url}
             errorCorrectionLevel={errorCorrectionLevel as "L" | "M" | "Q" | "H"}
             size={280}
+            logoSize={0.25}
           />
         </div>
 
