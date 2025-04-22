@@ -41,29 +41,43 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
         const response = await fetchQrCodes(filter);
 
         // Map API response to our internal QrCode type
-        const mappedQrCodes: QrCode[] = response.data.map((qrCode) => ({
-          id: qrCode.id,
-          urlId: qrCode.url_id,
-          shortCode: qrCode.short_code,
-          shortUrl: qrCode.short_url,
-          imageUrl: qrCode.qr_code_url || qrCode.png_url, // Use QR code URL or PNG URL as fallback
-          pngUrl: qrCode.png_url,
-          svgUrl: qrCode.svg_url,
-          createdAt: qrCode.created_at,
-          updatedAt: qrCode.updated_at,
-          scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
-          title: qrCode.url?.title,
-          description: qrCode.url?.original_url,
-          customization: {
-            foregroundColor: qrCode.color,
-            backgroundColor: qrCode.background_color,
-            includeLogo: qrCode.include_logo,
-            logoSize: qrCode.logo_size,
+        const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
+          // For debugging
+          console.log("Raw API QR Code data:", {
+            id: qrCode.id,
+            color: qrCode.color,
+            background_color: qrCode.background_color,
+            include_logo: qrCode.include_logo,
+            logo_size: qrCode.logo_size,
             size: qrCode.size,
-            logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
-            cornerRadius: 0, // Not supported by API yet
-          },
-        }));
+            short_url: qrCode.short_url,
+          });
+
+          return {
+            id: qrCode.id,
+            urlId: qrCode.url_id,
+            shortCode: qrCode.short_code,
+            shortUrl: qrCode.short_url,
+            // We're not going to use these image URLs anymore since they don't work
+            imageUrl: undefined,
+            pngUrl: undefined,
+            svgUrl: undefined,
+            createdAt: qrCode.created_at,
+            updatedAt: qrCode.updated_at,
+            scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
+            title: qrCode.url?.title || qrCode.short_code,
+            description: qrCode.url?.original_url,
+            customization: {
+              foregroundColor: qrCode.color || "#000000",
+              backgroundColor: qrCode.background_color || "#FFFFFF",
+              includeLogo: qrCode.include_logo,
+              logoSize: qrCode.logo_size || 0.25, // Default to 25% if not provided
+              size: qrCode.size || 300, // Default size if not provided
+              logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
+              cornerRadius: 0, // Not supported by API yet
+            },
+          };
+        });
 
         // Update state with mapped QR codes and pagination info
         setQrCodes(mappedQrCodes);
@@ -152,29 +166,43 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
       const response = await fetchQrCodes(filter);
 
       // Map API response to our internal QrCode type
-      const mappedQrCodes: QrCode[] = response.data.map((qrCode) => ({
-        id: qrCode.id,
-        urlId: qrCode.url_id,
-        shortCode: qrCode.short_code,
-        shortUrl: qrCode.short_url,
-        imageUrl: qrCode.qr_code_url || qrCode.png_url,
-        pngUrl: qrCode.png_url,
-        svgUrl: qrCode.svg_url,
-        createdAt: qrCode.created_at,
-        updatedAt: qrCode.updated_at,
-        scans: qrCode.url?.clicks || 0,
-        title: qrCode.url?.title,
-        description: qrCode.url?.original_url,
-        customization: {
-          foregroundColor: qrCode.color,
-          backgroundColor: qrCode.background_color,
-          includeLogo: qrCode.include_logo,
-          logoSize: qrCode.logo_size,
+      const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
+        // For debugging
+        console.log("Raw API QR Code data:", {
+          id: qrCode.id,
+          color: qrCode.color,
+          background_color: qrCode.background_color,
+          include_logo: qrCode.include_logo,
+          logo_size: qrCode.logo_size,
           size: qrCode.size,
-          logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
-          cornerRadius: 0,
-        },
-      }));
+          short_url: qrCode.short_url,
+        });
+
+        return {
+          id: qrCode.id,
+          urlId: qrCode.url_id,
+          shortCode: qrCode.short_code,
+          shortUrl: qrCode.short_url,
+          // We're not going to use these image URLs anymore since they don't work
+          imageUrl: undefined,
+          pngUrl: undefined,
+          svgUrl: undefined,
+          createdAt: qrCode.created_at,
+          updatedAt: qrCode.updated_at,
+          scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
+          title: qrCode.url?.title || qrCode.short_code,
+          description: qrCode.url?.original_url,
+          customization: {
+            foregroundColor: qrCode.color || "#000000",
+            backgroundColor: qrCode.background_color || "#FFFFFF",
+            includeLogo: qrCode.include_logo,
+            logoSize: qrCode.logo_size || 0.25, // Default to 25% if not provided
+            size: qrCode.size || 300, // Default size if not provided
+            logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
+            cornerRadius: 0, // Not supported by API yet
+          },
+        };
+      });
 
       // Update state with mapped QR codes and pagination info
       setQrCodes(mappedQrCodes);
