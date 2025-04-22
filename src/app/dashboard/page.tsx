@@ -13,6 +13,7 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import { useToast } from "@/contexts/ToastContext";
 import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
 import QrCodeModal from "@/components/molecules/QrCodeModal";
+import QrCodePreviewModal from "@/components/molecules/QrCodePreviewModal";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
@@ -44,6 +45,10 @@ export default function DashboardPage() {
   // QR Code modal state
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
+
+  // QR Code preview state
+  const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
+  const [selectedQrCode, setSelectedQrCode] = useState<QrCode | null>(null);
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
@@ -158,60 +163,8 @@ export default function DashboardPage() {
 
   // Handle QR code preview
   const handleQrPreview = (qrCode: QrCode) => {
-    // Open modal to show QR code (would be implemented in a real app)
-    // Since we don't have a direct URL now, we'll use a different approach
-
-    // Option 1: Create a temporary in-memory QR code and show it
-    const qrElement = document.createElement("div");
-    qrElement.style.position = "fixed";
-    qrElement.style.top = "0";
-    qrElement.style.left = "0";
-    qrElement.style.width = "100%";
-    qrElement.style.height = "100%";
-    qrElement.style.backgroundColor = "rgba(0,0,0,0.8)";
-    qrElement.style.zIndex = "1000";
-    qrElement.style.display = "flex";
-    qrElement.style.alignItems = "center";
-    qrElement.style.justifyContent = "center";
-
-    // Create close button
-    const closeButton = document.createElement("button");
-    closeButton.innerText = "Close";
-    closeButton.style.position = "absolute";
-    closeButton.style.top = "20px";
-    closeButton.style.right = "20px";
-    closeButton.style.padding = "8px 16px";
-    closeButton.style.backgroundColor = "#000";
-    closeButton.style.color = "#fff";
-    closeButton.style.border = "none";
-    closeButton.style.borderRadius = "4px";
-    closeButton.style.cursor = "pointer";
-
-    closeButton.onclick = () => {
-      document.body.removeChild(qrElement);
-    };
-
-    // Set content of the modal
-    qrElement.innerHTML = `
-      <div style="background-color: ${
-        qrCode.customization?.backgroundColor || "#FFFFFF"
-      }; padding: 2rem; border-radius: 8px; text-align: center;">
-        <h3 style="margin-bottom: 1rem; color: #333;">${
-          qrCode.title || `QR Code ${qrCode.id}`
-        }</h3>
-        <div id="qr-container" style="margin-bottom: 1rem;"></div>
-        <p style="margin-top: 1rem; color: #666; font-size: 0.875rem;">URL: ${
-          qrCode.shortUrl || ""
-        }</p>
-      </div>
-    `;
-
-    qrElement.appendChild(closeButton);
-    document.body.appendChild(qrElement);
-
-    // We could use a library to render QR code in the container
-    // For now just showing notification
-    showToast("Preview opened in new window", "success", 2000);
+    setSelectedQrCode(qrCode);
+    setQrPreviewOpen(true);
   };
 
   // Handle QR code download
@@ -341,6 +294,14 @@ export default function DashboardPage() {
         url={urlForQrCode}
         isOpen={qrModalOpen}
         onClose={handleCloseQrModal}
+      />
+
+      {/* QR Code Preview Modal */}
+      <QrCodePreviewModal
+        qrCode={selectedQrCode}
+        isOpen={qrPreviewOpen}
+        onClose={() => setQrPreviewOpen(false)}
+        onDownload={handleDownloadQr}
       />
     </>
   );
