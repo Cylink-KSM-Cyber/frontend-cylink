@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { QrCodeColor, QrCodeGenerateRequest } from "@/interfaces/qrcode";
+import {
+  QrCodeColor,
+  QrCodeGenerateRequest,
+  QrCodeEditRequest,
+  QrCodeUpdateResponse,
+} from "@/interfaces/qrcode";
 import { fetchQrCodeColors, generateQrCode } from "@/services/qrcode";
 import { Url } from "@/interfaces/url";
 import { useToast } from "@/contexts/ToastContext";
@@ -28,10 +33,10 @@ export const useQrCode = () => {
     useState<QrCodeColor | null>(null);
   const [selectedBackgroundColor, setSelectedBackgroundColor] =
     useState<QrCodeColor | null>(null);
-  const [includeLogoChecked, setIncludeLogoChecked] = useState<boolean>(true);
+  const [includeLogoChecked, setIncludeLogoChecked] = useState<boolean>(false);
   const [logoSize, setLogoSize] = useState<number>(0.25); // Default 25%
-  const [qrSize, setQrSize] = useState<number>(300); // Default 300px
-  const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<string>("H"); // Default highest correction
+  const [qrSize, setQrSize] = useState<number>(300); // Default size
+  const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<string>("H");
 
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -185,32 +190,115 @@ export const useQrCode = () => {
     // Keep the selected colors and options
   }, []);
 
+  /**
+   * Fetch single QR code by ID
+   * @param id QR code ID
+   * @returns Promise with QR code data or error
+   */
+  const fetchQrCodeById = async (
+    id: string | number
+  ): Promise<QrCodeUpdateResponse> => {
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/qr-codes/${id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            // Add any authentication headers if needed
+          },
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`Failed to fetch QR code: ${res.status}`);
+      }
+
+      const data = await res.json();
+      setIsLoading(false);
+      return data;
+    } catch (err) {
+      setError(err as Error);
+      setIsLoading(false);
+      throw err;
+    }
+  };
+
+  /**
+   * Update an existing QR code
+   * @param id QR code ID
+   * @param editData QR code data to update
+   * @returns Promise with updated QR code data or error
+   */
+  const updateQrCode = async (
+    id: string | number,
+    editData: QrCodeEditRequest
+  ): Promise<QrCodeUpdateResponse> => {
+    setIsGenerating(true);
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/qr-codes/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            // Add any authentication headers if needed
+          },
+          body: JSON.stringify(editData),
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(
+          errorData.message || `Failed to update QR code: ${res.status}`
+        );
+      }
+
+      const data = await res.json();
+
+      // Display success toast
+      showToast("QR Code berhasil diupdate", "success", 2000);
+
+      setIsGenerating(false);
+      return data;
+    } catch (err) {
+      setError(err as Error);
+      setIsGenerating(false);
+
+      // Display error toast
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update QR code";
+      showToast(errorMessage, "error", 3000);
+
+      throw err;
+    }
+  };
+
   return {
-    // State
     foregroundColors,
     backgroundColors,
     selectedForegroundColor,
     selectedBackgroundColor,
     includeLogoChecked,
-    logoSize,
-    qrSize,
     errorCorrectionLevel,
+    qrSize,
     isLoading,
     isGenerating,
     error,
     generatedQrUrl,
-
-    // Setters
     setSelectedForegroundColor,
     setSelectedBackgroundColor,
     setIncludeLogoChecked,
-    setLogoSize,
-    setQrSize,
     setErrorCorrectionLevel,
-
-    // Actions
+    setQrSize,
     loadColors,
     generateQrCodeForUrl,
     resetQrCode,
+    fetchQrCodeById,
+    updateQrCode,
   };
 };
