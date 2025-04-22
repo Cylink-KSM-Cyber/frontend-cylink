@@ -115,6 +115,7 @@ export interface DashboardStats {
   urlsCreatedToday: number;
   averageClicksPerUrl: number;
   mostClickedUrl?: Url;
+  qrCodesCreatedToday?: number;
 }
 
 /**
