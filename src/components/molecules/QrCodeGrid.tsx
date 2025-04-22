@@ -1,7 +1,8 @@
 import React from "react";
-import { QrCode } from "../../interfaces/url";
-import ButtonIcon from "../atoms/ButtonIcon";
+import { QrCode } from "@/interfaces/url";
+import ButtonIcon from "@/components/atoms/ButtonIcon";
 import Image from "next/image";
+import QRCode from "react-qr-code";
 
 // Icon imports
 import {
@@ -47,7 +48,7 @@ interface QrCodeGridProps {
 
 /**
  * QrCodeGrid Component
- * @description Displays QR codes in a responsive grid layout
+ * @description Displays QR codes in a responsive grid layout with real images and customizations
  */
 const QrCodeGrid: React.FC<QrCodeGridProps> = ({
   qrCodes,
@@ -146,6 +147,86 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
     );
   }
 
+  // Helper function to determine if a URL is valid for rendering
+  const isValidUrl = (url: string | undefined): boolean => {
+    if (!url) return false;
+    try {
+      return Boolean(new URL(url));
+    } catch {
+      return false;
+    }
+  };
+
+  // Render QR code using either image URL or react-qr-code component
+  const renderQrCode = (qrCode: QrCode) => {
+    // If we have a valid API-generated QR code image, use it
+    if (isValidUrl(qrCode.imageUrl)) {
+      return (
+        <Image
+          src={qrCode.imageUrl}
+          alt={qrCode.title || `QR Code ${qrCode.id}`}
+          width={150}
+          height={150}
+          className="h-auto w-auto max-h-full max-w-full object-contain"
+          unoptimized
+        />
+      );
+    }
+
+    // If we don't have a valid image URL, render with react-qr-code
+    // using customization colors if available
+    const fgColor = qrCode.customization?.foregroundColor || "#000000";
+    const bgColor = qrCode.customization?.backgroundColor || "#FFFFFF";
+    const value = qrCode.shortUrl || `https://example.com/${qrCode.id}`;
+
+    return (
+      <div className="relative">
+        <QRCode
+          value={value}
+          size={150}
+          fgColor={fgColor}
+          bgColor={bgColor}
+          level="H"
+        />
+
+        {/* Add logo if includeLogo is true */}
+        {qrCode.customization?.includeLogo && (
+          <div
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full flex items-center justify-center"
+            style={{
+              width: `${
+                qrCode.customization?.logoSize
+                  ? qrCode.customization.logoSize * 40
+                  : 30
+              }px`,
+              height: `${
+                qrCode.customization?.logoSize
+                  ? qrCode.customization.logoSize * 40
+                  : 30
+              }px`,
+            }}
+          >
+            <Image
+              src="/logo/logo-ksm.svg"
+              alt="Logo"
+              width={
+                qrCode.customization?.logoSize
+                  ? qrCode.customization.logoSize * 30
+                  : 20
+              }
+              height={
+                qrCode.customization?.logoSize
+                  ? qrCode.customization.logoSize * 30
+                  : 20
+              }
+              className="object-contain"
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}
@@ -157,17 +238,14 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
         >
           {/* QR Code Image */}
           <div
-            className="relative h-48 bg-[#F5F5F5] flex items-center justify-center cursor-pointer"
+            className="relative h-48 flex items-center justify-center cursor-pointer"
+            style={{
+              backgroundColor:
+                qrCode.customization?.backgroundColor || "#F5F5F5",
+            }}
             onClick={() => onPreview?.(qrCode)}
           >
-            <Image
-              src={qrCode.imageUrl}
-              alt={qrCode.title || "QR Code"}
-              width={150}
-              height={150}
-              className="h-auto w-auto max-h-full max-w-full object-contain"
-              unoptimized
-            />
+            {renderQrCode(qrCode)}
 
             {/* Overlay with information on hover */}
             <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -187,8 +265,7 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
           {/* QR Code Info */}
           <div className="p-4">
             <h3 className="text-base font-medium text-[#333333] mb-1">
-              {qrCode.title ||
-                `QR Code ${qrCode.id.toString().substring(0, 6)}`}
+              {qrCode.title || `QR Code ${String(qrCode.id).substring(0, 6)}`}
             </h3>
             <p className="text-xs text-[#607D8B] mb-2">
               Created: {formatDate(qrCode.createdAt)}
@@ -211,7 +288,9 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
               />
               <ButtonIcon
                 icon={<RiExternalLinkLine />}
-                onClick={() => window.open(qrCode.imageUrl, "_blank")}
+                onClick={() =>
+                  window.open(qrCode.imageUrl || qrCode.pngUrl, "_blank")
+                }
                 tooltip="View full size"
                 ariaLabel="View full size QR code"
               />
