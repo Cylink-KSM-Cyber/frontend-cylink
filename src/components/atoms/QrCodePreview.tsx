@@ -75,6 +75,7 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
           height={size}
           className="object-contain"
           unoptimized
+          priority
         />
       </div>
     );
