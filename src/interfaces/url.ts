@@ -29,7 +29,7 @@ export interface QrCode {
   urlId: number;
   shortCode?: string;
   shortUrl?: string;
-  imageUrl: string; // This will map to qr_code_url from API
+  imageUrl: string | undefined;
   pngUrl?: string;
   svgUrl?: string;
   createdAt: string;
