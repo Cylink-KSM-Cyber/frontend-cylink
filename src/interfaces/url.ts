@@ -27,18 +27,25 @@ export interface Url {
 export interface QrCode {
   id: number;
   urlId: number;
-  imageUrl: string;
+  shortCode?: string;
+  shortUrl?: string;
+  imageUrl: string; // This will map to qr_code_url from API
+  pngUrl?: string;
+  svgUrl?: string;
   createdAt: string;
   updatedAt: string;
+  scans: number;
+  title?: string;
+  description?: string;
   customization?: {
     foregroundColor?: string;
     backgroundColor?: string;
     logoUrl?: string;
     cornerRadius?: number;
+    includeLogo?: boolean;
+    logoSize?: number;
+    size?: number;
   };
-  scans: number;
-  title?: string;
-  description?: string;
 }
 
 /**
