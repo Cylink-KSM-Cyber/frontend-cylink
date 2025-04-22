@@ -83,6 +83,10 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       ? stats.totalClicks.toLocaleString()
       : "0";
 
+  // Use QR codes created today or fallback to urlsCreatedToday
+  const qrCodesCreatedToday =
+    stats.qrCodesCreatedToday ?? stats.urlsCreatedToday;
+
   // Log values for debugging only in development
   if (process.env.NODE_ENV === "development") {
     console.log(
@@ -143,7 +147,7 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
         type="qr-codes"
         highlightedValue={{
           prefix: "Today",
-          value: stats.urlsCreatedToday,
+          value: qrCodesCreatedToday,
           suffix: " new",
         }}
       />

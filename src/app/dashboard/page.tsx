@@ -86,7 +86,12 @@ export default function DashboardPage() {
     isLoading: isQrCodesLoading,
     error: qrCodesError,
     deleteQrCode,
-  } = useQrCodes();
+  } = useQrCodes({
+    page: 1,
+    limit: 10,
+    sortBy: "created_at",
+    sortOrder: "desc",
+  });
 
   // Handle search query changes
   const handleSearch = (value: string) => {
