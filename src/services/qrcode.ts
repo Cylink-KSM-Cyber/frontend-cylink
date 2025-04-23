@@ -1,10 +1,11 @@
-import { get, post } from "./api";
+import { get, post, del } from "./api";
 import {
   QrCodeColorsResponse,
   QrCodeGenerateRequest,
   QrCodeGenerateResponse,
   QrCodeApiResponse,
   QrCodeFilter,
+  QrCodeDeleteResponse,
 } from "@/interfaces/qrcode";
 
 /**
@@ -63,4 +64,16 @@ export const fetchQrCodes = async (
   }
 
   return get<QrCodeApiResponse>(endpoint);
+};
+
+/**
+ * Delete a QR code by ID
+ * @param id - QR code ID
+ * @returns Promise with the deletion response
+ */
+export const deleteQrCodeById = async (
+  id: string | number
+): Promise<QrCodeDeleteResponse> => {
+  const endpoint = `/api/v1/qr-codes/${id}`;
+  return del<QrCodeDeleteResponse>(endpoint);
 };

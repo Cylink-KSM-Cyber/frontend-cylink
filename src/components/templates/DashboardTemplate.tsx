@@ -89,10 +89,6 @@ interface DashboardTemplateProps {
    */
   onDeleteUrl: (url: Url) => void;
   /**
-   * Function to call when QR code download button is clicked
-   */
-  onDownloadQr: (qrCode: QrCode) => void;
-  /**
    * Function to call when QR code edit button is clicked
    */
   onEditQr: (qrCode: QrCode) => void;
@@ -129,7 +125,6 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   onGenerateQr,
   onEditUrl,
   onDeleteUrl,
-  onDownloadQr,
   onEditQr,
   onDeleteQr,
   onQrPreview,
@@ -240,7 +235,6 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
             <QrCodeGrid
               qrCodes={qrCodes}
               isLoading={isQrCodesLoading}
-              onDownload={onDownloadQr}
               onEdit={onEditQr}
               onDelete={onDeleteQr}
               onPreview={onQrPreview}

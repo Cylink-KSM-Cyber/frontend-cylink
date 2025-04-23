@@ -117,3 +117,77 @@ export interface QrCodeStats {
   total: number;
   createdToday: number;
 }
+
+/**
+ * QR Code Edit Request Interface
+ * @description Defines the structure for editing a QR code
+ */
+export interface QrCodeEditRequest {
+  /** Foreground color in hex format */
+  color: string;
+  /** Background color in hex format */
+  background_color: string;
+  /** Whether to include logo */
+  include_logo: boolean;
+  /** Logo size as an integer percentage (0-100) */
+  logo_size: number;
+  /** QR code size in pixels */
+  size: number;
+}
+
+/**
+ * QR Code Update Response Interface
+ * @description Defines the structure of the QR code update response
+ */
+export interface QrCodeUpdateResponse {
+  /** Response status code */
+  status: number;
+  /** Response message */
+  message: string;
+  /** Updated QR code data */
+  data: {
+    /** QR code ID */
+    id: number;
+    /** URL ID this QR code is associated with */
+    url_id: number;
+    /** Short URL */
+    short_url: string;
+    /** QR code image URL */
+    image_url: string;
+    /** QR code customization settings */
+    customization: {
+      /** Foreground color */
+      foreground_color: string;
+      /** Background color */
+      background_color: string;
+      /** Whether logo is included */
+      include_logo: boolean;
+      /** Logo size */
+      logo_size: number;
+      /** QR code size */
+      size: number;
+    };
+    /** Created date */
+    created_at: string;
+    /** Updated date */
+    updated_at: string;
+  };
+}
+
+/**
+ * QR Code Delete Response Interface
+ * @description Defines the structure for QR code deletion response
+ */
+export interface QrCodeDeleteResponse {
+  /** Response status code */
+  status: number;
+  /** Response message */
+  message: string;
+  /** Deleted QR code data */
+  data: {
+    /** QR code ID */
+    id: number;
+    /** Deletion timestamp */
+    deleted_at: string;
+  };
+}

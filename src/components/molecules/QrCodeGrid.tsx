@@ -1,11 +1,11 @@
 import React from "react";
-import { QrCode } from "../../interfaces/url";
-import ButtonIcon from "../atoms/ButtonIcon";
+import { QrCode } from "@/interfaces/url";
+import ButtonIcon from "@/components/atoms/ButtonIcon";
 import Image from "next/image";
+import QrCodePreview from "@/components/atoms/QrCodePreview";
 
 // Icon imports
 import {
-  RiDownloadLine,
   RiExternalLinkLine,
   RiEditLine,
   RiDeleteBinLine,
@@ -23,10 +23,6 @@ interface QrCodeGridProps {
    * Whether the data is loading
    */
   isLoading?: boolean;
-  /**
-   * Function to call when download button is clicked
-   */
-  onDownload?: (qrCode: QrCode) => void;
   /**
    * Function to call when edit button is clicked
    */
@@ -47,12 +43,11 @@ interface QrCodeGridProps {
 
 /**
  * QrCodeGrid Component
- * @description Displays QR codes in a responsive grid layout
+ * @description Displays QR codes in a responsive grid layout with real images and customizations
  */
 const QrCodeGrid: React.FC<QrCodeGridProps> = ({
   qrCodes,
   isLoading = false,
-  onDownload,
   onEdit,
   onDelete,
   onPreview,
@@ -146,6 +141,80 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
     );
   }
 
+  // Render QR code using QrCodePreview component which already handles styling consistently
+  const renderQrCode = (qrCode: QrCode) => {
+    console.log("Rendering QR code with data:", qrCode.id, {
+      shortUrl: qrCode.shortUrl,
+      customization: qrCode.customization,
+    });
+
+    // Extract customization properties with fallbacks
+    const fgColor = qrCode.customization?.foregroundColor || "#000000";
+    const bgColor = qrCode.customization?.backgroundColor || "#FFFFFF";
+    const includeLogo = qrCode.customization?.includeLogo || false;
+    const value = qrCode.shortUrl || `https://example.com/${qrCode.id}`;
+    const logoSize = qrCode.customization?.logoSize || 0.25;
+
+    return (
+      <QrCodePreview
+        foregroundColor={fgColor}
+        backgroundColor={bgColor}
+        includeLogoChecked={includeLogo}
+        size={150}
+        value={value}
+        errorCorrectionLevel="H"
+        logoSize={logoSize}
+        generatedQrUrl={null} // Don't use external URL
+      />
+    );
+  };
+
+  // Simple fallback component in case QR code rendering fails
+  const QRCodeWithFallback: React.FC<{
+    qrCode: QrCode;
+    renderFunction: (qrCode: QrCode) => React.ReactNode;
+  }> = ({ qrCode, renderFunction }) => {
+    const [hasError, setHasError] = React.useState(false);
+
+    React.useEffect(() => {
+      // Reset error state if QR code changes
+      setHasError(false);
+    }, [qrCode.id]);
+
+    if (hasError) {
+      return (
+        <div className="text-center">
+          <div className="text-red-500 mb-2">Could not load QR code</div>
+          <div className="text-sm text-gray-500">
+            <Image
+              src="/logo/logo-ksm.svg"
+              alt="Logo"
+              width={30}
+              height={30}
+              className="mx-auto mb-2"
+            />
+            Try regenerating the QR code
+          </div>
+        </div>
+      );
+    }
+
+    try {
+      return <>{renderFunction(qrCode)}</>;
+    } catch (error) {
+      console.error("Error rendering QR code:", error);
+      setHasError(true);
+      return (
+        <div className="text-center">
+          <div className="text-red-500 mb-2">Could not load QR code</div>
+          <div className="text-sm text-gray-500">
+            Try regenerating the QR code
+          </div>
+        </div>
+      );
+    }
+  };
+
   return (
     <div
       className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ${className}`}
@@ -157,17 +226,15 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
         >
           {/* QR Code Image */}
           <div
-            className="relative h-48 bg-[#F5F5F5] flex items-center justify-center cursor-pointer"
+            className="relative h-48 flex items-center justify-center cursor-pointer"
+            style={{
+              backgroundColor:
+                qrCode.customization?.backgroundColor || "#FFFFFF",
+              padding: "1rem",
+            }}
             onClick={() => onPreview?.(qrCode)}
           >
-            <Image
-              src={qrCode.imageUrl}
-              alt={qrCode.title || "QR Code"}
-              width={150}
-              height={150}
-              className="h-auto w-auto max-h-full max-w-full object-contain"
-              unoptimized
-            />
+            <QRCodeWithFallback qrCode={qrCode} renderFunction={renderQrCode} />
 
             {/* Overlay with information on hover */}
             <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
@@ -187,8 +254,7 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
           {/* QR Code Info */}
           <div className="p-4">
             <h3 className="text-base font-medium text-[#333333] mb-1">
-              {qrCode.title ||
-                `QR Code ${qrCode.id.toString().substring(0, 6)}`}
+              {qrCode.title || `QR Code ${String(qrCode.id).substring(0, 6)}`}
             </h3>
             <p className="text-xs text-[#607D8B] mb-2">
               Created: {formatDate(qrCode.createdAt)}
@@ -201,19 +267,37 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
             </p>
 
             {/* Action buttons */}
-            <div className="flex justify-between">
-              <ButtonIcon
-                icon={<RiDownloadLine />}
-                onClick={() => onDownload?.(qrCode)}
-                tooltip="Download"
-                ariaLabel="Download QR code"
-                variant="primary"
-              />
+            <div className="flex justify-center gap-6">
               <ButtonIcon
                 icon={<RiExternalLinkLine />}
-                onClick={() => window.open(qrCode.imageUrl, "_blank")}
-                tooltip="View full size"
-                ariaLabel="View full size QR code"
+                onClick={() => {
+                  // We don't have direct URLs anymore since we're generating QR codes on the fly
+                  // So let's copy the short URL to clipboard instead
+                  if (qrCode.shortUrl) {
+                    navigator.clipboard.writeText(qrCode.shortUrl);
+                    // Ideally we'd show a toast, but we don't have access to showToast here
+                    console.log(`Copied to clipboard: ${qrCode.shortUrl}`);
+                    // Create a temporary notification
+                    const notification = document.createElement("div");
+                    notification.textContent = "URL copied to clipboard!";
+                    notification.style.position = "fixed";
+                    notification.style.bottom = "20px";
+                    notification.style.right = "20px";
+                    notification.style.backgroundColor = "#333";
+                    notification.style.color = "#fff";
+                    notification.style.padding = "10px 20px";
+                    notification.style.borderRadius = "4px";
+                    notification.style.zIndex = "9999";
+                    document.body.appendChild(notification);
+
+                    // Remove notification after 2 seconds
+                    setTimeout(() => {
+                      document.body.removeChild(notification);
+                    }, 2000);
+                  }
+                }}
+                tooltip="Copy URL"
+                ariaLabel="Copy URL to clipboard"
               />
               <ButtonIcon
                 icon={<RiEditLine />}

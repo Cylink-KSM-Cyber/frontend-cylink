@@ -12,11 +12,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useToast } from "@/contexts/ToastContext";
 import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
+import DeleteQrCodeModal from "@/components/molecules/DeleteQrCodeModal";
 import QrCodeModal from "@/components/molecules/QrCodeModal";
+import QrCodePreviewModal from "@/components/molecules/QrCodePreviewModal";
+import QrCodeEditModal from "@/components/molecules/QrCodeEditModal";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import "@/styles/conversionStats.css";
+import "@/styles/deleteModal.css";
+import { useRouter } from "next/navigation";
 
 /**
  * Dashboard page
@@ -44,6 +49,14 @@ export default function DashboardPage() {
   // QR Code modal state
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
+
+  // QR Code preview state
+  const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
+  const [selectedQrCode, setSelectedQrCode] = useState<QrCode | null>(null);
+
+  // QR Code edit state
+  const [qrEditOpen, setQrEditOpen] = useState(false);
+  const [qrCodeToEdit, setQrCodeToEdit] = useState<QrCode | null>(null);
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
@@ -82,12 +95,20 @@ export default function DashboardPage() {
     isLoading: isQrCodesLoading,
     error: qrCodesError,
     deleteQrCode,
+    refreshQrCodes,
   } = useQrCodes({
     page: 1,
     limit: 10,
     sortBy: "created_at",
     sortOrder: "desc",
   });
+
+  // Delete QR Code modal state
+  const [deleteQrCodeModalOpen, setDeleteQrCodeModalOpen] = useState(false);
+  const [qrCodeToDelete, setQrCodeToDelete] = useState<QrCode | null>(null);
+
+  // Add state for QR code deletion
+  const [isDeletingQrCode, setIsDeletingQrCode] = useState(false);
 
   // Handle URL page changes
   const handleUrlPageChange = (page: number) => {
@@ -156,28 +177,48 @@ export default function DashboardPage() {
     }, 300);
   };
 
-  // Handle QR code download
-  const handleDownloadQr = (qrCode: QrCode) => {
-    // In a real app, this would trigger a download
-    window.open(qrCode.imageUrl, "_blank");
+  // Handle QR code preview
+  const handleQrPreview = (qrCode: QrCode) => {
+    setSelectedQrCode(qrCode);
+    setQrPreviewOpen(true);
   };
 
   // Handle QR code edit
   const handleEditQr = (qrCode: QrCode) => {
-    // This would typically open a modal for QR code customization
-    console.log("Edit QR code:", qrCode.id);
+    setQrCodeToEdit(qrCode);
+    setQrEditOpen(true);
   };
 
-  // Handle QR code delete
+  // Open delete QR code confirmation modal
   const handleDeleteQr = (qrCode: QrCode) => {
-    // In a real app, this would show a confirmation dialog
-    deleteQrCode(String(qrCode.id));
+    setQrCodeToDelete(qrCode);
+    setDeleteQrCodeModalOpen(true);
   };
 
-  // Handle QR code preview
-  const handleQrPreview = (qrCode: QrCode) => {
-    // This would typically open a modal with a larger preview
-    window.open(qrCode.imageUrl, "_blank");
+  // Confirm QR code deletion
+  const confirmDeleteQrCode = async (qrCode: QrCode) => {
+    setIsDeletingQrCode(true);
+
+    const success = await deleteQrCode(String(qrCode.id));
+
+    setIsDeletingQrCode(false);
+
+    if (success) {
+      // Close modal
+      setDeleteQrCodeModalOpen(false);
+      setQrCodeToDelete(null);
+
+      // Wait for the modal to close and refresh the QR codes
+      setTimeout(() => {
+        refreshQrCodes();
+      }, 1300);
+    }
+  };
+
+  // Cancel QR code deletion
+  const cancelDeleteQrCode = () => {
+    setDeleteQrCodeModalOpen(false);
+    setQrCodeToDelete(null);
   };
 
   // Handle create new URL
@@ -214,6 +255,8 @@ export default function DashboardPage() {
     totalClicksData: undefined,
   };
 
+  const router = useRouter();
+
   return (
     <>
       <DashboardTemplate
@@ -235,7 +278,6 @@ export default function DashboardPage() {
         onGenerateQr={handleGenerateQr}
         onEditUrl={handleEditUrl}
         onDeleteUrl={handleDeleteUrl}
-        onDownloadQr={handleDownloadQr}
         onEditQr={handleEditQr}
         onDeleteQr={handleDeleteQr}
         onQrPreview={handleQrPreview}
@@ -250,11 +292,39 @@ export default function DashboardPage() {
         isDeleting={isDeleting}
       />
 
+      {/* Delete QR Code Modal */}
+      <DeleteQrCodeModal
+        qrCode={qrCodeToDelete}
+        isOpen={deleteQrCodeModalOpen}
+        onConfirm={confirmDeleteQrCode}
+        onCancel={cancelDeleteQrCode}
+        isDeleting={isDeletingQrCode}
+      />
+
       {/* QR Code Modal */}
       <QrCodeModal
         url={urlForQrCode}
         isOpen={qrModalOpen}
         onClose={handleCloseQrModal}
+      />
+
+      {/* QR Code Preview Modal */}
+      <QrCodePreviewModal
+        qrCode={selectedQrCode}
+        isOpen={qrPreviewOpen}
+        onClose={() => setQrPreviewOpen(false)}
+      />
+
+      {/* QR Code Edit Modal */}
+      <QrCodeEditModal
+        qrCode={qrCodeToEdit}
+        isOpen={qrEditOpen}
+        onClose={() => setQrEditOpen(false)}
+        onUpdated={() => {
+          setTimeout(() => {
+            router.refresh();
+          }, 500);
+        }}
       />
     </>
   );
