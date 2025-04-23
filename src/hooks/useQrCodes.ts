@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { QrCode } from "@/interfaces/url";
-import { fetchQrCodes } from "@/services/qrcode";
+import { fetchQrCodes, deleteQrCodeById } from "@/services/qrcode";
 import { QrCodeFilter } from "@/interfaces/qrcode";
 import { useToast } from "@/contexts/ToastContext";
 
@@ -110,14 +110,25 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
    */
   const deleteQrCode = async (id: string | number) => {
     try {
-      // This will be replaced with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Call the API to delete the QR code
+      await deleteQrCodeById(id);
+
+      // Update local state by removing the deleted QR code
       setQrCodes((prevCodes) =>
         prevCodes.filter((code) => String(code.id) !== String(id))
       );
+
+      // Show success toast
+      showToast("QR code deleted successfully", "success", 4000);
+
       return true;
     } catch (err) {
+      // Handle error
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete QR Code";
       console.error(`Failed to delete QR Code ${id}:`, err);
+      showToast(errorMessage, "error", 4000);
+
       return false;
     }
   };
