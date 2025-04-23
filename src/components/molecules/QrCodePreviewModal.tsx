@@ -4,8 +4,6 @@ import React from "react";
 import { QrCode } from "@/interfaces/url";
 import Modal from "@/components/atoms/Modal";
 import QrCodePreview from "@/components/atoms/QrCodePreview";
-import Button from "@/components/atoms/Button";
-import { RiDownload2Line } from "react-icons/ri";
 
 /**
  * QR Code Preview Modal props
@@ -18,8 +16,6 @@ interface QrCodePreviewModalProps {
   isOpen: boolean;
   /** Function to call when modal is closed */
   onClose: () => void;
-  /** Function to call when download button is clicked */
-  onDownload: (qrCode: QrCode) => void;
 }
 
 /**
@@ -30,7 +26,6 @@ const QrCodePreviewModal: React.FC<QrCodePreviewModalProps> = ({
   qrCode,
   isOpen,
   onClose,
-  onDownload,
 }) => {
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -60,15 +55,6 @@ const QrCodePreviewModal: React.FC<QrCodePreviewModalProps> = ({
       onClose={onClose}
       variant="default"
       size="md"
-      footer={
-        <Button
-          variant="primary"
-          onClick={() => onDownload(qrCode)}
-          startIcon={<RiDownload2Line />}
-        >
-          Download
-        </Button>
-      }
       overlayStyle="glassmorphism"
     >
       <div className="qr-preview-modal-content">
