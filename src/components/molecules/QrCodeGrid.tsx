@@ -6,7 +6,6 @@ import QrCodePreview from "@/components/atoms/QrCodePreview";
 
 // Icon imports
 import {
-  RiDownloadLine,
   RiExternalLinkLine,
   RiEditLine,
   RiDeleteBinLine,
@@ -24,10 +23,6 @@ interface QrCodeGridProps {
    * Whether the data is loading
    */
   isLoading?: boolean;
-  /**
-   * Function to call when download button is clicked
-   */
-  onDownload?: (qrCode: QrCode) => void;
   /**
    * Function to call when edit button is clicked
    */
@@ -53,7 +48,6 @@ interface QrCodeGridProps {
 const QrCodeGrid: React.FC<QrCodeGridProps> = ({
   qrCodes,
   isLoading = false,
-  onDownload,
   onEdit,
   onDelete,
   onPreview,
@@ -273,14 +267,7 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
             </p>
 
             {/* Action buttons */}
-            <div className="flex justify-between">
-              <ButtonIcon
-                icon={<RiDownloadLine />}
-                onClick={() => onDownload?.(qrCode)}
-                tooltip="Download"
-                ariaLabel="Download QR code"
-                variant="primary"
-              />
+            <div className="flex justify-center gap-6">
               <ButtonIcon
                 icon={<RiExternalLinkLine />}
                 onClick={() => {
