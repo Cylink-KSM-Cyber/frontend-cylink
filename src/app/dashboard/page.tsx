@@ -183,46 +183,6 @@ export default function DashboardPage() {
     setQrPreviewOpen(true);
   };
 
-  // Handle QR code download
-  const handleDownloadQr = (qrCode: QrCode) => {
-    // Since we don't have direct URLs to download from, we need to generate
-    // the QR code first using the canvas API
-
-    // Create a temporary canvas to generate QR code
-    const canvas = document.createElement("canvas");
-    const size = qrCode.customization?.size || 300;
-    canvas.width = size;
-    canvas.height = size;
-
-    // Get the QR code as SVG string
-    const qrCodeElement = document.createElement("div");
-
-    // Render to a temporary div to get SVG
-    qrCodeElement.innerHTML = `
-      <div style="display: none;">
-        <svg id="temp-qr-svg" height="${size}" width="${size}">
-          <rect width="100%" height="100%" fill="${
-            qrCode.customization?.backgroundColor || "#FFFFFF"
-          }"></rect>
-          <!-- QR code would be drawn here in a real implementation -->
-          <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="${
-            qrCode.customization?.foregroundColor || "#000000"
-          }">
-            ${qrCode.shortUrl || ""}
-          </text>
-        </svg>
-      </div>
-    `;
-
-    document.body.appendChild(qrCodeElement);
-
-    // In a real implementation, we'd draw the QR code on the canvas
-    // For simplicity, just showing a toast and cleanup
-    document.body.removeChild(qrCodeElement);
-
-    showToast("QR code download started", "success", 2000);
-  };
-
   // Handle QR code edit
   const handleEditQr = (qrCode: QrCode) => {
     setQrCodeToEdit(qrCode);
@@ -318,7 +278,6 @@ export default function DashboardPage() {
         onGenerateQr={handleGenerateQr}
         onEditUrl={handleEditUrl}
         onDeleteUrl={handleDeleteUrl}
-        onDownloadQr={handleDownloadQr}
         onEditQr={handleEditQr}
         onDeleteQr={handleDeleteQr}
         onQrPreview={handleQrPreview}
@@ -354,7 +313,6 @@ export default function DashboardPage() {
         qrCode={selectedQrCode}
         isOpen={qrPreviewOpen}
         onClose={() => setQrPreviewOpen(false)}
-        onDownload={handleDownloadQr}
       />
 
       {/* QR Code Edit Modal */}
