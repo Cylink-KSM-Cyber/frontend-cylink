@@ -173,3 +173,21 @@ export interface QrCodeUpdateResponse {
     updated_at: string;
   };
 }
+
+/**
+ * QR Code Delete Response Interface
+ * @description Defines the structure for QR code deletion response
+ */
+export interface QrCodeDeleteResponse {
+  /** Response status code */
+  status: number;
+  /** Response message */
+  message: string;
+  /** Deleted QR code data */
+  data: {
+    /** QR code ID */
+    id: number;
+    /** Deletion timestamp */
+    deleted_at: string;
+  };
+}
