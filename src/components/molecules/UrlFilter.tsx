@@ -109,6 +109,9 @@ const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
           <option value={50} className="py-1">
             50 per page
           </option>
+          <option value={100} className="py-1">
+            100 per page
+          </option>
         </select>
         <div className="absolute right-3 pointer-events-none">
           <svg

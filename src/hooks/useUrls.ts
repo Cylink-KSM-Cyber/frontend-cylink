@@ -11,7 +11,7 @@ import { fetchUrls } from "@/services/url";
  */
 export const useUrls = (
   initialFilter: UrlFilter = {
-    search: "tes",
+    search: "",
     page: 1,
     limit: 10,
     sortBy: "created_at",
