@@ -109,10 +109,13 @@ const CreateUrlModal: React.FC<CreateUrlModalProps> = ({
       }
     >
       <div className="flex flex-col py-2">
-        <div className="mb-4 flex justify-center">
+        <div className="mb-4 flex flex-col items-center gap-4 justify-center">
           <div className="rounded-full bg-blue-100 p-3 text-blue-600">
             <RiLinkM className="h-6 w-6" />
           </div>
+          <h4 className="mb-2 mx-10 text-center text-lg font-medium text-gray-900">
+            Easily shorten and personalize your links!
+          </h4>
         </div>
 
         <form className="space-y-4">
