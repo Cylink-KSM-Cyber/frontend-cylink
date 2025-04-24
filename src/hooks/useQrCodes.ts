@@ -1,88 +1,134 @@
 import { useState, useEffect } from "react";
 import { QrCode } from "@/interfaces/url";
+import { fetchQrCodes, deleteQrCodeById } from "@/services/qrcode";
+import { QrCodeFilter } from "@/interfaces/qrcode";
+import { useToast } from "@/contexts/ToastContext";
 
 /**
  * Custom hook for fetching and managing QR Codes
  * @returns QR Code data and loading state
  */
-export const useQrCodes = () => {
+export const useQrCodes = (initialFilter?: QrCodeFilter) => {
   const [qrCodes, setQrCodes] = useState<QrCode[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [filter, setFilter] = useState<QrCodeFilter>(
+    initialFilter || {
+      page: 1,
+      limit: 10,
+      sortBy: "created_at",
+      sortOrder: "desc",
+      includeUrl: true,
+    }
+  );
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    total_pages: 1,
+  });
+
+  // Get toast context
+  const { showToast } = useToast();
 
   useEffect(() => {
-    const fetchQrCodes = async () => {
+    const fetchQrCodesList = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        // This will be replaced with actual API call when integrated
-        // For now, return mock data that matches the interface
-        const mockQrCodes: QrCode[] = Array(6)
-          .fill(null)
-          .map((_, index) => ({
-            id: `qr-${index + 1}`,
-            urlId: `url-${index + 1}`,
-            imageUrl: `https://placehold.co/200x200?text=QR+Code+${index + 1}`,
-            createdAt: new Date(
-              Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 30
-            ).toISOString(),
-            updatedAt: new Date(
-              Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 15
-            ).toISOString(),
-            scans: Math.floor(Math.random() * 100),
-            title: index % 2 === 0 ? `QR Code ${index + 1}` : undefined,
-            description:
-              index % 3 === 0
-                ? `Description for QR Code ${index + 1}`
-                : undefined,
-            customization:
-              index % 2 === 0
-                ? {
-                    foregroundColor: [
-                      "#000000",
-                      "#1a73e8",
-                      "#d32f2f",
-                      "#388e3c",
-                    ][index % 4],
-                    backgroundColor: "#ffffff",
-                    logoUrl:
-                      index % 3 === 0
-                        ? "https://placehold.co/50x50?text=Logo"
-                        : undefined,
-                    cornerRadius: index % 4 === 0 ? 8 : undefined,
-                  }
-                : undefined,
-          }));
+        // Get QR codes from API
+        const response = await fetchQrCodes(filter);
 
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setQrCodes(mockQrCodes);
+        // Map API response to our internal QrCode type
+        const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
+          // For debugging
+          console.log("Raw API QR Code data:", {
+            id: qrCode.id,
+            color: qrCode.color,
+            background_color: qrCode.background_color,
+            include_logo: qrCode.include_logo,
+            logo_size: qrCode.logo_size,
+            size: qrCode.size,
+            short_url: qrCode.short_url,
+          });
+
+          return {
+            id: qrCode.id,
+            urlId: qrCode.url_id,
+            shortCode: qrCode.short_code,
+            shortUrl: qrCode.short_url,
+            // We're not going to use these image URLs anymore since they don't work
+            imageUrl: undefined,
+            pngUrl: undefined,
+            svgUrl: undefined,
+            createdAt: qrCode.created_at,
+            updatedAt: qrCode.updated_at,
+            scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
+            title: qrCode.url?.title || qrCode.short_code,
+            description: qrCode.url?.original_url,
+            customization: {
+              foregroundColor: qrCode.color || "#000000",
+              backgroundColor: qrCode.background_color || "#FFFFFF",
+              includeLogo: qrCode.include_logo,
+              logoSize: qrCode.logo_size || 0.25, // Default to 25% if not provided
+              size: qrCode.size || 300, // Default size if not provided
+              logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
+              cornerRadius: 0, // Not supported by API yet
+            },
+          };
+        });
+
+        // Update state with mapped QR codes and pagination info
+        setQrCodes(mappedQrCodes);
+        setPagination(response.pagination);
       } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Failed to fetch QR codes")
-        );
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch QR codes";
+        setError(err instanceof Error ? err : new Error(errorMessage));
         console.error("Failed to fetch QR codes:", err);
+        showToast(errorMessage, "error", 5000);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchQrCodes();
-  }, []);
+    fetchQrCodesList();
+  }, [filter, showToast]);
+
+  /**
+   * Update filter parameters
+   * @param newFilter - New filter parameters to apply
+   */
+  const updateFilter = (newFilter: Partial<QrCodeFilter>) => {
+    setFilter((prev) => ({ ...prev, ...newFilter }));
+  };
 
   /**
    * Delete a QR Code
    * @param id - ID of QR Code to delete
    */
-  const deleteQrCode = async (id: string) => {
+  const deleteQrCode = async (id: string | number) => {
     try {
-      // This will be replaced with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setQrCodes((prevCodes) => prevCodes.filter((code) => code.id !== id));
+      // Call the API to delete the QR code
+      await deleteQrCodeById(id);
+
+      // Update local state by removing the deleted QR code
+      setQrCodes((prevCodes) =>
+        prevCodes.filter((code) => String(code.id) !== String(id))
+      );
+
+      // Show success toast
+      showToast("QR code deleted successfully", "success", 4000);
+
       return true;
     } catch (err) {
+      // Handle error
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete QR Code";
       console.error(`Failed to delete QR Code ${id}:`, err);
+      showToast(errorMessage, "error", 4000);
+
       return false;
     }
   };
@@ -93,7 +139,7 @@ export const useQrCodes = () => {
    * @param customization - Optional customization options
    */
   const generateQrCode = async (
-    urlId: string,
+    urlId: string | number,
     customization?: QrCode["customization"],
     title?: string,
     description?: string
@@ -104,7 +150,7 @@ export const useQrCodes = () => {
 
       const newQrCode: QrCode = {
         id: Date.now(),
-        urlId: parseInt(urlId) || 0,
+        urlId: typeof urlId === "string" ? parseInt(urlId) || 0 : urlId,
         imageUrl: `https://placehold.co/200x200?text=New+QR+Code`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -126,54 +172,60 @@ export const useQrCodes = () => {
    * Refresh QR Code data
    */
   const refreshQrCodes = async () => {
-    setIsLoading(true);
-    setError(null);
-
     try {
-      // This will be replaced with actual API call
-      const mockQrCodes: QrCode[] = Array(6)
-        .fill(null)
-        .map((_, index) => ({
-          id: `qr-${index + 1}`,
-          urlId: `url-${index + 1}`,
-          imageUrl: `https://placehold.co/200x200?text=QR+Code+${index + 1}`,
-          createdAt: new Date(
-            Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 30
-          ).toISOString(),
-          updatedAt: new Date(
-            Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 15
-          ).toISOString(),
-          scans: Math.floor(Math.random() * 100),
-          title: index % 2 === 0 ? `QR Code ${index + 1}` : undefined,
-          description:
-            index % 3 === 0
-              ? `Description for QR Code ${index + 1}`
-              : undefined,
-          customization:
-            index % 2 === 0
-              ? {
-                  foregroundColor: ["#000000", "#1a73e8", "#d32f2f", "#388e3c"][
-                    index % 4
-                  ],
-                  backgroundColor: "#ffffff",
-                  logoUrl:
-                    index % 3 === 0
-                      ? "https://placehold.co/50x50?text=Logo"
-                      : undefined,
-                  cornerRadius: index % 4 === 0 ? 8 : undefined,
-                }
-              : undefined,
-        }));
+      // Get QR codes from API with current filter
+      const response = await fetchQrCodes(filter);
 
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setQrCodes(mockQrCodes);
+      // Map API response to our internal QrCode type
+      const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
+        // For debugging
+        console.log("Raw API QR Code data:", {
+          id: qrCode.id,
+          color: qrCode.color,
+          background_color: qrCode.background_color,
+          include_logo: qrCode.include_logo,
+          logo_size: qrCode.logo_size,
+          size: qrCode.size,
+          short_url: qrCode.short_url,
+        });
+
+        return {
+          id: qrCode.id,
+          urlId: qrCode.url_id,
+          shortCode: qrCode.short_code,
+          shortUrl: qrCode.short_url,
+          // We're not going to use these image URLs anymore since they don't work
+          imageUrl: undefined,
+          pngUrl: undefined,
+          svgUrl: undefined,
+          createdAt: qrCode.created_at,
+          updatedAt: qrCode.updated_at,
+          scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
+          title: qrCode.url?.title || qrCode.short_code,
+          description: qrCode.url?.original_url,
+          customization: {
+            foregroundColor: qrCode.color || "#000000",
+            backgroundColor: qrCode.background_color || "#FFFFFF",
+            includeLogo: qrCode.include_logo,
+            logoSize: qrCode.logo_size || 0.25, // Default to 25% if not provided
+            size: qrCode.size || 300, // Default size if not provided
+            logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
+            cornerRadius: 0, // Not supported by API yet
+          },
+        };
+      });
+
+      // Update state with mapped QR codes and pagination info
+      setQrCodes(mappedQrCodes);
+      setPagination(response.pagination);
+      return true;
     } catch (err) {
-      setError(
-        err instanceof Error ? err : new Error("Failed to refresh QR codes")
-      );
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to refresh QR codes";
+      setError(err instanceof Error ? err : new Error(errorMessage));
       console.error("Failed to refresh QR codes:", err);
-    } finally {
-      setIsLoading(false);
+      showToast(errorMessage, "error", 5000);
+      return false;
     }
   };
 
@@ -181,6 +233,8 @@ export const useQrCodes = () => {
     qrCodes,
     isLoading,
     error,
+    pagination,
+    updateFilter,
     deleteQrCode,
     generateQrCode,
     refreshQrCodes,

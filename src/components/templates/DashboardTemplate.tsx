@@ -69,10 +69,6 @@ interface DashboardTemplateProps {
    */
   isQrCodesLoading?: boolean;
   /**
-   * Function to call when search input changes
-   */
-  onSearch: (value: string) => void;
-  /**
    * Function to call when create URL button is clicked
    */
   onCreateUrl: () => void;
@@ -92,10 +88,6 @@ interface DashboardTemplateProps {
    * Function to call when URL delete button is clicked
    */
   onDeleteUrl: (url: Url) => void;
-  /**
-   * Function to call when QR code download button is clicked
-   */
-  onDownloadQr: (qrCode: QrCode) => void;
   /**
    * Function to call when QR code edit button is clicked
    */
@@ -128,13 +120,11 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   urlSortDirection,
   qrCodes,
   isQrCodesLoading = false,
-  onSearch,
   onCreateUrl,
   onCopyUrl,
   onGenerateQr,
   onEditUrl,
   onDeleteUrl,
-  onDownloadQr,
   onEditQr,
   onDeleteQr,
   onQrPreview,
@@ -189,12 +179,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
     <div className="bg-transparent">
       <div className="container mx-auto px-2 sm:px-4">
         {/* Header Section */}
-        <DashboardHeader
-          userName={userName}
-          onSearch={activeTab === "urls" ? onSearch : undefined}
-          onCreateClick={onCreateUrl}
-          className="mb-6"
-        />
+        <DashboardHeader userName={userName} className="mb-6" />
 
         {/* Stats Summary */}
         <StatsSummary
@@ -215,6 +200,15 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
         <div className="mb-8">
           {/* URLs Tab */}
           <TabPanel id="urls" activeTab={activeTab}>
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={onCreateUrl}
+                className="flex items-center gap-2 bg-black hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <RiLinkM className="h-4 w-4" />
+                Create New URL
+              </button>
+            </div>
             <UrlsTable
               urls={urls}
               isLoading={isUrlsLoading}
@@ -241,7 +235,6 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
             <QrCodeGrid
               qrCodes={qrCodes}
               isLoading={isQrCodesLoading}
-              onDownload={onDownloadQr}
               onEdit={onEditQr}
               onDelete={onDeleteQr}
               onPreview={onQrPreview}

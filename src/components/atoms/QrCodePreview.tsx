@@ -40,6 +40,10 @@ interface QrCodePreviewProps {
    * Error correction level (L: 7%, M: 15%, Q: 25%, H: 30%)
    */
   errorCorrectionLevel?: "L" | "M" | "Q" | "H";
+  /**
+   * Logo size as a percentage (0.1 to 0.5)
+   */
+  logoSize?: number;
 }
 
 /**
@@ -55,6 +59,7 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
   isLoading = false,
   value = "https://example.com",
   errorCorrectionLevel = "H",
+  logoSize = 0.25,
 }) => {
   // If we have a generated QR URL, display it instead of the preview
   if (generatedQrUrl) {
@@ -69,6 +74,8 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
           width={size}
           height={size}
           className="object-contain"
+          unoptimized
+          priority
         />
       </div>
     );
@@ -86,9 +93,9 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
     );
   }
 
-  // Calculate logo size relative to QR code size (25% of QR size)
-  const logoSize = Math.round(size * 0.25);
-  const logoContainerSize = Math.round(logoSize * 1.4); // 40% padding around logo
+  // Calculate logo size relative to QR code size
+  const logoSizePixels = Math.round(size * logoSize);
+  const logoContainerSize = Math.round(logoSizePixels * 1.4); // 40% padding around logo
 
   // Show QR code with react-qr-code
   return (
@@ -120,8 +127,8 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = ({
           <Image
             src="/logo/logo-ksm.svg"
             alt="KSM Logo"
-            width={logoSize}
-            height={logoSize}
+            width={logoSizePixels}
+            height={logoSizePixels}
             style={{
               filter:
                 foregroundColor !== "#000000"

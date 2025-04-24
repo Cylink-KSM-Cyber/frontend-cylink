@@ -27,18 +27,25 @@ export interface Url {
 export interface QrCode {
   id: number;
   urlId: number;
-  imageUrl: string;
+  shortCode?: string;
+  shortUrl?: string;
+  imageUrl: string | undefined;
+  pngUrl?: string;
+  svgUrl?: string;
   createdAt: string;
   updatedAt: string;
+  scans: number;
+  title?: string;
+  description?: string;
   customization?: {
     foregroundColor?: string;
     backgroundColor?: string;
     logoUrl?: string;
     cornerRadius?: number;
+    includeLogo?: boolean;
+    logoSize?: number;
+    size?: number;
   };
-  scans: number;
-  title?: string;
-  description?: string;
 }
 
 /**
@@ -115,6 +122,7 @@ export interface DashboardStats {
   urlsCreatedToday: number;
   averageClicksPerUrl: number;
   mostClickedUrl?: Url;
+  qrCodesCreatedToday?: number;
 }
 
 /**
@@ -335,6 +343,24 @@ export interface ExtendedDashboardStats extends DashboardStats {
     change_percentage: number;
 
     data?: TotalClicksResponse["data"];
+  };
+
+  /**
+   * Conversion data from API
+   */
+  conversionData?: {
+    /**
+     * Total conversions from the API
+     */
+    totalConversions: number;
+    /**
+     * Percentage change in conversion rate
+     */
+    changePercentage: number;
+    /**
+     * Top clicks count
+     */
+    topClicksCount: number;
   };
 }
 

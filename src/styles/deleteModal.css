@@ -1,0 +1,31 @@
+/* Delete Modal custom styles */
+
+.delete-modal-alert-icon {
+  transition: all 0.3s ease;
+}
+
+.delete-modal-alert-icon:hover {
+  transform: scale(1.1);
+}
+
+.delete-modal-card {
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.delete-modal-card:hover {
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.delete-modal-title {
+  letter-spacing: -0.01em;
+}
+
+.delete-modal-details {
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.delete-modal-buttons {
+  gap: 12px;
+}

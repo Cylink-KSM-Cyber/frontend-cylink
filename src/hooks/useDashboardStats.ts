@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from "react";
 import { ExtendedDashboardStats } from "@/interfaces/url";
 import { useTotalUrls } from "@/hooks/useTotalUrls";
 import { useTotalClicks } from "@/hooks/useTotalClicks";
+import { useConversionRate } from "@/hooks/useConversionRate";
+import { useQrCodeStats } from "@/hooks/useQrCodeStats";
 
 /**
  * Custom hook for fetching and managing dashboard statistics
@@ -15,6 +17,7 @@ export const useDashboardStats = () => {
 
   // Memoize the parameters to prevent unnecessary re-renders
   const totalClicksParams = useMemo(() => ({ comparison: "30" } as const), []);
+  const conversionRateParams = useMemo(() => ({ comparison: 30 } as const), []);
 
   // Use the totalUrls hook to get real total URLs count from API
   const {
@@ -29,6 +32,20 @@ export const useDashboardStats = () => {
     isLoading: isTotalClicksLoading,
     error: totalClicksError,
   } = useTotalClicks(totalClicksParams);
+
+  // Use the conversionRate hook to get real conversion data from API
+  const {
+    conversionStats,
+    isLoading: isConversionRateLoading,
+    error: conversionRateError,
+  } = useConversionRate(conversionRateParams);
+
+  // Use the QR code stats hook to get real QR code data from API
+  const {
+    stats: qrCodeStats,
+    isLoading: isQrCodeStatsLoading,
+    error: qrCodeStatsError,
+  } = useQrCodeStats();
 
   // Log the value of totalUrls for debugging
   useEffect(() => {
@@ -46,6 +63,23 @@ export const useDashboardStats = () => {
       );
     }
   }, [totalClicksData]);
+
+  // Log the value of conversionStats for debugging
+  useEffect(() => {
+    if (conversionStats && process.env.NODE_ENV === "development") {
+      console.log(
+        "Current conversionStats in useDashboardStats:",
+        conversionStats
+      );
+    }
+  }, [conversionStats]);
+
+  // Log the value of qrCodeStats for debugging
+  useEffect(() => {
+    if (qrCodeStats && process.env.NODE_ENV === "development") {
+      console.log("Current qrCodeStats in useDashboardStats:", qrCodeStats);
+    }
+  }, [qrCodeStats]);
 
   useEffect(() => {
     // Skip if we've already loaded stats and data hasn't changed
@@ -65,8 +99,12 @@ export const useDashboardStats = () => {
         console.log(
           "Creating stats with totalUrls:",
           totalUrls,
-          "and totalClicksData:",
-          totalClicksData
+          "totalClicksData:",
+          totalClicksData,
+          "and conversionStats:",
+          conversionStats,
+          "and qrCodeStats:",
+          qrCodeStats
         );
 
         // Log specific values we're interested in
@@ -99,11 +137,17 @@ export const useDashboardStats = () => {
           // Use real total clicks data from API if available, otherwise use mock data
           totalClicks: totalClicksData?.summary?.total_clicks ?? 1243,
 
-          conversionRate: 3.2,
-          qrCodesGenerated: 28,
+          // Use conversion rate from API if available or fall back to mock data
+          conversionRate: conversionStats?.conversionRate ?? 3.2,
+
+          // Use real QR code stats from API if available, otherwise use mock data
+          qrCodesGenerated: qrCodeStats.total ?? 28,
           activeUrls:
             totalClicksData?.summary?.comparison?.active_urls?.current ?? 35,
+
+          // Use real QR codes created today from API if available, otherwise use mock data
           urlsCreatedToday: 3,
+          qrCodesCreatedToday: qrCodeStats.createdToday ?? 0,
 
           // Use real average clicks data from API if available, otherwise use mock data
           averageClicksPerUrl:
@@ -121,7 +165,7 @@ export const useDashboardStats = () => {
             updated_at: new Date(
               Date.now() - 1000 * 60 * 60 * 12
             ).toISOString(),
-            clicks: 156,
+            clicks: conversionStats?.topClicksCount ?? 156,
             is_active: true,
             user_id: 1,
             clickTrend: 12.5,
@@ -139,6 +183,15 @@ export const useDashboardStats = () => {
                     ?.change_percentage ?? 0,
               }
             : undefined,
+
+          // Add the conversion data if available
+          conversionData: conversionStats
+            ? {
+                totalConversions: conversionStats.totalConversions,
+                changePercentage: conversionStats.conversionChangePercentage,
+                topClicksCount: conversionStats.topClicksCount,
+              }
+            : undefined,
         };
 
         console.log("Final stats object:", {
@@ -147,6 +200,9 @@ export const useDashboardStats = () => {
           avgClicksPerUrl: mockStats.averageClicksPerUrl,
           type2: typeof mockStats.averageClicksPerUrl,
           totalClicksData: mockStats.totalClicksData,
+          conversionData: mockStats.conversionData,
+          qrCodesGenerated: mockStats.qrCodesGenerated,
+          urlsCreatedToday: mockStats.urlsCreatedToday,
         });
 
         // Simulate API delay
@@ -171,16 +227,26 @@ export const useDashboardStats = () => {
       }
     };
 
-    // Only fetch stats when both totalUrls and totalClicksData are loaded
+    // Only fetch stats when all data is loaded
     if (
       !isTotalUrlsLoading &&
       !isTotalClicksLoading &&
-      (totalUrls !== undefined || totalClicksData !== null)
+      !isConversionRateLoading &&
+      !isQrCodeStatsLoading &&
+      (totalUrls !== undefined ||
+        totalClicksData !== null ||
+        conversionStats !== null ||
+        qrCodeStats !== null)
     ) {
       console.log(
-        "totalUrls and totalClicksData loaded, fetching stats with values:",
+        "All data loaded, fetching stats with values - totalUrls:",
         totalUrls,
-        totalClicksData
+        "totalClicksData:",
+        totalClicksData,
+        "conversionStats:",
+        conversionStats,
+        "qrCodeStats:",
+        qrCodeStats
       );
       fetchStats();
     }
@@ -189,6 +255,10 @@ export const useDashboardStats = () => {
     isTotalUrlsLoading,
     totalClicksData,
     isTotalClicksLoading,
+    conversionStats,
+    isConversionRateLoading,
+    qrCodeStats,
+    isQrCodeStatsLoading,
     stats,
     isLoading,
     statsLoaded,
@@ -207,35 +277,47 @@ export const useDashboardStats = () => {
       // Create stats using actual API data
       const refreshedStats: ExtendedDashboardStats = {
         // Use the real totalUrls from API
-        totalUrls: totalUrls,
+        totalUrls: totalUrls ?? 0,
 
-        // Use real total clicks data from API if available, otherwise use mock data
-        totalClicks: totalClicksData?.summary?.total_clicks ?? 1243,
+        // Use real total clicks data from API if available
+        totalClicks:
+          totalClicksData?.summary?.total_clicks ?? stats?.totalClicks ?? 0,
 
-        conversionRate: 3.2,
-        qrCodesGenerated: 28,
+        // Use conversion rate from API if available
+        conversionRate:
+          conversionStats?.conversionRate ?? stats?.conversionRate ?? 0,
+
+        // Use real QR code stats from API if available
+        qrCodesGenerated: qrCodeStats.total ?? stats?.qrCodesGenerated ?? 0,
+
+        // Use real active URLs from API if available
         activeUrls:
-          totalClicksData?.summary?.comparison?.active_urls?.current ?? 35,
+          totalClicksData?.summary?.comparison?.active_urls?.current ??
+          stats?.activeUrls ??
+          0,
+
+        // Use real QR codes created today from API if available
         urlsCreatedToday: 3,
+        qrCodesCreatedToday:
+          qrCodeStats.createdToday ?? stats?.qrCodesCreatedToday ?? 0,
 
-        // Use real average clicks data from API if available, otherwise use mock data
+        // Use real average clicks data from API if available
         averageClicksPerUrl:
-          totalClicksData?.summary?.avg_clicks_per_url ?? 26.4,
+          totalClicksData?.summary?.avg_clicks_per_url ??
+          stats?.averageClicksPerUrl ??
+          0,
 
-        mostClickedUrl: {
+        // Use existing most clicked URL data or create a placeholder
+        mostClickedUrl: stats?.mostClickedUrl ?? {
           id: 1,
-          original_url:
-            "https://example.com/very/long/url/that/needs/shortening",
-          short_code: "abc123",
-          short_url: "cylink.co/abc123",
-          created_at: new Date(
-            Date.now() - 1000 * 60 * 60 * 24 * 7
-          ).toISOString(),
-          updated_at: new Date(Date.now() - 1000 * 60 * 60 * 12).toISOString(),
-          clicks: 156,
+          original_url: "https://example.com",
+          short_code: "demo123",
+          short_url: "cylink.co/demo123",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          clicks: 0,
           is_active: true,
           user_id: 1,
-          clickTrend: 12.5,
         },
 
         // Add the extended total clicks data if available
@@ -250,42 +332,41 @@ export const useDashboardStats = () => {
                   ?.change_percentage ?? 0,
             }
           : undefined,
+
+        // Add the conversion data if available
+        conversionData: conversionStats
+          ? {
+              totalConversions: conversionStats.totalConversions,
+              changePercentage: conversionStats.conversionChangePercentage,
+              topClicksCount: conversionStats.topClicksCount,
+            }
+          : undefined,
       };
 
-      console.log("refreshStats - Final stats object:", {
-        totalClicks: refreshedStats.totalClicks,
-        type: typeof refreshedStats.totalClicks,
-        avgClicksPerUrl: refreshedStats.averageClicksPerUrl,
-        type2: typeof refreshedStats.averageClicksPerUrl,
-        totalClicksData: refreshedStats.totalClicksData,
-      });
-
+      // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 800));
       setStats(refreshedStats);
       setStatsLoaded(true);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err
-          : new Error("Failed to refresh dashboard stats")
+        err instanceof Error ? err : new Error("Failed to refresh stats")
       );
-      console.error("Failed to refresh dashboard stats:", err);
+      console.error("Failed to refresh stats:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Combine errors from hooks
-  const combinedError = error || totalUrlsError || totalClicksError;
+  // If there are any errors, log them
+  useEffect(() => {
+    if (totalUrlsError) console.error("Total URLs error:", totalUrlsError);
+    if (totalClicksError)
+      console.error("Total Clicks error:", totalClicksError);
+    if (conversionRateError)
+      console.error("Conversion Rate error:", conversionRateError);
+    if (qrCodeStatsError)
+      console.error("QR Code Stats error:", qrCodeStatsError);
+  }, [totalUrlsError, totalClicksError, conversionRateError, qrCodeStatsError]);
 
-  // Loading is true if any hook is loading
-  const combinedIsLoading =
-    isLoading || isTotalUrlsLoading || isTotalClicksLoading;
-
-  return {
-    stats,
-    isLoading: combinedIsLoading,
-    error: combinedError,
-    refreshStats,
-  };
+  return { stats, isLoading, error, refreshStats };
 };

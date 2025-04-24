@@ -1,0 +1,38 @@
+/* Styling for conversion rate stats card */
+.stat-card-conversion .highlight-value {
+  color: #ec4899; /* Pink-500 */
+  font-weight: 500;
+}
+
+.conversion-rate-value {
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
+.conversion-description {
+  font-size: 0.75rem;
+  color: #607d8b;
+}
+
+.top-clicks {
+  font-weight: 500;
+  color: #ec4899; /* Pink-500 */
+}
+
+/* Animation for number changes */
+@keyframes pulse-conversion {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+    color: #ec4899; /* Pink-500 */
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.conversion-value-change {
+  animation: pulse-conversion 0.5s ease-in-out;
+}

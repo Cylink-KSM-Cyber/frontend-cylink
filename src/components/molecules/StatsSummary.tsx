@@ -67,6 +67,12 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
     stats.totalClicksData?.avg_clicks_per_url ?? stats.averageClicksPerUrl;
   const clicksChangePercentage = stats.totalClicksData?.change_percentage;
 
+  // Get conversion data if available
+  const conversionChangePercentage = stats.conversionData?.changePercentage;
+  const totalConversions = stats.conversionData?.totalConversions;
+  const topClicksCount =
+    stats.conversionData?.topClicksCount ?? stats.mostClickedUrl?.clicks;
+
   // Ensure avgClicksPerUrl is properly formatted as a number
   const formattedAvgClicks =
     typeof avgClicksPerUrl === "number" ? avgClicksPerUrl.toFixed(2) : "0.00";
@@ -76,6 +82,10 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
     typeof stats.totalClicks === "number"
       ? stats.totalClicks.toLocaleString()
       : "0";
+
+  // Use QR codes created today or fallback to urlsCreatedToday
+  const qrCodesCreatedToday =
+    stats.qrCodesCreatedToday ?? stats.urlsCreatedToday;
 
   // Log values for debugging only in development
   if (process.env.NODE_ENV === "development") {
@@ -96,6 +106,11 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       "StatsSummary - clicksChangePercentage:",
       clicksChangePercentage
     );
+    console.log(
+      "StatsSummary - conversionChangePercentage:",
+      conversionChangePercentage
+    );
+    console.log("StatsSummary - topClicksCount:", topClicksCount);
   }
 
   return (
@@ -132,7 +147,7 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
         type="qr-codes"
         highlightedValue={{
           prefix: "Today",
-          value: stats.urlsCreatedToday,
+          value: qrCodesCreatedToday,
           suffix: " new",
         }}
       />
@@ -140,13 +155,21 @@ const StatsSummary: React.FC<StatsSummaryProps> = ({
       <StatCard
         title="Conversion Rate"
         value={`${stats.conversionRate}%`}
-        description="Clicks to conversions"
-        trend={2.5} // This would come from the API in a real implementation
+        description={
+          totalConversions
+            ? `${totalConversions} conversions`
+            : "Clicks to conversions"
+        }
+        trend={
+          conversionChangePercentage !== undefined
+            ? conversionChangePercentage
+            : 2.5
+        }
         icon={<RiPercentLine className="h-6 w-6" />}
         type="conversion"
         highlightedValue={{
           prefix: "Top",
-          value: stats.mostClickedUrl ? stats.mostClickedUrl.clicks : 0,
+          value: topClicksCount || 0,
           suffix: " clicks",
         }}
       />
