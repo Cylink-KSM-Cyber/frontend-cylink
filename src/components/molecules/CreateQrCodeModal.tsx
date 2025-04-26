@@ -133,6 +133,10 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
   // State for tracking the current step
   const [currentStep, setCurrentStep] = useState(1);
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  // Store the URL object for use in step 2
+  const [selectedUrlForQrCode, setSelectedUrlForQrCode] = useState<Url | null>(
+    null
+  );
 
   // Watch URL source selection
   const urlSource = watch("urlSource");
@@ -143,6 +147,7 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
     if (isOpen) {
       loadColors();
       resetQrCode();
+      setSelectedUrlForQrCode(null);
 
       // Also load existing URLs
       fetchExistingUrls();
@@ -194,33 +199,50 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
     try {
       let urlToUse: Url | null = null;
 
-      // If using existing URL
-      if (data.urlSource === "existing" && data.existingUrlId) {
-        urlToUse =
-          existingUrls.find((url) => url.id === data.existingUrlId) || null;
-      }
-      // If creating new URL
-      else if (
-        data.urlSource === "new" &&
-        data.title &&
-        data.originalUrl &&
-        data.expiryDate
-      ) {
-        urlToUse = await createUrl({
-          title: data.title,
-          original_url: data.originalUrl,
-          custom_code: data.customCode,
-          expiry_date: data.expiryDate,
-        });
-      }
+      if (currentStep === 1) {
+        // First step - Select or create URL
+        // If using existing URL
+        if (data.urlSource === "existing" && data.existingUrlId) {
+          urlToUse =
+            existingUrls.find((url) => url.id === data.existingUrlId) || null;
 
-      // Generate QR code for the URL
-      if (urlToUse) {
-        if (currentStep === 1) {
-          setPreviewUrl(urlToUse.short_url);
-          setCurrentStep(2);
-        } else if (currentStep === 2) {
-          await generateQrCodeForUrl(urlToUse);
+          if (urlToUse) {
+            setPreviewUrl(urlToUse.short_url);
+            setSelectedUrlForQrCode(urlToUse); // Store the selected URL
+            setCurrentStep(2);
+          }
+        }
+        // If creating new URL
+        else if (
+          data.urlSource === "new" &&
+          data.title &&
+          data.originalUrl &&
+          data.expiryDate
+        ) {
+          try {
+            urlToUse = await createUrl({
+              title: data.title,
+              original_url: data.originalUrl,
+              custom_code: data.customCode,
+              expiry_date: data.expiryDate,
+            });
+
+            if (urlToUse) {
+              setPreviewUrl(urlToUse.short_url);
+              setSelectedUrlForQrCode(urlToUse); // Store the created URL
+              setCurrentStep(2);
+            }
+          } catch (createError) {
+            console.error("Error creating URL:", createError);
+            // Don't move to next step if URL creation failed
+          }
+        }
+      } else if (currentStep === 2) {
+        // Second step - Generate QR code using the stored URL object
+        if (selectedUrlForQrCode) {
+          await generateQrCodeForUrl(selectedUrlForQrCode);
+        } else {
+          console.error("No URL selected for QR code generation");
         }
       }
     } catch (error) {
