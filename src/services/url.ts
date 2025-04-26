@@ -74,6 +74,7 @@ const buildQueryParams = (filter: Partial<UrlFilter>): string => {
   params.append("sortOrder", sortOrderValue);
 
   // Add optional parameters if present
+  console.log("Search value:", filter.search);
   if (filter.search) params.append("search", filter.search);
   if (filter.status && filter.status !== "all")
     params.append("status", filter.status);

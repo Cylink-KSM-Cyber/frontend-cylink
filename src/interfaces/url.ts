@@ -131,7 +131,7 @@ export interface DashboardStats {
  */
 export interface UrlFilter {
   search?: string;
-  status?: "active" | "expired" | "inactive" | "all";
+  status?: "active" | "expired" | "inactive" | "all" | string | undefined;
   sortBy?: "created_at" | "clicks" | "title";
   sortOrder?: "asc" | "desc";
   page: number;
@@ -171,6 +171,60 @@ export interface UrlApiResponse {
     limit: number;
     total_pages: number;
   };
+}
+
+/**
+ * CTR Response Interface
+ * @description Defines the structure for the total URLs count response
+ */
+export interface AnalysisPeriod {
+  start_date: string;
+  end_date: string;
+  days: number;
+}
+
+export interface OverallStats {
+  total_impressions: string;
+  total_clicks: string;
+  ctr: string;
+  unique_impressions: string;
+  unique_ctr: string;
+  analysis_period: AnalysisPeriod;
+}
+
+export interface DailyPerformance {
+  date: string;
+  impressions: string;
+  clicks: string;
+  ctr: string;
+}
+
+export interface SourceStats {
+  source: string;
+  impressions: string;
+  clicks: string;
+  ctr: string;
+}
+
+export interface CtrStatisticsData {
+  overall: OverallStats;
+  top_performing_days: DailyPerformance[];
+  ctr_by_source: SourceStats[];
+}
+
+export interface CtrStatsResponse {
+  status: number;
+  message: string;
+  data: CtrStatisticsData;
+}
+
+export interface CtrStatsParams {
+  start_date?: string;
+  end_date?: string;
+  comparison?: "7" | "14" | "30" | "90" | "custom";
+  custom_comparison_start?: string;
+  custom_comparison_end?: string;
+  group_by?: "day" | "week" | "month";
 }
 
 /**
@@ -287,6 +341,8 @@ export interface ExtendedDashboardStats extends DashboardStats {
      * Percentage change in total clicks
      */
     change_percentage: number;
+
+    data?: TotalClicksResponse["data"];
   };
 
   /**
@@ -306,4 +362,59 @@ export interface ExtendedDashboardStats extends DashboardStats {
      */
     topClicksCount: number;
   };
+}
+
+export interface CreateUrlFormData {
+  originalUrl: string;
+  customCode?: string;
+  title: string;
+  expiryDate: string;
+}
+
+export interface CreateUrlFormResponse {
+  status: number;
+  message: string;
+  data: {
+    id: number;
+    original_url: string;
+    short_code: string;
+    short_url: string;
+    title: string;
+    clicks: number;
+    user_id: number;
+    created_at: string;
+    updated_at: string;
+    expiry_date: string;
+    is_active: boolean;
+  };
+}
+
+export interface EditUrlFormData {
+  originalUrl: string;
+  customCode?: string;
+  title?: string;
+  expiryDate?: string;
+}
+
+export interface EditUrlFormResponse {
+  staus: number;
+  message: string;
+  data: {
+    id: number;
+    original_url: string;
+    short_code: string;
+    short_url: string;
+    title: string;
+    clicks: number;
+    created_at: string;
+    updated_at: string;
+    expiry_date: string;
+    is_active: boolean;
+  };
+}
+
+export interface CreateUrlModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: CreateUrlFormData) => void;
 }

@@ -1,98 +1,134 @@
+"use client";
+
 import React from "react";
-import { UrlFilter as FilterInterface } from "@/interfaces/url";
+import { RiFilter2Line, RiListCheck2 } from "react-icons/ri";
+
+/**
+ * Filter options interface
+ */
+export interface FilterOptions {
+  status?: string;
+  limit?: number;
+  // You can add more filter types here in the future
+}
 
 /**
  * Props for the UrlFilter component
  */
 interface UrlFilterProps {
-  filter: FilterInterface;
-  onFilterChange: (newFilter: Partial<FilterInterface>) => void;
+  /**
+   * Current filter options
+   */
+  filters: FilterOptions;
+  /**
+   * Function to call when any filter changes
+   */
+  onFilterChange: (
+    filterType: keyof FilterOptions,
+    value: string | number
+  ) => void;
 }
 
 /**
  * URL Filter Component
- * @description A component that provides filtering and sorting controls for URLs
+ * @description A component that provides filtering and sorting controls for URLs with enhanced styling
  */
-const UrlFilter = ({ filter, onFilterChange }: UrlFilterProps) => {
-  const handleSortByChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
-    const validValue = ["created_at", "clicks", "title"].includes(value)
-      ? (value as FilterInterface["sortBy"])
-      : "created_at";
-
-    onFilterChange({ sortBy: validValue });
-  };
-
-  const handleSortOrderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    const validValue = ["asc", "desc"].includes(value)
-      ? (value as FilterInterface["sortOrder"])
-      : "desc";
-
-    onFilterChange({ sortOrder: validValue });
+    onFilterChange("status", value);
   };
 
   const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onFilterChange({ limit: Number(e.target.value), page: 1 });
+    const value = parseInt(e.target.value, 10);
+    onFilterChange("limit", value);
   };
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-      <div className="flex-1">
-        <label
-          htmlFor="sortBy"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Sort By
-        </label>
+    <div className="flex flex-wrap gap-3 items-center">
+      {/* Status Filter */}
+      <div className="relative flex items-center">
+        <div className="absolute left-3 pointer-events-none text-blue-500">
+          <RiFilter2Line className="w-5 h-5" />
+        </div>
         <select
-          id="sortBy"
-          value={filter.sortBy || "created_at"}
-          onChange={handleSortByChange}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
+          value={filters.status || "all"}
+          onChange={handleStatusChange}
+          className="bg-white border border-gray-200 rounded-lg pl-10 pr-8 py-2 text-sm shadow-sm hover:border-blue-400 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 cursor-pointer transition-all duration-200 appearance-none"
         >
-          <option value="created_at">Created Date</option>
-          <option value="clicks">Clicks</option>
-          <option value="title">Title</option>
+          <option value="all" className="py-1">
+            All Status
+          </option>
+          <option value="active" className="text-green-600 py-1">
+            Active
+          </option>
+          <option value="expired" className="text-red-600 py-1">
+            Expired
+          </option>
+          <option value="inactive" className="text-gray-600 py-1">
+            Inactive
+          </option>
         </select>
+        <div className="absolute right-3 pointer-events-none">
+          <svg
+            className="w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
+        </div>
       </div>
 
-      <div className="flex-1">
-        <label
-          htmlFor="sortOrder"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Sort Order
-        </label>
+      {/* Limit Filter */}
+      <div className="relative flex items-center">
+        <div className="absolute left-3 pointer-events-none text-purple-500">
+          <RiListCheck2 className="w-5 h-5" />
+        </div>
         <select
-          id="sortOrder"
-          value={filter.sortOrder || "desc"}
-          onChange={handleSortOrderChange}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
-        >
-          <option value="asc">Ascending</option>
-          <option value="desc">Descending</option>
-        </select>
-      </div>
-
-      <div className="flex-1">
-        <label
-          htmlFor="limit"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Items Per Page
-        </label>
-        <select
-          id="limit"
-          value={filter.limit}
+          value={filters.limit || 10}
           onChange={handleLimitChange}
-          className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 px-3"
+          className="bg-white border border-gray-200 rounded-lg pl-10 pr-8 py-2 text-sm shadow-sm hover:border-purple-400 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 cursor-pointer transition-all duration-200 appearance-none"
         >
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="25">25</option>
-          <option value="50">50</option>
+          <option value={5} className="py-1">
+            5 per page
+          </option>
+          <option value={10} className="py-1">
+            10 per page
+          </option>
+          <option value={25} className="py-1">
+            25 per page
+          </option>
+          <option value={50} className="py-1">
+            50 per page
+          </option>
+          <option value={100} className="py-1">
+            100 per page
+          </option>
         </select>
+        <div className="absolute right-3 pointer-events-none">
+          <svg
+            className="w-4 h-4 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            ></path>
+          </svg>
+        </div>
       </div>
     </div>
   );

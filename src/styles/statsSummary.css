@@ -27,6 +27,18 @@
 }
 
 .stat-card-conversion {
+  border-left-color: #ff0582; /* pink-500 */
+}
+
+.stat-card-active-urls {
+  border-left-color: #3b82f6; /* blue-500 */
+}
+
+.stat-card-average-ctr {
+  border-left-color: #f59e0b; /* amber-500 */
+}
+
+.stat-card-top-performing {
   border-left-color: #ec4899; /* pink-500 */
 }
 
