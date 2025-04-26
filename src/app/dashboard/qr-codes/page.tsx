@@ -79,17 +79,31 @@ export default function QrCodesPage() {
 
   // Apply search filter with debounce
   useEffect(() => {
+    // Only proceed with the search if searchTerm has actually changed
+    // and it's not triggered by filter.search changing
     const timeoutId = setTimeout(() => {
-      if (searchTerm.trim() !== "") {
-        updateFilter({ search: searchTerm, page: 1 });
-      } else if (filter.search) {
-        // Reset search filter if search term is empty but filter has search
-        updateFilter({ search: undefined, page: 1 });
+      // Store the current search value to compare against
+      const currentSearchTerm = searchTerm.trim();
+      const currentFilterSearch = filter.search || "";
+
+      console.log("Search effect running with:", {
+        currentSearchTerm,
+        currentFilterSearch,
+        isEqual: currentSearchTerm === currentFilterSearch,
+      });
+
+      // Only update filter if the search term is different from the current filter
+      if (currentSearchTerm !== currentFilterSearch) {
+        if (currentSearchTerm !== "") {
+          updateFilter({ search: currentSearchTerm, page: 1 });
+        } else {
+          updateFilter({ search: undefined, page: 1 });
+        }
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm, updateFilter, filter.search]);
+  }, [searchTerm]); // Remove filter.search dependency to break circular updates
 
   // Handle page change
   const handlePageChange = (page: number) => {
