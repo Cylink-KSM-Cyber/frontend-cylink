@@ -42,6 +42,8 @@ export default function QrCodesPage() {
 
   // Search term state
   const [searchTerm, setSearchTerm] = useState("");
+  // Track if there's an active search
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   // QR code selection for bulk actions
   const [selectedQrCodes, setSelectedQrCodes] = useState<QrCode[]>([]);
@@ -80,30 +82,30 @@ export default function QrCodesPage() {
   // Apply search filter with debounce
   useEffect(() => {
     // Only proceed with the search if searchTerm has actually changed
-    // and it's not triggered by filter.search changing
     const timeoutId = setTimeout(() => {
       // Store the current search value to compare against
       const currentSearchTerm = searchTerm.trim();
-      const currentFilterSearch = filter.search || "";
 
       console.log("Search effect running with:", {
         currentSearchTerm,
-        currentFilterSearch,
-        isEqual: currentSearchTerm === currentFilterSearch,
+        isSearchActive,
       });
 
-      // Only update filter if the search term is different from the current filter
-      if (currentSearchTerm !== currentFilterSearch) {
-        if (currentSearchTerm !== "") {
-          updateFilter({ search: currentSearchTerm, page: 1 });
-        } else {
-          updateFilter({ search: undefined, page: 1 });
-        }
+      if (currentSearchTerm !== "") {
+        // Set active search flag when searching
+        setIsSearchActive(true);
+        updateFilter({ search: currentSearchTerm, page: 1 });
+      } else if (isSearchActive) {
+        // Only clear search and refresh when coming from an active search state
+        setIsSearchActive(false);
+        updateFilter({ search: undefined, page: 1 });
+        // Force refresh to get all QR codes
+        refreshQrCodes();
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchTerm]); // Remove filter.search dependency to break circular updates
+  }, [searchTerm]);
 
   // Handle page change
   const handlePageChange = (page: number) => {
