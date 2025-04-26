@@ -389,6 +389,30 @@ export interface CreateUrlFormResponse {
   };
 }
 
+export interface EditUrlFormData {
+  originalUrl: string;
+  customCode?: string;
+  title?: string;
+  expiryDate?: string;
+}
+
+export interface EditUrlFormResponse {
+  staus: number;
+  message: string;
+  data: {
+    id: number;
+    original_url: string;
+    short_code: string;
+    short_url: string;
+    title: string;
+    clicks: number;
+    created_at: string;
+    updated_at: string;
+    expiry_date: string;
+    is_active: boolean;
+  };
+}
+
 export interface CreateUrlModalProps {
   isOpen: boolean;
   onClose: () => void;

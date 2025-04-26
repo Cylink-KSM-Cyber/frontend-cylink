@@ -1,22 +1,22 @@
-import { CreateUrlFormData, CreateUrlFormResponse } from "@/interfaces/url";
+import { EditUrlFormData, EditUrlFormResponse } from "@/interfaces/url";
 import Cookies from "js-cookie";
 import { useState } from "react";
 
-export const useCreateUrl = () => {
-  const [isCreating, setIsCreating] = useState(false);
+export const useEditUrl = () => {
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const createUrl = async (formData: CreateUrlFormData) => {
-    setIsCreating(true);
+  const editUrl = async (id: number, formData: EditUrlFormData) => {
+    setIsEditing(true);
     setError(null);
 
     const token = Cookies.get("accessToken");
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/urls`,
+        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/urls/${id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
@@ -33,25 +33,25 @@ export const useCreateUrl = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create URL");
+        throw new Error(errorData.message || "Failed to edit URL");
       }
 
       const responseData = await response.json();
-      return responseData as CreateUrlFormResponse;
+      return responseData as EditUrlFormResponse;
     } catch (err) {
-      console.error("Error in createUrl:", err);
+      console.error("Error in editUrl:", err);
       const error =
-        err instanceof Error ? err : new Error("Failed to create URL");
+        err instanceof Error ? err : new Error("Failed to edit URL");
       setError(error);
       throw error;
     } finally {
-      setIsCreating(false);
+      setIsEditing(false);
     }
   };
 
   return {
-    createUrl,
-    isCreating,
+    editUrl,
+    isEditing,
     error,
   };
 };

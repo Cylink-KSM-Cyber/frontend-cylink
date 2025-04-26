@@ -2,15 +2,17 @@
 
 import CreateUrlModal from "@/components/molecules/CreateUrlModal";
 import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
+import EditUrlModal from "@/components/molecules/EditUrlModal";
 import QrCodeModal from "@/components/molecules/QrCodeModal";
 import UrlTemplate from "@/components/templates/URLsTemplate";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useToast } from "@/contexts/ToastContext";
 import { useCreateUrl } from "@/hooks/url/useCreateUrl";
+import { useEditUrl } from "@/hooks/url/useEditUrl";
 import { useDeleteUrl } from "@/hooks/useDeleteUrl";
 import { useUrls } from "@/hooks/useUrls";
 import { useUrlStats } from "@/hooks/useUrlStats";
-import type { CreateUrlFormData, Url } from "@/interfaces/url";
+import type { CreateUrlFormData, EditUrlFormData, Url } from "@/interfaces/url";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
@@ -42,6 +44,10 @@ export default function UrlsPage() {
 
   // Create URL modal state
   const [createModalOpen, setCreateModalOpen] = useState(false);
+
+  // Edit URL modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [urlToEdit, setUrlToEdit] = useState<Url | null>(null);
 
   // QR Code modal state
   const [qrModalOpen, setQrModalOpen] = useState(false);
@@ -79,6 +85,8 @@ export default function UrlsPage() {
   });
 
   const { createUrl, isCreating } = useCreateUrl();
+
+  const { editUrl, isEditing } = useEditUrl();
 
   // URL deletion hook
   const { deleteUrl, isDeleting, error: deleteError } = useDeleteUrl();
@@ -126,8 +134,9 @@ export default function UrlsPage() {
 
   // Handle URL edit
   const handleEditUrl = (url: Url) => {
-    // This would typically open a modal or navigate to an edit page
-    console.log("Edit URL:", url.id);
+    setUrlToEdit(url);
+    console.log("handleEditUrl", url);
+    setEditModalOpen(true);
   };
 
   // Open delete confirmation modal
@@ -160,6 +169,10 @@ export default function UrlsPage() {
 
   const closeCreateUrl = () => {
     setCreateModalOpen(false);
+  };
+
+  const closeEditUrl = () => {
+    setEditModalOpen(false);
   };
 
   // Handle QR code generation
@@ -205,6 +218,30 @@ export default function UrlsPage() {
       );
     } finally {
       setCreateModalOpen(false);
+    }
+  };
+
+  const handleSubmitEditUrlForm = async (data: EditUrlFormData) => {
+    try {
+      console.log("Form submitted:", data);
+
+      const response = await editUrl(urlToEdit?.id as number, data);
+
+      showToast(
+        `URL "${response.data.title}" updated succesfully`,
+        "success",
+        2000
+      );
+      setEditModalOpen(false);
+      refreshUrls();
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : "Something went wrong",
+        "error",
+        3000
+      );
+    } finally {
+      setEditModalOpen(false);
     }
   };
 
@@ -273,6 +310,15 @@ export default function UrlsPage() {
         onConfirm={confirmDeleteUrl}
         onCancel={cancelDeleteUrl}
         isDeleting={isDeleting}
+      />
+
+      {/* Edit URL Modal */}
+      <EditUrlModal
+        url={urlToEdit}
+        isOpen={editModalOpen}
+        onClose={closeEditUrl}
+        onSubmit={handleSubmitEditUrlForm}
+        isEditing={isEditing}
       />
 
       {/* QR Code Modal */}
