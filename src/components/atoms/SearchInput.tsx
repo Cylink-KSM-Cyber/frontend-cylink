@@ -40,6 +40,13 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [inputValue, setInputValue] = useState(initialValue);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Set initial value when it changes from parent
+  useEffect(() => {
+    if (initialValue !== inputValue) {
+      setInputValue(initialValue);
+    }
+  }, [initialValue]);
+
   // Clear debounce timer on unmount
   useEffect(() => {
     return () => {
@@ -71,8 +78,14 @@ const SearchInput: React.FC<SearchInputProps> = ({
     onSearch("");
   };
 
+  // Handle form submission (prevent default)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch(inputValue);
+  };
+
   return (
-    <div className={`relative ${className}`}>
+    <form className={`relative ${className}`} onSubmit={handleSubmit}>
       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
         <svg
           className="w-4 h-4 text-[#607D8B]"
@@ -97,6 +110,13 @@ const SearchInput: React.FC<SearchInputProps> = ({
         placeholder={placeholder}
         value={inputValue}
         onChange={handleInputChange}
+        onKeyDown={(e) => {
+          // Handle Enter key by preventing default form submission
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onSearch(inputValue);
+          }
+        }}
       />
 
       {inputValue && (
@@ -122,7 +142,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
           </svg>
         </button>
       )}
-    </div>
+    </form>
   );
 };
 

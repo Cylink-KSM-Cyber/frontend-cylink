@@ -99,7 +99,10 @@ const NavItemComponent: React.FC<{
           ? `${THEME.ACTIVE_BG_CLASS} ${THEME.ACTIVE_TEXT_CLASS}`
           : "text-gray-700 hover:bg-gray-100"
       } rounded-lg transition-all duration-200`}
-      onClick={onClick}
+      onClick={() => {
+        // Call onClick to set active item before navigation happens
+        onClick();
+      }}
     >
       <span
         className={`text-xl ${
@@ -197,7 +200,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "qrcodes",
       label: "QR Codes",
-      path: "/dashboard?tab=qrcodes",
+      path: "/dashboard/qr-codes",
       icon: <RiQrCodeLine />,
     },
     {

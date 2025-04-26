@@ -9,6 +9,8 @@ import {
   RiExternalLinkLine,
   RiEditLine,
   RiDeleteBinLine,
+  RiCheckboxBlankLine,
+  RiCheckboxLine,
 } from "react-icons/ri";
 
 /**
@@ -36,6 +38,14 @@ interface QrCodeGridProps {
    */
   onPreview?: (qrCode: QrCode) => void;
   /**
+   * Array of selected QR codes
+   */
+  selectedQrCodes?: QrCode[];
+  /**
+   * Function to call when QR code selection changes
+   */
+  onSelectQrCode?: (qrCode: QrCode, selected: boolean) => void;
+  /**
    * Optional CSS classes to apply
    */
   className?: string;
@@ -51,6 +61,8 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
   onEdit,
   onDelete,
   onPreview,
+  selectedQrCodes = [],
+  onSelectQrCode,
   className = "",
 }) => {
   // Format date for display
@@ -61,6 +73,18 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
       month: "short",
       day: "numeric",
     }).format(date);
+  };
+
+  // Check if a QR code is selected
+  const isSelected = (qrCode: QrCode) => {
+    return selectedQrCodes.some((selected) => selected.id === qrCode.id);
+  };
+
+  // Handle checkbox change
+  const handleCheckboxChange = (qrCode: QrCode, checked: boolean) => {
+    if (onSelectQrCode) {
+      onSelectQrCode(qrCode, checked);
+    }
   };
 
   // If loading, show skeleton grid
@@ -92,62 +116,11 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
 
   // If no QR codes, show empty state
   if (qrCodes.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-        <div className="py-6">
-          <svg
-            className="w-12 h-12 mx-auto text-gray-300 mb-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M3 3H8V8H3V3Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M16 3H21V8H16V3Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M3 16H8V21H3V16Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M16 16H21V21H16V16Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            No QR Codes Found
-          </h3>
-          <p className="text-gray-500 mb-4">
-            You haven&apos;t generated any QR codes yet.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Render QR code using QrCodePreview component which already handles styling consistently
   const renderQrCode = (qrCode: QrCode) => {
-    console.log("Rendering QR code with data:", qrCode.id, {
-      shortUrl: qrCode.shortUrl,
-      customization: qrCode.customization,
-    });
-
     // Extract customization properties with fallbacks
     const fgColor = qrCode.customization?.foregroundColor || "#000000";
     const bgColor = qrCode.customization?.backgroundColor || "#FFFFFF";
@@ -208,6 +181,13 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
         <div className="text-center">
           <div className="text-red-500 mb-2">Could not load QR code</div>
           <div className="text-sm text-gray-500">
+            <Image
+              src="/logo/logo-ksm.svg"
+              alt="Logo"
+              width={30}
+              height={30}
+              className="mx-auto mb-2"
+            />
             Try regenerating the QR code
           </div>
         </div>
@@ -222,96 +202,97 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
       {qrCodes.map((qrCode) => (
         <div
           key={qrCode.id}
-          className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+          className={`relative bg-white rounded-lg shadow-sm overflow-hidden transition-all duration-150 ${
+            isSelected(qrCode) ? "ring-2 ring-primary-500" : "hover:shadow-md"
+          }`}
         >
-          {/* QR Code Image */}
+          {/* Selection checkbox overlay */}
+          {onSelectQrCode && (
+            <div className="absolute top-2 left-2 z-10">
+              <label className="cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={isSelected(qrCode)}
+                  onChange={(e) =>
+                    handleCheckboxChange(qrCode, e.target.checked)
+                  }
+                />
+                <div className="h-6 w-6 rounded-full bg-white shadow-sm flex items-center justify-center">
+                  {isSelected(qrCode) ? (
+                    <RiCheckboxLine className="text-primary-600 text-lg" />
+                  ) : (
+                    <RiCheckboxBlankLine className="text-gray-400 text-lg" />
+                  )}
+                </div>
+              </label>
+            </div>
+          )}
+
+          {/* QR Code */}
           <div
-            className="relative h-48 flex items-center justify-center cursor-pointer"
-            style={{
-              backgroundColor:
-                qrCode.customization?.backgroundColor || "#FFFFFF",
-              padding: "1rem",
-            }}
-            onClick={() => onPreview?.(qrCode)}
+            className="p-6 flex justify-center items-center cursor-pointer"
+            onClick={() => onPreview && onPreview(qrCode)}
           >
             <QRCodeWithFallback qrCode={qrCode} renderFunction={renderQrCode} />
-
-            {/* Overlay with information on hover */}
-            <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
-              <span className="text-white text-sm font-medium">
-                Click to preview
-              </span>
-            </div>
-
-            {/* Custom indicator */}
-            {qrCode.customization && (
-              <div className="absolute top-2 right-2 bg-black text-white text-xs px-2 py-1 rounded-full">
-                Custom
-              </div>
-            )}
           </div>
 
-          {/* QR Code Info */}
-          <div className="p-4">
-            <h3 className="text-base font-medium text-[#333333] mb-1">
-              {qrCode.title || `QR Code ${String(qrCode.id).substring(0, 6)}`}
+          {/* Info */}
+          <div className="p-4 bg-gray-50">
+            <h3
+              className="font-medium text-gray-900 mb-1 truncate"
+              title={qrCode.title || qrCode.shortUrl || "Untitled"}
+            >
+              {qrCode.title || qrCode.shortUrl || "Untitled"}
             </h3>
-            <p className="text-xs text-[#607D8B] mb-2">
-              Created: {formatDate(qrCode.createdAt)}
+            <p
+              className="text-sm text-gray-500 mb-3 truncate"
+              title={qrCode.description || qrCode.shortUrl}
+            >
+              {qrCode.description || qrCode.shortUrl}
             </p>
-            <p className="text-xs text-[#333333] mb-3">
-              Scanned:{" "}
-              <span className="font-medium">
-                {qrCode.scans.toLocaleString()} times
+
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500">
+                {formatDate(qrCode.createdAt)}
               </span>
-            </p>
 
-            {/* Action buttons */}
-            <div className="flex justify-center gap-6">
-              <ButtonIcon
-                icon={<RiExternalLinkLine />}
-                onClick={() => {
-                  // We don't have direct URLs anymore since we're generating QR codes on the fly
-                  // So let's copy the short URL to clipboard instead
-                  if (qrCode.shortUrl) {
-                    navigator.clipboard.writeText(qrCode.shortUrl);
-                    // Ideally we'd show a toast, but we don't have access to showToast here
-                    console.log(`Copied to clipboard: ${qrCode.shortUrl}`);
-                    // Create a temporary notification
-                    const notification = document.createElement("div");
-                    notification.textContent = "URL copied to clipboard!";
-                    notification.style.position = "fixed";
-                    notification.style.bottom = "20px";
-                    notification.style.right = "20px";
-                    notification.style.backgroundColor = "#333";
-                    notification.style.color = "#fff";
-                    notification.style.padding = "10px 20px";
-                    notification.style.borderRadius = "4px";
-                    notification.style.zIndex = "9999";
-                    document.body.appendChild(notification);
+              {qrCode.scans !== undefined && (
+                <span className="text-xs px-2 py-1 bg-gray-100 rounded-full">
+                  {qrCode.scans} {qrCode.scans === 1 ? "scan" : "scans"}
+                </span>
+              )}
+            </div>
 
-                    // Remove notification after 2 seconds
-                    setTimeout(() => {
-                      document.body.removeChild(notification);
-                    }, 2000);
-                  }
-                }}
-                tooltip="Copy URL"
-                ariaLabel="Copy URL to clipboard"
-              />
-              <ButtonIcon
-                icon={<RiEditLine />}
-                onClick={() => onEdit?.(qrCode)}
-                tooltip="Edit"
-                ariaLabel="Edit QR code"
-              />
-              <ButtonIcon
-                icon={<RiDeleteBinLine />}
-                onClick={() => onDelete?.(qrCode)}
-                tooltip="Delete"
-                ariaLabel="Delete QR code"
-                variant="danger"
-              />
+            {/* Actions */}
+            <div className="mt-3 flex justify-between">
+              {onEdit && (
+                <ButtonIcon
+                  icon={<RiEditLine />}
+                  onClick={() => onEdit(qrCode)}
+                  tooltip="Edit"
+                  className="text-gray-500 hover:text-gray-700"
+                  ariaLabel="Edit QR code"
+                />
+              )}
+              {onPreview && (
+                <ButtonIcon
+                  icon={<RiExternalLinkLine />}
+                  onClick={() => onPreview(qrCode)}
+                  tooltip="Preview"
+                  className="text-gray-500 hover:text-gray-700"
+                  ariaLabel="Preview QR code"
+                />
+              )}
+              {onDelete && (
+                <ButtonIcon
+                  icon={<RiDeleteBinLine />}
+                  onClick={() => onDelete(qrCode)}
+                  tooltip="Delete"
+                  className="text-red-500 hover:text-red-700"
+                  ariaLabel="Delete QR code"
+                />
+              )}
             </div>
           </div>
         </div>

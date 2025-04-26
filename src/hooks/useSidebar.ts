@@ -96,11 +96,11 @@ export const useSidebar = (navItems: NavItem[], defaultCollapsed = false) => {
       if (item.path === pathname) return true;
 
       // Match dashboard home
-      if (item.path === "/dashboard" && pathname.startsWith("/dashboard"))
+      if (item.path === "/dashboard" && pathname?.startsWith("/dashboard"))
         return true;
 
       // Match other paths that start with item path (e.g. /settings/profile matches /settings)
-      if (item.path !== "/" && pathname.startsWith(item.path)) return true;
+      if (item.path !== "/" && pathname?.startsWith(item.path)) return true;
 
       return false;
     });

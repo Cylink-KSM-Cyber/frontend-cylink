@@ -132,7 +132,7 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   // Get query params and router for updating URL
   const searchParams = useSearchParams();
   const router = useRouter();
-  const tabParam = searchParams.get("tab");
+  const tabParam = searchParams?.get("tab") || null;
 
   // Get sidebar context
   const { activeItemId } = useSidebar();
@@ -151,10 +151,17 @@ const DashboardTemplate: React.FC<DashboardTemplateProps> = ({
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
 
-    // Update URL query parameter
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", tab);
-    router.push(`/dashboard?${params.toString()}`);
+    // Update URL based on tab
+    if (tab === "qrcodes") {
+      router.push("/dashboard/qr-codes");
+    } else if (tab === "urls") {
+      router.push("/dashboard/urls");
+    } else {
+      // For analytics and any other tabs, use query parameter
+      const params = new URLSearchParams(searchParams?.toString() || "");
+      params.set("tab", tab);
+      router.push(`/dashboard?${params.toString()}`);
+    }
   };
 
   // Sync with sidebar active item
