@@ -55,3 +55,5 @@ export const useCreateUrl = () => {
     error,
   };
 };
+
+export default useCreateUrl;
