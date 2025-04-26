@@ -2,9 +2,8 @@
 
 import React from "react";
 import { useUrls } from "@/hooks/useUrls";
-import { UrlFilter as FilterType } from "@/interfaces/url";
 import UrlItem from "@/components/molecules/UrlItem";
-import UrlFilter from "@/components/molecules/UrlFilter";
+import UrlFilter, { FilterOptions } from "@/components/molecules/UrlFilter";
 import Pagination from "@/components/molecules/Pagination";
 
 /**
@@ -17,14 +16,22 @@ const UrlList = () => {
     isLoading,
     error,
     pagination,
+    filter,
     updateFilter,
     deleteUrl,
     updateUrlStatus,
     refreshUrls,
   } = useUrls();
 
-  const handleFilterChange = (newFilter: Partial<FilterType>) => {
-    updateFilter(newFilter);
+  const handleFilterChangeForUrlFilter = (
+    filterType: keyof FilterOptions,
+    value: string | number
+  ) => {
+    if (filterType === "status") {
+      updateFilter({ status: value as string });
+    } else if (filterType === "limit") {
+      updateFilter({ limit: value as number });
+    }
   };
 
   const handlePageChange = (page: number) => {
@@ -71,13 +78,11 @@ const UrlList = () => {
   return (
     <div className="space-y-6">
       <UrlFilter
-        filter={{
-          page: pagination.page,
-          limit: pagination.limit,
-          sortBy: "created_at",
-          sortOrder: "desc",
+        filters={{
+          status: filter.status,
+          limit: filter.limit,
         }}
-        onFilterChange={handleFilterChange}
+        onFilterChange={handleFilterChangeForUrlFilter}
       />
 
       <div>
