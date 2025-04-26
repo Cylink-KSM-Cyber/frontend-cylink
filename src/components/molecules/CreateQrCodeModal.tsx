@@ -45,7 +45,7 @@ interface CreateQrCodeModalProps {
 const qrCodeCreateSchema = z
   .object({
     urlSource: z.enum(["existing", "new"]),
-    existingUrlId: z.number().optional().nullable(),
+    existingUrlId: z.union([z.number(), z.string()]).optional().nullable(),
     title: z.string().optional(),
     originalUrl: z.string().url("Please enter a valid URL").optional(),
     customCode: z.string().optional(),
@@ -55,7 +55,11 @@ const qrCodeCreateSchema = z
     (data) => {
       // If using existing URL, validate existingUrlId
       if (data.urlSource === "existing") {
-        return !!data.existingUrlId;
+        return (
+          data.existingUrlId !== null &&
+          data.existingUrlId !== undefined &&
+          data.existingUrlId !== ""
+        );
       }
 
       // If creating new URL, validate required fields
@@ -87,7 +91,6 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
   // Form state with validation
   const {
     register,
-    handleSubmit,
     watch,
     setValue,
     formState: { errors },
@@ -196,57 +199,76 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
 
   // Handle form submission
   const handleFormSubmit = async (data: QrCodeCreateFormSchema) => {
+    console.log("Form submitted:", data);
+    console.log("Current step:", currentStep);
+
     try {
-      let urlToUse: Url | null = null;
-
+      // Step 1: URL Selection
       if (currentStep === 1) {
-        // First step - Select or create URL
-        // If using existing URL
-        if (data.urlSource === "existing" && data.existingUrlId) {
-          urlToUse =
-            existingUrls.find((url) => url.id === data.existingUrlId) || null;
-
-          if (urlToUse) {
-            setPreviewUrl(urlToUse.short_url);
-            setSelectedUrlForQrCode(urlToUse); // Store the selected URL
-            setCurrentStep(2);
+        if (data.urlSource === "existing") {
+          // Handle existing URL selection
+          if (!data.existingUrlId) {
+            alert("Please select a URL");
+            return;
           }
-        }
-        // If creating new URL
-        else if (
-          data.urlSource === "new" &&
-          data.title &&
-          data.originalUrl &&
-          data.expiryDate
-        ) {
+
+          // Find the selected URL
+          const selectedUrl = existingUrls.find(
+            (url) => url.id == data.existingUrlId
+          );
+          if (!selectedUrl) {
+            console.error("Selected URL not found:", data.existingUrlId);
+            alert("Selected URL not found. Please try again.");
+            return;
+          }
+
+          // Set the URL and proceed to next step
+          console.log("Selected existing URL:", selectedUrl);
+          setSelectedUrlForQrCode(selectedUrl);
+          setPreviewUrl(selectedUrl.short_url);
+          setCurrentStep(2);
+        } else if (data.urlSource === "new") {
+          // Handle new URL creation
+          if (!data.title || !data.originalUrl || !data.expiryDate) {
+            alert("Please fill in all required fields");
+            return;
+          }
+
           try {
-            urlToUse = await createUrl({
+            // Create new URL
+            const newUrl = await createUrl({
               title: data.title,
               original_url: data.originalUrl,
-              custom_code: data.customCode,
+              custom_code: data.customCode || undefined,
               expiry_date: data.expiryDate,
             });
 
-            if (urlToUse) {
-              setPreviewUrl(urlToUse.short_url);
-              setSelectedUrlForQrCode(urlToUse); // Store the created URL
-              setCurrentStep(2);
-            }
-          } catch (createError) {
-            console.error("Error creating URL:", createError);
-            // Don't move to next step if URL creation failed
+            // Set the URL and proceed to next step
+            console.log("Created new URL:", newUrl);
+            setSelectedUrlForQrCode(newUrl);
+            setPreviewUrl(newUrl.short_url);
+            setCurrentStep(2);
+          } catch (error) {
+            console.error("Error creating URL:", error);
+            alert("Failed to create URL. Please try again.");
           }
         }
-      } else if (currentStep === 2) {
-        // Second step - Generate QR code using the stored URL object
-        if (selectedUrlForQrCode) {
-          await generateQrCodeForUrl(selectedUrlForQrCode);
-        } else {
+      }
+      // Step 2: QR Code Generation
+      else if (currentStep === 2) {
+        if (!selectedUrlForQrCode) {
           console.error("No URL selected for QR code generation");
+          alert("Please select a URL first");
+          setCurrentStep(1);
+          return;
         }
+
+        console.log("Generating QR code for URL:", selectedUrlForQrCode);
+        await generateQrCodeForUrl(selectedUrlForQrCode);
       }
     } catch (error) {
-      console.error("Error in QR code creation:", error);
+      console.error("Error in QR code creation process:", error);
+      alert("An error occurred. Please try again.");
     }
   };
 
@@ -340,7 +362,8 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
           <select
             id="existingUrlId"
             {...register("existingUrlId", {
-              setValueAs: (value) => (value ? Number(value) : undefined),
+              valueAsNumber: true,
+              required: urlSource === "existing",
             })}
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             disabled={isLoadingUrls}
@@ -358,6 +381,49 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
           {isLoadingUrls && (
             <p className="mt-1 text-sm text-gray-500">Loading URLs...</p>
           )}
+
+          {/* Direct action button to manually select a URL */}
+          <div className="mt-4">
+            <Button
+              variant="primary"
+              onClick={() => {
+                const selectedId = existingUrlId;
+                console.log(
+                  "Direct selection, ID:",
+                  selectedId,
+                  "Type:",
+                  typeof selectedId
+                );
+
+                if (selectedId) {
+                  const selected = existingUrls.find((url) => {
+                    console.log(
+                      "Comparing:",
+                      url.id,
+                      selectedId,
+                      url.id == selectedId
+                    );
+                    return url.id == selectedId;
+                  });
+
+                  if (selected) {
+                    console.log("Found URL directly:", selected);
+                    setPreviewUrl(selected.short_url);
+                    setSelectedUrlForQrCode(selected);
+                    setCurrentStep(2);
+                  } else {
+                    console.error("Could not find URL with ID:", selectedId);
+                    alert("Please select a valid URL from the dropdown");
+                  }
+                } else {
+                  alert("Please select a URL from the dropdown");
+                }
+              }}
+              size="sm"
+            >
+              Use Selected URL
+            </Button>
+          </div>
         </div>
       )}
 
@@ -724,7 +790,20 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
           {currentStep === 1 ? (
             <Button
               variant="primary"
-              onClick={handleSubmit(handleFormSubmit)}
+              onClick={() => {
+                // Manually trigger form validation and submission
+                const formData = {
+                  urlSource: watch("urlSource"),
+                  existingUrlId: watch("existingUrlId"),
+                  title: watch("title"),
+                  originalUrl: watch("originalUrl"),
+                  customCode: watch("customCode"),
+                  expiryDate: watch("expiryDate"),
+                };
+
+                console.log("Direct form submission with data:", formData);
+                handleFormSubmit(formData);
+              }}
               disabled={isCreatingUrl}
               loading={isCreatingUrl}
               startIcon={<RiLinkM />}
@@ -734,7 +813,13 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
           ) : (
             <Button
               variant="primary"
-              onClick={handleSubmit(handleFormSubmit)}
+              onClick={() => {
+                // Directly call the handler for step 2
+                handleFormSubmit({
+                  urlSource: watch("urlSource"),
+                  existingUrlId: watch("existingUrlId"),
+                });
+              }}
               disabled={
                 isGenerating ||
                 !selectedForegroundColor ||
