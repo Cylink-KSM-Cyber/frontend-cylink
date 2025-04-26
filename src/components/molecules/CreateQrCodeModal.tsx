@@ -776,8 +776,9 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
       size={currentStep === 1 ? "md" : "lg"}
       overlayStyle="glassmorphism"
       footer={renderFooterButtons()}
+      className="max-h-[90vh] my-auto"
     >
-      <div className="py-2">
+      <div className="py-2 overflow-y-auto max-h-[calc(90vh-160px)]">
         {/* Step Indicator */}
         <div className="mb-6">
           <div className="flex items-center justify-center">
