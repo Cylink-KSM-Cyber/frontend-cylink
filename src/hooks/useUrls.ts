@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Url, UrlFilter } from "@/interfaces/url";
-import { fetchUrls } from "@/services/url";
+import { fetchUrls, updateUrlStatusById, deleteUrlById } from "@/services/url";
+import { useToast } from "@/contexts/ToastContext";
 
 /**
  * Custom hook for fetching and managing URLs
@@ -28,6 +29,7 @@ export const useUrls = (
     limit: 10,
     total_pages: 0,
   });
+  const { showToast } = useToast();
 
   /**
    * Fetch URLs based on current filter
@@ -113,6 +115,64 @@ export const useUrls = (
     return fetchUrlData();
   }, [fetchUrlData]);
 
+  /**
+   * Update URL status (active/inactive)
+   * @param id - ID of the URL to update
+   * @param isActive - New active status
+   * @returns Promise resolving to success status
+   */
+  const updateUrlStatus = useCallback(
+    async (id: number, isActive: boolean): Promise<boolean> => {
+      try {
+        await updateUrlStatusById(id, isActive);
+        // Refresh URLs after status update
+        await fetchUrlData();
+        return true;
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to update URL status")
+        );
+        console.error("Failed to update URL status:", err);
+        return false;
+      }
+    },
+    [fetchUrlData]
+  );
+
+  /**
+   * Delete a URL by ID
+   * @param id - ID of the URL to delete
+   * @returns Promise resolving to the success status
+   */
+  const deleteUrl = useCallback(
+    async (id: number): Promise<boolean> => {
+      try {
+        const response = await deleteUrlById(id);
+
+        // Display success toast
+        showToast(
+          `Successfully deleted URL "${response.data.short_code}"`,
+          "white",
+          4000
+        );
+
+        // Refresh URLs after deletion
+        await fetchUrlData();
+        return true;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to delete URL";
+
+        setError(err instanceof Error ? err : new Error(errorMessage));
+
+        // Display error toast
+        showToast(errorMessage, "error", 4000);
+        return false;
+      }
+    },
+    [showToast, fetchUrlData]
+  );
+
   return {
     urls,
     isLoading,
@@ -121,6 +181,8 @@ export const useUrls = (
     filter,
     updateFilter,
     refreshUrls,
+    updateUrlStatus,
+    deleteUrl,
   };
 };
 
