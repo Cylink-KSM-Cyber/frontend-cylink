@@ -174,7 +174,6 @@ export default function QrCodesPage() {
     // Wait for the modal to close and refresh the QR codes
     setTimeout(() => {
       refreshQrCodes();
-      showToast("QR code updated successfully", "success", 3000);
     }, 500);
   };
 
@@ -202,7 +201,6 @@ export default function QrCodesPage() {
         // Wait for the modal to close and refresh the QR codes
         setTimeout(() => {
           refreshQrCodes();
-          showToast("QR code deleted successfully", "success", 3000);
         }, 500);
       }
     } catch (error) {
