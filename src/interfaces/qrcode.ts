@@ -15,7 +15,8 @@ export interface QrCodeColorsResponse {
   status: number;
   message: string;
   data: {
-    colors: string[];
+    foreground_colors: QrCodeColor[];
+    background_colors: QrCodeColor[];
   };
 }
 
@@ -25,6 +26,7 @@ export interface QrCodeColorsResponse {
  */
 export interface QrCodeGenerateRequest {
   url_id: number;
+  short_code?: string;
   color?: string;
   background_color?: string;
   include_logo?: boolean;
@@ -47,6 +49,7 @@ export interface QrCodeGenerateResponse {
     qr_code_url: string;
     png_url: string;
     svg_url: string;
+    image_url: string;
     color: string;
     background_color: string;
     include_logo: boolean;
