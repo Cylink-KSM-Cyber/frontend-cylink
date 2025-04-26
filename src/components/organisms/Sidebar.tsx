@@ -197,7 +197,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     {
       id: "qrcodes",
       label: "QR Codes",
-      path: "/dashboard?tab=qrcodes",
+      path: "/dashboard/qr-codes",
       icon: <RiQrCodeLine />,
     },
     {

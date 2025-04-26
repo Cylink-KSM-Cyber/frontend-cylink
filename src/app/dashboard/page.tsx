@@ -40,7 +40,7 @@ export default function DashboardPage() {
 
   // Get tab from URL query params
   const searchParams = useSearchParams();
-  const tabParam = searchParams.get("tab");
+  const tabParam = searchParams?.get("tab") || null;
 
   // Delete URL modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);

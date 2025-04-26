@@ -51,12 +51,16 @@ export const SidebarProvider: React.FC<SidebarProviderProps> = ({
   useEffect(() => {
     // Set active item based on pathname and search params
     if (pathname === "/dashboard") {
-      const tab = searchParams.get("tab");
+      const tab = searchParams?.get("tab");
       if (tab) {
         setActiveItemId(tab);
       } else {
         setActiveItemId("dashboard");
       }
+    } else if (pathname === "/dashboard/qr-codes") {
+      setActiveItemId("qrcodes");
+    } else if (pathname === "/dashboard/urls") {
+      setActiveItemId("urls");
     } else if (pathname === "/settings") {
       setActiveItemId("settings");
     }
