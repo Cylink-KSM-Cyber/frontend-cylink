@@ -34,7 +34,6 @@ export const useQrCode = () => {
   const [selectedBackgroundColor, setSelectedBackgroundColor] =
     useState<QrCodeColor | null>(null);
   const [includeLogoChecked, setIncludeLogoChecked] = useState<boolean>(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [logoSize, setLogoSize] = useState<number>(0.25); // Default 25%
   const [qrSize, setQrSize] = useState<number>(300); // Default size
   const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<string>("H");
@@ -287,6 +286,7 @@ export const useQrCode = () => {
     includeLogoChecked,
     errorCorrectionLevel,
     qrSize,
+    logoSize,
     isLoading,
     isGenerating,
     error,
@@ -296,6 +296,7 @@ export const useQrCode = () => {
     setIncludeLogoChecked,
     setErrorCorrectionLevel,
     setQrSize,
+    setLogoSize,
     loadColors,
     generateQrCodeForUrl,
     resetQrCode,
