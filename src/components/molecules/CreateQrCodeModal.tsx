@@ -381,49 +381,6 @@ const CreateQrCodeModal: React.FC<CreateQrCodeModalProps> = ({
           {isLoadingUrls && (
             <p className="mt-1 text-sm text-gray-500">Loading URLs...</p>
           )}
-
-          {/* Direct action button to manually select a URL */}
-          <div className="mt-4">
-            <Button
-              variant="primary"
-              onClick={() => {
-                const selectedId = existingUrlId;
-                console.log(
-                  "Direct selection, ID:",
-                  selectedId,
-                  "Type:",
-                  typeof selectedId
-                );
-
-                if (selectedId) {
-                  const selected = existingUrls.find((url) => {
-                    console.log(
-                      "Comparing:",
-                      url.id,
-                      selectedId,
-                      url.id == selectedId
-                    );
-                    return url.id == selectedId;
-                  });
-
-                  if (selected) {
-                    console.log("Found URL directly:", selected);
-                    setPreviewUrl(selected.short_url);
-                    setSelectedUrlForQrCode(selected);
-                    setCurrentStep(2);
-                  } else {
-                    console.error("Could not find URL with ID:", selectedId);
-                    alert("Please select a valid URL from the dropdown");
-                  }
-                } else {
-                  alert("Please select a URL from the dropdown");
-                }
-              }}
-              size="sm"
-            >
-              Use Selected URL
-            </Button>
-          </div>
         </div>
       )}
 
