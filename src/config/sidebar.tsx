@@ -26,14 +26,14 @@ export const sidebarNavItems: NavItem[] = [
   {
     id: "urls",
     label: "My URLs",
-    path: "/dashboard?tab=urls",
+    path: "/dashboard/urls",
     icon: <RiLinkM />,
     requiresAuth: true,
   },
   {
     id: "qrcodes",
     label: "QR Codes",
-    path: "/dashboard?tab=qrcodes",
+    path: "/dashboard/qr-codes",
     icon: <RiQrCodeLine />,
     requiresAuth: true,
   },
