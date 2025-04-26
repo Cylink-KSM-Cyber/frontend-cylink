@@ -1,4 +1,4 @@
-import { get, del } from "./api";
+import { get, del, put } from "./api";
 import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
 
 /**
@@ -118,4 +118,20 @@ export const deleteUrlById = async (id: number): Promise<DeleteUrlResponse> => {
   console.log(`Deleting URL with ID: ${id}`);
   const endpoint = `/api/v1/urls/${id}`;
   return del<DeleteUrlResponse>(endpoint);
+};
+
+/**
+ * Update URL status by ID (active/inactive)
+ * @param id - ID of the URL to update
+ * @param isActive - New status value
+ * @returns Promise with API response
+ */
+export const updateUrlStatusById = async (id: number, isActive: boolean) => {
+  console.log(
+    `Updating status for URL with ID: ${id} to ${
+      isActive ? "active" : "inactive"
+    }`
+  );
+  const endpoint = `/api/v1/urls/${id}/status`;
+  return put(endpoint, { is_active: isActive });
 };
