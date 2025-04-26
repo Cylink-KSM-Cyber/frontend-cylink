@@ -116,53 +116,7 @@ const QrCodeGrid: React.FC<QrCodeGridProps> = ({
 
   // If no QR codes, show empty state
   if (qrCodes.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-        <div className="py-6">
-          <svg
-            className="w-12 h-12 mx-auto text-gray-300 mb-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M3 3H8V8H3V3Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M16 3H21V8H16V3Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M3 16H8V21H3V16Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M16 16H21V21H16V16Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <h3 className="text-lg font-semibold text-gray-800 mb-2">
-            No QR Codes Found
-          </h3>
-          <p className="text-gray-500 mb-4">
-            You haven&apos;t generated any QR codes yet.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Render QR code using QrCodePreview component which already handles styling consistently
