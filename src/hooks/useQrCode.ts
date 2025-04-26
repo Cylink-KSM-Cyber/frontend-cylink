@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   QrCodeColor,
   QrCodeGenerateRequest,
@@ -44,6 +44,10 @@ export const useQrCode = () => {
   const [error, setError] = useState<Error | null>(null);
   const [generatedQrUrl, setGeneratedQrUrl] = useState<string | null>(null);
 
+  // Refs to track API call status
+  const colorsLoadedRef = useRef(false);
+  const colorsFetchInProgressRef = useRef(false);
+
   // Toast context
   const { showToast } = useToast();
 
@@ -72,6 +76,17 @@ export const useQrCode = () => {
    * Load available QR code colors
    */
   const loadColors = useCallback(async () => {
+    // Skip if colors are already loaded or there's a fetch in progress
+    if (
+      (colorsLoadedRef.current &&
+        foregroundColors.length > 0 &&
+        backgroundColors.length > 0) ||
+      colorsFetchInProgressRef.current
+    ) {
+      return;
+    }
+
+    colorsFetchInProgressRef.current = true;
     setIsLoading(true);
     setError(null);
 
@@ -93,28 +108,50 @@ export const useQrCode = () => {
       setBackgroundColors(bgColors);
 
       // Set defaults
-      if (fgColors.length > 0) {
+      if (fgColors.length > 0 && !selectedForegroundColor) {
         setSelectedForegroundColor(fgColors[0]);
       }
-      if (bgColors.length > 0) {
+      if (bgColors.length > 0 && !selectedBackgroundColor) {
         setSelectedBackgroundColor(bgColors[0]);
       }
+
+      // Mark colors as loaded
+      colorsLoadedRef.current = true;
     } catch (err) {
       console.error("Error loading QR code colors:", err);
 
       // Set default colors when API fails
       setForegroundColors([{ name: "Black", hex: "#000000" }]);
       setBackgroundColors([{ name: "White", hex: "#FFFFFF" }]);
-      setSelectedForegroundColor({ name: "Black", hex: "#000000" });
-      setSelectedBackgroundColor({ name: "White", hex: "#FFFFFF" });
+
+      if (!selectedForegroundColor) {
+        setSelectedForegroundColor({ name: "Black", hex: "#000000" });
+      }
+      if (!selectedBackgroundColor) {
+        setSelectedBackgroundColor({ name: "White", hex: "#FFFFFF" });
+      }
 
       setError(
         err instanceof Error ? err : new Error("Failed to load QR code colors")
       );
     } finally {
       setIsLoading(false);
+      colorsFetchInProgressRef.current = false;
     }
-  }, []);
+  }, [
+    foregroundColors.length,
+    backgroundColors.length,
+    selectedForegroundColor,
+    selectedBackgroundColor,
+  ]);
+
+  /**
+   * Force reload colors (useful if needed to refresh data)
+   */
+  const reloadColors = useCallback(() => {
+    colorsLoadedRef.current = false;
+    loadColors();
+  }, [loadColors]);
 
   /**
    * Generate QR code for URL
@@ -252,52 +289,45 @@ export const useQrCode = () => {
       );
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(
-          errorData.message || `Failed to update QR code: ${res.status}`
-        );
+        throw new Error(`Failed to update QR code: ${res.status}`);
       }
 
       const data = await res.json();
-
-      // Display success toast
-      showToast("QR Code berhasil diupdate", "success", 2000);
-
       setIsGenerating(false);
       return data;
     } catch (err) {
       setError(err as Error);
       setIsGenerating(false);
-
-      // Display error toast
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update QR code";
-      showToast(errorMessage, "error", 3000);
-
       throw err;
     }
   };
 
   return {
+    // State
     foregroundColors,
     backgroundColors,
     selectedForegroundColor,
     selectedBackgroundColor,
     includeLogoChecked,
-    errorCorrectionLevel,
-    qrSize,
     logoSize,
+    qrSize,
+    errorCorrectionLevel,
     isLoading,
     isGenerating,
     error,
     generatedQrUrl,
+
+    // Setters
     setSelectedForegroundColor,
     setSelectedBackgroundColor,
     setIncludeLogoChecked,
-    setErrorCorrectionLevel,
-    setQrSize,
     setLogoSize,
+    setQrSize,
+    setErrorCorrectionLevel,
+
+    // Actions
     loadColors,
+    reloadColors,
     generateQrCodeForUrl,
     resetQrCode,
     fetchQrCodeById,
