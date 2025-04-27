@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { get } from "@/services/api";
 import {
   UrlTotalClicksData,
@@ -32,11 +32,20 @@ export const useUrlTotalClicks = (
     page: 1,
   }
 ): UseUrlTotalClicksReturn => {
-  const [data, setData] = useState<UrlTotalClicksData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isError, setIsError] = useState<boolean>(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [timeSeriesData, setTimeSeriesData] = useState<ChartDataPoint[]>([]);
+  // Single source of truth for data state
+  const [apiResponse, setApiResponse] = useState<{
+    data: UrlTotalClicksData | null;
+    timeSeriesData: ChartDataPoint[];
+    isLoading: boolean;
+    isError: boolean;
+    error: Error | null;
+  }>({
+    data: null,
+    timeSeriesData: [],
+    isLoading: true,
+    isError: false,
+    error: null,
+  });
 
   // Use ref to store the latest params and prevent unnecessary fetches
   const paramsRef = useRef<UrlTotalClicksParams>(params);
@@ -88,6 +97,7 @@ export const useUrlTotalClicks = (
       return timeSeriesData.map((item) => ({
         date: item.date,
         value: item.clicks,
+        // Simpan label ringkas hanya dengan jumlah klik
         label: `${item.clicks}`,
       }));
     },
@@ -150,9 +160,13 @@ export const useUrlTotalClicks = (
       paramsRef.current = { ...params };
       fetchInProgressRef.current = true;
 
-      setIsLoading(true);
-      setIsError(false);
-      setError(null);
+      // Set loading state immediately
+      setApiResponse((prev) => ({
+        ...prev,
+        isLoading: true,
+        isError: false,
+        error: null,
+      }));
 
       try {
         const queryString = buildQueryString(params);
@@ -175,32 +189,50 @@ export const useUrlTotalClicks = (
         }
 
         if (response && response.data) {
-          setData(response.data);
-
           // Transform time series data for the chart
           const chartData = transformTimeSeriesData(
             response.data.time_series.data
           );
-          setTimeSeriesData(chartData);
+
+          // Update all states atomically
+          setApiResponse({
+            data: response.data,
+            timeSeriesData: chartData,
+            isLoading: false,
+            isError: false,
+            error: null,
+          });
+
           hasDataBeenFetchedRef.current = true;
         } else {
           throw new Error("Invalid API response format");
         }
       } catch (err) {
         console.error("Failed to fetch URL total clicks:", err);
-        setIsError(true);
-        setError(
-          err instanceof Error
-            ? err
-            : new Error("Failed to fetch URL total clicks")
-        );
+
+        setApiResponse((prev) => ({
+          ...prev,
+          isLoading: false,
+          isError: true,
+          error:
+            err instanceof Error
+              ? err
+              : new Error("Failed to fetch URL total clicks"),
+        }));
       } finally {
-        setIsLoading(false);
         fetchInProgressRef.current = false;
       }
     },
     [params, buildQueryString, transformTimeSeriesData, haveParamsChanged]
   );
+
+  // Pre-load data with eager loading strategy
+  useMemo(() => {
+    // Trigger immediate fetch on first render
+    if (!hasDataBeenFetchedRef.current) {
+      fetchTotalClicks();
+    }
+  }, [fetchTotalClicks]);
 
   // Fetch data when params change
   useEffect(() => {
@@ -218,11 +250,11 @@ export const useUrlTotalClicks = (
   }, [fetchTotalClicks]);
 
   return {
-    data,
-    isLoading,
-    isError,
-    error,
+    data: apiResponse.data,
+    isLoading: apiResponse.isLoading,
+    isError: apiResponse.isError,
+    error: apiResponse.error,
     refetch: () => fetchTotalClicks(), // Pass no instance to force a refresh
-    timeSeriesData,
+    timeSeriesData: apiResponse.timeSeriesData,
   };
 };
