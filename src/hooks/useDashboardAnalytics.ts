@@ -3,12 +3,12 @@ import {
   DashboardAnalyticsData,
   TimePeriod,
   RecentActivityItem,
-  CtrSourceData,
 } from "@/interfaces/dashboard";
 import { useTotalUrls } from "@/hooks/useTotalUrls";
 import { useTotalClicks } from "@/hooks/useTotalClicks";
 import { useConversionRate } from "@/hooks/useConversionRate";
 import { useUrls } from "@/hooks/useUrls";
+import { useCtrStats } from "@/hooks/useCtrStats";
 import {
   RiLineChartLine,
   RiLinkM,
@@ -52,11 +52,18 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
   } = useTotalClicks({ comparison: timePeriod });
 
   const conversionPeriod = mapTimePeriodToConversionParams(timePeriod);
+  useConversionRate({
+    comparison: conversionPeriod,
+  });
+
+  // Get CTR stats
   const {
-    conversionStats,
-    isLoading: isCtrLoading,
-    error: ctrError,
-  } = useConversionRate({ comparison: conversionPeriod });
+    ctrStats,
+    isLoading: isCtrStatsLoading,
+    error: ctrStatsError,
+  } = useCtrStats({
+    period: timePeriod === "custom" ? undefined : timePeriod,
+  });
 
   // Get top performing URLs (sorted by clicks)
   const {
@@ -94,20 +101,33 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
     }));
   }, [totalClicksData]);
 
-  // Generate CTR breakdown data
+  // Generate CTR breakdown data from API response
   const generateCtrBreakdown = useCallback(() => {
-    // This is a mock implementation since the real data structure is different
-    // In a real implementation, this would map from the API response
-    const mockSourceData: CtrSourceData[] = [
-      { source: "Direct", ctr: 4.2, clicks: 156, impressions: 3714 },
-      { source: "Social", ctr: 2.8, clicks: 89, impressions: 3179 },
-      { source: "Email", ctr: 5.6, clicks: 125, impressions: 2232 },
-      { source: "Referral", ctr: 3.1, clicks: 67, impressions: 2161 },
-      { source: "Other", ctr: 1.9, clicks: 42, impressions: 2211 },
-    ];
+    if (!ctrStats?.data?.ctr_by_source) {
+      return [];
+    }
 
-    return mockSourceData;
-  }, []);
+    return ctrStats.data.ctr_by_source
+      .filter(
+        (item: { impressions: string; clicks: string }) =>
+          parseInt(item.impressions, 10) > 0 || parseInt(item.clicks, 10) > 0
+      )
+      .map(
+        (item: {
+          source: string;
+          ctr: string;
+          clicks: string;
+          impressions: string;
+        }) => ({
+          source: item.source,
+          ctr: parseFloat(item.ctr),
+          clicks: parseInt(item.clicks, 10),
+          impressions: parseInt(item.impressions, 10),
+        })
+      )
+      .sort((a: { ctr: number }, b: { ctr: number }) => b.ctr - a.ctr)
+      .slice(0, 5);
+  }, [ctrStats]);
 
   // Mock recent activity data
   useEffect(() => {
@@ -198,14 +218,14 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
       },
       averageCtr: {
         title: "Average CTR",
-        value: conversionStats?.conversionRate
-          ? `${conversionStats.conversionRate.toFixed(2)}%`
+        value: ctrStats?.data?.overall
+          ? `${parseFloat(ctrStats.data.overall.ctr).toFixed(2)}%`
           : "0%",
-        trend: conversionStats?.conversionChangePercentage || 0,
+        trend: 0, // This would need a comparison period calculation from the API
         trendLabel: "vs previous period",
         icon: RiPercentLine,
-        isLoading: isCtrLoading,
-        isError: !!ctrError,
+        isLoading: isCtrStatsLoading,
+        isError: !!ctrStatsError,
       },
       topPerformer: {
         title: "Top Performing URL",
@@ -226,9 +246,9 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
     },
     ctrBreakdown: {
       sourceData: generateCtrBreakdown(),
-      isLoading: isCtrLoading,
-      isError: !!ctrError,
-      error: ctrError || null,
+      isLoading: isCtrStatsLoading,
+      isError: !!ctrStatsError,
+      error: ctrStatsError || null,
     },
     recentActivity,
     timePeriod,
