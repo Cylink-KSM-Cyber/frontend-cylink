@@ -229,7 +229,7 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
       },
       topPerformer: {
         title: "Top Performing URL",
-        value: topUrls.length > 0 ? topUrls[0].short_url : "N/A",
+        value: topUrls.length > 0 ? topUrls[0].short_code || "N/A" : "N/A",
         trend: topUrls.length > 0 ? topUrls[0].clicks : 0,
         trendLabel: "total clicks",
         icon: RiLineChartLine,

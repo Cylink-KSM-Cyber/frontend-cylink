@@ -104,7 +104,9 @@ const KpiCard: React.FC<KpiCardData> = ({
         <div className="text-sm text-gray-500 font-medium">{title}</div>
         {Icon && <Icon className={`w-5 h-5 ${iconColorClass}`} />}
       </div>
-      <div className="text-2xl font-bold mb-1">{value}</div>
+
+      <div className="text-2xl font-bold mb-1 truncate">{value}</div>
+
       <div className="flex items-center text-xs text-gray-500">
         {trendLabel && (
           <>
