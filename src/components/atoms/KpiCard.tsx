@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import { KpiCardData } from "@/interfaces/dashboard";
 
 /**
@@ -14,7 +14,11 @@ const KpiCard: React.FC<KpiCardData> = ({
   isLoading = false,
   isError = false,
   color = "blue",
+  periodDetails,
 }) => {
+  const [showPeriodTooltip, setShowPeriodTooltip] = useState(false);
+  const trendRef = useRef<HTMLDivElement>(null);
+
   // Determine arrow direction and color based on trend value
   const getTrendArrow = () => {
     if (trend === undefined || trend === 0) return null;
@@ -95,8 +99,29 @@ const KpiCard: React.FC<KpiCardData> = ({
     red: "text-red-600",
   };
 
+  const bgColorClasses = {
+    blue: "bg-blue-50",
+    green: "bg-green-50",
+    purple: "bg-purple-50",
+    orange: "bg-orange-50",
+    red: "bg-red-50",
+  };
+
+  const borderColorClasses = {
+    blue: "border-blue-200",
+    green: "border-green-200",
+    purple: "border-purple-200",
+    orange: "border-orange-200",
+    red: "border-red-200",
+  };
+
   const iconColorClass =
     colorClasses[color as keyof typeof colorClasses] || colorClasses.blue;
+  const bgColorClass =
+    bgColorClasses[color as keyof typeof bgColorClasses] || bgColorClasses.blue;
+  const borderColorClass =
+    borderColorClasses[color as keyof typeof borderColorClasses] ||
+    borderColorClasses.blue;
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition-shadow duration-300 h-full">
@@ -107,11 +132,62 @@ const KpiCard: React.FC<KpiCardData> = ({
 
       <div className="text-2xl font-bold mb-1 truncate">{value}</div>
 
-      <div className="flex items-center text-xs text-gray-500">
+      <div
+        className="flex items-center text-xs text-gray-500 relative"
+        ref={trendRef}
+        onMouseEnter={() => periodDetails && setShowPeriodTooltip(true)}
+        onMouseLeave={() => setShowPeriodTooltip(false)}
+      >
         {trendLabel && (
           <>
-            <span>{trendLabel}</span>
+            <span
+              className={
+                periodDetails
+                  ? "cursor-help underline underline-offset-2 decoration-dotted"
+                  : ""
+              }
+            >
+              {trendLabel}
+            </span>
             {getTrendArrow()}
+
+            {showPeriodTooltip && periodDetails && (
+              <div
+                className={`absolute bottom-full left-0 mb-2 p-3 ${bgColorClass} ${borderColorClass} border rounded-md shadow-md z-10 w-60`}
+              >
+                <div className="text-xs font-medium mb-2">
+                  Comparison Details:
+                </div>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
+                  <div className="text-gray-600">Current:</div>
+                  <div className="font-medium">
+                    {periodDetails.current.toLocaleString()}
+                  </div>
+
+                  <div className="text-gray-600">Previous:</div>
+                  <div className="font-medium">
+                    {periodDetails.previous.toLocaleString()}
+                  </div>
+
+                  <div className="text-gray-600">Change:</div>
+                  <div className="font-medium">
+                    {periodDetails.change > 0 ? "+" : ""}
+                    {periodDetails.change.toLocaleString()}
+                  </div>
+
+                  <div className="text-gray-600">Period:</div>
+                  <div className="font-medium">
+                    {periodDetails.periodDays} days
+                  </div>
+
+                  <div className="text-gray-600">Date Range:</div>
+                  <div className="font-medium text-[10px]">
+                    {periodDetails.dateRange}
+                  </div>
+                </div>
+                <div className="absolute w-3 h-3 rotate-45 border-l border-b bg-inherit border-inherit left-3 -bottom-[6px]"></div>
+              </div>
+            )}
           </>
         )}
       </div>

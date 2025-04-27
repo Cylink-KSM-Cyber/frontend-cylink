@@ -6,27 +6,14 @@ import {
 } from "@/interfaces/dashboard";
 import { useTotalUrls } from "@/hooks/useTotalUrls";
 import { useTotalClicks } from "@/hooks/useTotalClicks";
-import { useConversionRate } from "@/hooks/useConversionRate";
 import { useUrls } from "@/hooks/useUrls";
-import { useCtrStats } from "@/hooks/useCtrStats";
+import { useCtrStats } from "./useCtrStats";
 import {
   RiLineChartLine,
   RiLinkM,
   RiPercentLine,
   RiBarChartLine,
 } from "react-icons/ri";
-
-/**
- * Map dashboard time period to conversion rate params
- * @param period Dashboard time period
- * @returns Time period value for conversion rate API
- */
-const mapTimePeriodToConversionParams = (
-  period: TimePeriod
-): 7 | 14 | 30 | 90 | undefined => {
-  if (period === "custom") return undefined;
-  return parseInt(period, 10) as 7 | 14 | 30 | 90;
-};
 
 /**
  * Custom hook for handling dashboard analytics data
@@ -51,19 +38,24 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
     error: clicksError,
   } = useTotalClicks({ comparison: timePeriod });
 
-  const conversionPeriod = mapTimePeriodToConversionParams(timePeriod);
-  useConversionRate({
-    comparison: conversionPeriod,
-  });
-
   // Get CTR stats
   const {
     ctrStats,
-    isLoading: isCtrStatsLoading,
-    error: ctrStatsError,
+    isLoading: isCtrLoading,
+    error: ctrError,
   } = useCtrStats({
     period: timePeriod === "custom" ? undefined : timePeriod,
+    comparison: timePeriod === "custom" ? undefined : timePeriod,
   });
+
+  // Debug log untuk memeriksa data CTR comparison
+  useEffect(() => {
+    console.log("CTR Stats Data:", ctrStats);
+    console.log(
+      "CTR Has Comparison:",
+      ctrStats?.data?.comparison !== undefined
+    );
+  }, [ctrStats]);
 
   // Get top performing URLs (sorted by clicks)
   const {
@@ -197,13 +189,12 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
       totalUrls: {
         title: "Total URLs",
         value: totalUrls || 0,
-        trend:
-          totalClicksData?.summary?.comparison?.active_urls
-            ?.change_percentage || 0,
-        trendLabel: "vs previous period",
+        trend: undefined,
+        trendLabel: undefined,
         icon: RiLinkM,
         isLoading: isUrlsLoading,
         isError: !!urlsError,
+        periodDetails: undefined,
       },
       totalClicks: {
         title: "Total Clicks",
@@ -211,21 +202,48 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
         trend:
           totalClicksData?.summary?.comparison?.total_clicks
             ?.change_percentage || 0,
-        trendLabel: "vs previous period",
+        trendLabel: totalClicksData?.summary?.comparison?.period_days
+          ? `vs previous ${totalClicksData.summary.comparison.period_days} days`
+          : "vs previous period",
         icon: RiBarChartLine,
         isLoading: isClicksLoading,
         isError: !!clicksError,
+        periodDetails: totalClicksData?.summary?.comparison
+          ? {
+              current: totalClicksData.summary.comparison.total_clicks.current,
+              previous:
+                totalClicksData.summary.comparison.total_clicks.previous,
+              change: totalClicksData.summary.comparison.total_clicks.change,
+              periodDays: totalClicksData.summary.comparison.period_days,
+              dateRange: `${totalClicksData.summary.comparison.previous_period.start_date} - ${totalClicksData.summary.comparison.previous_period.end_date}`,
+            }
+          : undefined,
       },
       averageCtr: {
         title: "Average CTR",
         value: ctrStats?.data?.overall
           ? `${parseFloat(ctrStats.data.overall.ctr).toFixed(2)}%`
           : "0%",
-        trend: 0, // This would need a comparison period calculation from the API
-        trendLabel: "vs previous period",
+        trend: ctrStats?.data?.comparison
+          ? ctrStats.data.comparison.metrics?.ctr?.change_percentage || 0
+          : 0,
+        trendLabel: ctrStats?.data?.comparison?.period_days
+          ? `vs previous ${ctrStats.data.comparison.period_days} days`
+          : "vs previous period",
         icon: RiPercentLine,
-        isLoading: isCtrStatsLoading,
-        isError: !!ctrStatsError,
+        isLoading: isCtrLoading,
+        isError: !!ctrError,
+        periodDetails: ctrStats?.data?.comparison
+          ? {
+              current: parseFloat(ctrStats.data.overall.ctr),
+              previous: parseFloat(
+                ctrStats.data.comparison.metrics.ctr.previous
+              ),
+              change: ctrStats.data.comparison.metrics.ctr.change,
+              periodDays: ctrStats.data.comparison.period_days,
+              dateRange: `${ctrStats.data.comparison.previous_period.start_date} - ${ctrStats.data.comparison.previous_period.end_date}`,
+            }
+          : undefined,
       },
       topPerformer: {
         title: "Top Performing URL",
@@ -246,9 +264,9 @@ export const useDashboardAnalytics = (): DashboardAnalyticsData => {
     },
     ctrBreakdown: {
       sourceData: generateCtrBreakdown(),
-      isLoading: isCtrStatsLoading,
-      isError: !!ctrStatsError,
-      error: ctrStatsError || null,
+      isLoading: isCtrLoading,
+      isError: !!ctrError,
+      error: ctrError || null,
     },
     recentActivity,
     timePeriod,

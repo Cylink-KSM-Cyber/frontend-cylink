@@ -11,6 +11,17 @@ import { IconType } from "react-icons";
 export type TimePeriod = "7" | "14" | "30" | "90" | "custom";
 
 /**
+ * Period Details Interface for comparison data
+ */
+export interface PeriodComparisonDetails {
+  current: number;
+  previous: number;
+  change: number;
+  periodDays: number;
+  dateRange: string;
+}
+
+/**
  * KPI Card Data Interface
  */
 export interface KpiCardData {
@@ -22,6 +33,7 @@ export interface KpiCardData {
   isLoading?: boolean;
   isError?: boolean;
   color?: string;
+  periodDetails?: PeriodComparisonDetails;
 }
 
 /**
