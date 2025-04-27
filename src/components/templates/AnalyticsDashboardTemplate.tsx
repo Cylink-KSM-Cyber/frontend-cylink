@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { memo } from "react";
 import DashboardHeader from "@/components/molecules/DashboardHeader";
 import KpiCardsSection from "@/components/molecules/KpiCardsSection";
 import UrlPerformanceTrend from "@/components/molecules/UrlPerformanceTrend";
 import TopPerformingUrls from "@/components/molecules/TopPerformingUrls";
 import CtrBreakdownChart from "@/components/molecules/CtrBreakdownChart";
 import RecentActivity from "@/components/molecules/RecentActivity";
-import { DashboardAnalyticsData, TimePeriod } from "@/interfaces/dashboard";
+import { DashboardAnalyticsData } from "@/interfaces/dashboard";
 import { Url } from "@/interfaces/url";
 
 interface AnalyticsDashboardTemplateProps {
@@ -15,63 +15,35 @@ interface AnalyticsDashboardTemplateProps {
 }
 
 /**
- * AnalyticsDashboardTemplate
- * Main layout template for the analytics dashboard
+ * Analytics Dashboard Template
+ * Organizes and displays all dashboard sections and components
+ *
+ * @param dashboardData - All dashboard data from useDashboardAnalytics hook
+ * @param onCopyUrl - Handler for copying URL to clipboard
+ * @param className - Optional CSS class
+ * @returns React component
  */
 const AnalyticsDashboardTemplate: React.FC<AnalyticsDashboardTemplateProps> = ({
   dashboardData,
   onCopyUrl,
   className = "",
 }) => {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Handle time period change
-  const handleTimePeriodChange = (period: TimePeriod) => {
-    dashboardData.setTimePeriod(period);
-  };
-
-  // Handle dashboard refresh
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await dashboardData.refresh();
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   return (
-    <div className={`w-full max-w-7xl mx-auto px-4 py-8 ${className}`}>
-      {/* Dashboard Header */}
+    <div className={`space-y-6 p-4 ${className}`}>
+      {/* Dashboard header with time period selector */}
       <DashboardHeader
+        title="Analytics Dashboard"
         timePeriod={dashboardData.timePeriod}
-        onTimePeriodChange={handleTimePeriodChange}
-        onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
-        className="mb-8"
+        onTimePeriodChange={dashboardData.setTimePeriod}
+        onRefresh={dashboardData.refresh}
       />
 
-      {/* KPI Cards */}
-      <KpiCardsSection kpiData={dashboardData.kpiData} className="mb-8" />
+      {/* KPI Cards Section */}
+      <KpiCardsSection kpiData={dashboardData.kpiData} />
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* URL Performance Trend (spans 2 columns on large screens) */}
-        <div className="lg:col-span-2">
-          <UrlPerformanceTrend performanceData={dashboardData.urlPerformance} />
-        </div>
+      {/* URL Performance Trend Chart */}
+      <UrlPerformanceTrend performanceData={dashboardData.urlPerformance} />
 
-        {/* Recent Activity */}
-        <div>
-          <RecentActivity
-            items={dashboardData.recentActivity.items}
-            isLoading={dashboardData.recentActivity.isLoading}
-            isError={dashboardData.recentActivity.isError}
-          />
-        </div>
-      </div>
-
-      {/* Bottom Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Performing URLs */}
         <TopPerformingUrls
@@ -84,8 +56,18 @@ const AnalyticsDashboardTemplate: React.FC<AnalyticsDashboardTemplateProps> = ({
         {/* CTR Breakdown */}
         <CtrBreakdownChart breakdownData={dashboardData.ctrBreakdown} />
       </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Activity */}
+        <RecentActivity
+          items={dashboardData.recentActivity.items}
+          isLoading={dashboardData.recentActivity.isLoading}
+          isError={dashboardData.recentActivity.isError}
+        />
+      </div>
     </div>
   );
 };
 
-export default AnalyticsDashboardTemplate;
+// Export a memoized version of the component to prevent unnecessary re-renders
+export default memo(AnalyticsDashboardTemplate);

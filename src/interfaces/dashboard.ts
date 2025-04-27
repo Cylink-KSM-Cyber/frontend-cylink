@@ -89,6 +89,27 @@ export interface RecentActivityItem {
 }
 
 /**
+ * Top Performer URL Analytics Interface
+ * @description Contains detailed analytics for the top performing URL
+ */
+export interface TopPerformerAnalytics {
+  urlId: number;
+  shortCode: string;
+  totalClicks: number;
+  uniqueVisitors: number;
+  clicksComparison?: {
+    current: number;
+    previous: number;
+    change: number;
+    changePercentage: number;
+    periodDays?: number;
+  };
+  isLoading: boolean;
+  isError: boolean;
+  error?: Error | null;
+}
+
+/**
  * Dashboard Analytics Data Interface
  */
 export interface DashboardAnalyticsData {
@@ -108,4 +129,5 @@ export interface DashboardAnalyticsData {
   timePeriod: TimePeriod;
   refresh: () => Promise<void>;
   setTimePeriod: (period: TimePeriod) => void;
+  topPerformerAnalytics?: TopPerformerAnalytics;
 }

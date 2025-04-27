@@ -1,5 +1,9 @@
 import { get, del, put } from "./api";
 import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
+import {
+  UrlAnalyticsParams,
+  UrlAnalyticsResponse,
+} from "@/interfaces/urlAnalytics";
 
 /**
  * URL Service
@@ -134,4 +138,21 @@ export const updateUrlStatusById = async (id: number, isActive: boolean) => {
   );
   const endpoint = `/api/v1/urls/${id}/status`;
   return put(endpoint, { is_active: isActive });
+};
+
+/**
+ * Fetch analytics data for a specific URL
+ * @param id - URL ID
+ * @returns Analytics data for the specific URL
+ */
+export const fetchUrlAnalytics = async (
+  id: number
+): Promise<UrlAnalyticsResponse> => {
+  try {
+    const endpoint = `/api/v1/urls/${id}/analytics`;
+    return await get<UrlAnalyticsResponse>(endpoint);
+  } catch (error) {
+    console.error("Failed to fetch URL analytics:", error);
+    throw error;
+  }
 };
