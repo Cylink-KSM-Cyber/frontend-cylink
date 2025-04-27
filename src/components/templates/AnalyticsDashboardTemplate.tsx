@@ -40,7 +40,7 @@ const AnalyticsDashboardTemplate: React.FC<AnalyticsDashboardTemplateProps> = ({
       <KpiCardsSection kpiData={dashboardData.kpiData} />
 
       {/* URL Performance Trend Chart */}
-      <UrlPerformanceTrend performanceData={dashboardData.urlPerformance} />
+      <UrlPerformanceTrend />
 
       <div className="grid gap-6">
         {/* Top Performing URLs */}
