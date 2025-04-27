@@ -13,6 +13,8 @@ import {
   RiMenuFoldLine,
   RiMenuUnfoldLine,
   RiUser3Line,
+  RiArrowLeftSLine,
+  RiArrowRightSLine,
 } from "react-icons/ri";
 import { NavItem, UserProfileProps } from "@/interfaces/sidebar";
 import { useSidebar } from "@/contexts/SidebarContext";
@@ -37,7 +39,14 @@ const THEME = {
   LOGO_TEXT_CLASS: "text-black",
 };
 
-// User profile component
+/**
+ * User profile component for displaying user information in the sidebar
+ * @param name - User's display name
+ * @param email - User's email address
+ * @param avatarUrl - URL to user's avatar image
+ * @param isCollapsed - Whether the sidebar is in collapsed state
+ * @param onProfileClick - Function to handle profile click
+ */
 const UserProfile: React.FC<UserProfileProps> = ({
   name,
   email,
@@ -82,6 +91,10 @@ const UserProfile: React.FC<UserProfileProps> = ({
  * Navigation item component
  * @description Renders a navigation item in the sidebar with active state styling
  * Uses consistent theme variables for colors
+ * @param item - Navigation item data
+ * @param isActive - Whether the item is currently active
+ * @param isCollapsed - Whether the sidebar is in collapsed state
+ * @param onClick - Function to handle item click
  */
 const NavItemComponent: React.FC<{
   item: NavItem;
@@ -164,6 +177,12 @@ interface SidebarProps {
  * Sidebar Component
  * @description Main sidebar navigation component for dashboard
  * Uses logo from public/logo/logo-cylink.png and consistent theme styling
+ * @param userName - User's display name
+ * @param userEmail - User's email
+ * @param userAvatar - URL to user's avatar image
+ * @param onLogout - Function to handle logout
+ * @param onProfileClick - Function to handle profile click
+ * @param className - Additional CSS classes
  */
 const Sidebar: React.FC<SidebarProps> = ({
   userName,
@@ -263,47 +282,46 @@ const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* Logo and Toggle */}
         <div
-          className={`flex items-center h-16 px-4 ${
-            isCollapsed ? "justify-center" : "justify-between"
-          }`}
+          className={`
+            flex items-center h-16 px-4 border-b border-gray-100
+            ${isCollapsed ? "justify-between" : "justify-between"}
+          `}
         >
-          {!isCollapsed ? (
-            <Link href="/dashboard" className="flex items-center">
-              <div className="flex items-center">
-                <Image
-                  src="/logo/logo-cylink.png"
-                  alt="CyLink Logo"
-                  width={32}
-                  height={32}
-                  className="mr-2"
-                />
-                <span className={`text-xl font-bold ${THEME.LOGO_TEXT_CLASS}`}>
-                  CyLink
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <Link
-              href="/dashboard"
-              className="flex items-center justify-center"
-            >
+          <Link
+            href="/dashboard"
+            className={`
+              flex items-center 
+              ${isCollapsed ? "justify-center" : ""}
+            `}
+          >
+            <div className="relative flex-shrink-0 w-8 h-8">
               <Image
                 src="/logo/logo-cylink.png"
                 alt="CyLink Logo"
-                width={28}
-                height={28}
+                className="object-contain"
+                fill
+                sizes="32px"
+                priority
               />
-            </Link>
-          )}
+            </div>
+            {!isCollapsed && (
+              <span
+                className={`ml-2.5 text-xl font-bold ${THEME.LOGO_TEXT_CLASS}`}
+              >
+                CyLink
+              </span>
+            )}
+          </Link>
 
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md text-gray-500 hover:bg-gray-100 focus:outline-none"
+            className="p-2 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             {isCollapsed ? (
-              <RiMenuUnfoldLine size={20} />
+              <RiArrowRightSLine size={18} />
             ) : (
-              <RiMenuFoldLine size={20} />
+              <RiArrowLeftSLine size={18} />
             )}
           </button>
         </div>
@@ -348,6 +366,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <button
         className={`fixed z-20 bottom-4 right-4 lg:hidden p-3 ${THEME.ACTIVE_BG_CLASS} ${THEME.ACTIVE_TEXT_CLASS} rounded-full shadow-lg`}
         onClick={toggleMobileSidebar}
+        aria-label={isMobileOpen ? "Close sidebar" : "Open sidebar"}
       >
         {isMobileOpen ? (
           <RiMenuFoldLine size={24} />
