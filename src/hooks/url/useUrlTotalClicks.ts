@@ -88,7 +88,7 @@ export const useUrlTotalClicks = (
       return timeSeriesData.map((item) => ({
         date: item.date,
         value: item.clicks,
-        label: `${item.clicks} clicks (${item.urls_count} URLs)`,
+        label: `${item.clicks}`,
       }));
     },
     []
