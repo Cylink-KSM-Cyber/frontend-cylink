@@ -1,126 +1,32 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import DashboardTemplate from "@/components/templates/DashboardTemplate";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
-import { useUrls } from "@/hooks/useUrls";
-import { useQrCodes } from "@/hooks/useQrCodes";
-import { useDeleteUrl } from "@/hooks/useDeleteUrl";
-import { Url, QrCode } from "@/interfaces/url";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSidebar } from "@/contexts/SidebarContext";
+import React, { useEffect } from "react";
 import { useToast } from "@/contexts/ToastContext";
-import DeleteUrlModal from "@/components/molecules/DeleteUrlModal";
-import DeleteQrCodeModal from "@/components/molecules/DeleteQrCodeModal";
-import QrCodeModal from "@/components/molecules/QrCodeModal";
-import QrCodePreviewModal from "@/components/molecules/QrCodePreviewModal";
-import QrCodeEditModal from "@/components/molecules/QrCodeEditModal";
-import "@/styles/dashboard.css";
-import "@/styles/statsSummary.css";
-import "@/styles/totalClicks.css";
-import "@/styles/conversionStats.css";
-import "@/styles/deleteModal.css";
-import { useRouter } from "next/navigation";
+import { useSidebar } from "@/contexts/SidebarContext";
+import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
+import AnalyticsDashboardTemplate from "@/components/templates/AnalyticsDashboardTemplate";
+import { Url } from "@/interfaces/url";
+import "@/styles/analyticsDashboard.css";
 
 /**
  * Dashboard page
- * @description The user dashboard page with URL management and analytics
+ * @description The user analytics dashboard page
  * @returns Dashboard page component
  */
 export default function DashboardPage() {
-  // Get user from auth context
-  const { user } = useAuth();
-
-  // Get sidebar context to sync with tab changes
+  // Get sidebar context to set active item
   const { setActiveItemId } = useSidebar();
 
   // Get toast context for notifications
   const { showToast } = useToast();
 
-  // Get tab from URL query params
-  const searchParams = useSearchParams();
-  const tabParam = searchParams?.get("tab") || null;
+  // Set the active sidebar item
+  useEffect(() => {
+    setActiveItemId("dashboard");
+  }, [setActiveItemId]);
 
-  // Delete URL modal state
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [urlToDelete, setUrlToDelete] = useState<Url | null>(null);
-
-  // QR Code modal state
-  const [qrModalOpen, setQrModalOpen] = useState(false);
-  const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
-
-  // QR Code preview state
-  const [qrPreviewOpen, setQrPreviewOpen] = useState(false);
-  const [selectedQrCode, setSelectedQrCode] = useState<QrCode | null>(null);
-
-  // QR Code edit state
-  const [qrEditOpen, setQrEditOpen] = useState(false);
-  const [qrCodeToEdit, setQrCodeToEdit] = useState<QrCode | null>(null);
-
-  // Initialize URL sort state
-  const [urlSort, setUrlSort] = useState({
-    sortBy: "created_at" as "created_at" | "clicks" | "title",
-    sortOrder: "desc" as "asc" | "desc",
-  });
-
-  // Fetch dashboard stats data
-  const {
-    stats,
-    isLoading: isStatsLoading,
-    error: statsError,
-  } = useDashboardStats();
-
-  // Fetch URL data with filter
-  const {
-    urls,
-    isLoading: isUrlsLoading,
-    error: urlsError,
-    pagination,
-    updateFilter,
-    refreshUrls,
-  } = useUrls({
-    page: 1,
-    limit: 10,
-    sortBy: urlSort.sortBy,
-    sortOrder: urlSort.sortOrder,
-  });
-
-  // URL deletion hook
-  const { deleteUrl, isDeleting, error: deleteError } = useDeleteUrl();
-
-  // Fetch QR code data
-  const {
-    qrCodes,
-    isLoading: isQrCodesLoading,
-    error: qrCodesError,
-    deleteQrCode,
-    refreshQrCodes,
-  } = useQrCodes({
-    page: 1,
-    limit: 10,
-    sortBy: "created_at",
-    sortOrder: "desc",
-  });
-
-  // Delete QR Code modal state
-  const [deleteQrCodeModalOpen, setDeleteQrCodeModalOpen] = useState(false);
-  const [qrCodeToDelete, setQrCodeToDelete] = useState<QrCode | null>(null);
-
-  // Add state for QR code deletion
-  const [isDeletingQrCode, setIsDeletingQrCode] = useState(false);
-
-  // Handle URL page changes
-  const handleUrlPageChange = (page: number) => {
-    updateFilter({ page });
-  };
-
-  // Handle URL sort changes
-  const handleUrlSortChange = (column: string, direction: "asc" | "desc") => {
-    const sortBy = column as "created_at" | "clicks" | "title";
-    setUrlSort({ sortBy, sortOrder: direction });
-    updateFilter({ sortBy, sortOrder: direction });
-  };
+  // Get dashboard analytics data
+  const dashboardData = useDashboardAnalytics();
 
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
@@ -128,204 +34,10 @@ export default function DashboardPage() {
     showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
 
-  // Handle URL edit
-  const handleEditUrl = (url: Url) => {
-    // This would typically open a modal or navigate to an edit page
-    console.log("Edit URL:", url.id);
-  };
-
-  // Open delete confirmation modal
-  const handleDeleteUrl = (url: Url) => {
-    setUrlToDelete(url);
-    setDeleteModalOpen(true);
-  };
-
-  // Confirm URL deletion
-  const confirmDeleteUrl = async (url: Url) => {
-    const success = await deleteUrl(url.id);
-
-    if (success) {
-      // Close modal
-      setDeleteModalOpen(false);
-      setUrlToDelete(null);
-
-      // Wait 1.3 seconds as requested before refreshing
-      setTimeout(() => {
-        refreshUrls();
-      }, 1300);
-    }
-  };
-
-  // Cancel URL deletion
-  const cancelDeleteUrl = () => {
-    setDeleteModalOpen(false);
-    setUrlToDelete(null);
-  };
-
-  // Handle QR code generation
-  const handleGenerateQr = (url: Url) => {
-    setUrlForQrCode(url);
-    setQrModalOpen(true);
-  };
-
-  // Close QR code modal
-  const handleCloseQrModal = () => {
-    setQrModalOpen(false);
-    // Wait for modal close animation to finish
-    setTimeout(() => {
-      setUrlForQrCode(null);
-    }, 300);
-  };
-
-  // Handle QR code preview
-  const handleQrPreview = (qrCode: QrCode) => {
-    setSelectedQrCode(qrCode);
-    setQrPreviewOpen(true);
-  };
-
-  // Handle QR code edit
-  const handleEditQr = (qrCode: QrCode) => {
-    setQrCodeToEdit(qrCode);
-    setQrEditOpen(true);
-  };
-
-  // Open delete QR code confirmation modal
-  const handleDeleteQr = (qrCode: QrCode) => {
-    setQrCodeToDelete(qrCode);
-    setDeleteQrCodeModalOpen(true);
-  };
-
-  // Confirm QR code deletion
-  const confirmDeleteQrCode = async (qrCode: QrCode) => {
-    setIsDeletingQrCode(true);
-
-    const success = await deleteQrCode(String(qrCode.id));
-
-    setIsDeletingQrCode(false);
-
-    if (success) {
-      // Close modal
-      setDeleteQrCodeModalOpen(false);
-      setQrCodeToDelete(null);
-
-      // Wait for the modal to close and refresh the QR codes
-      setTimeout(() => {
-        refreshQrCodes();
-      }, 1300);
-    }
-  };
-
-  // Cancel QR code deletion
-  const cancelDeleteQrCode = () => {
-    setDeleteQrCodeModalOpen(false);
-    setQrCodeToDelete(null);
-  };
-
-  // Handle create new URL
-  const handleCreateUrl = () => {
-    // This would typically open a modal or navigate to a create page
-    console.log("Create new URL");
-  };
-
-  // Set initial active tab based on URL params
-  useEffect(() => {
-    if (tabParam) {
-      setActiveItemId(tabParam);
-    } else {
-      setActiveItemId("dashboard");
-    }
-  }, [tabParam, setActiveItemId]);
-
-  // If there are errors, we could show error states
-  // For now, we'll just log them and continue with available data
-  if (statsError) console.error("Stats error:", statsError);
-  if (urlsError) console.error("URLs error:", urlsError);
-  if (qrCodesError) console.error("QR codes error:", qrCodesError);
-  if (deleteError) console.error("Delete error:", deleteError);
-
-  // Default stats if none are available
-  const dashboardStats = stats || {
-    totalUrls: 0,
-    totalClicks: 0,
-    conversionRate: 0,
-    qrCodesGenerated: 0,
-    activeUrls: 0,
-    urlsCreatedToday: 0,
-    averageClicksPerUrl: 0,
-    totalClicksData: undefined,
-  };
-
-  const router = useRouter();
-
   return (
-    <>
-      <DashboardTemplate
-        userName={user?.username ?? "User"}
-        stats={dashboardStats}
-        urls={urls ?? []}
-        isUrlsLoading={isUrlsLoading}
-        isStatsLoading={isStatsLoading}
-        currentUrlPage={pagination?.page ?? 1}
-        totalUrlPages={pagination?.total_pages ?? 1}
-        onUrlPageChange={handleUrlPageChange}
-        onUrlSortChange={handleUrlSortChange}
-        urlSortBy={urlSort.sortBy}
-        urlSortDirection={urlSort.sortOrder}
-        qrCodes={qrCodes || []}
-        isQrCodesLoading={isQrCodesLoading}
-        onCreateUrl={handleCreateUrl}
-        onCopyUrl={handleCopyUrl}
-        onGenerateQr={handleGenerateQr}
-        onEditUrl={handleEditUrl}
-        onDeleteUrl={handleDeleteUrl}
-        onEditQr={handleEditQr}
-        onDeleteQr={handleDeleteQr}
-        onQrPreview={handleQrPreview}
-      />
-
-      {/* Delete URL Modal */}
-      <DeleteUrlModal
-        url={urlToDelete}
-        isOpen={deleteModalOpen}
-        onConfirm={confirmDeleteUrl}
-        onCancel={cancelDeleteUrl}
-        isDeleting={isDeleting}
-      />
-
-      {/* Delete QR Code Modal */}
-      <DeleteQrCodeModal
-        qrCode={qrCodeToDelete}
-        isOpen={deleteQrCodeModalOpen}
-        onConfirm={confirmDeleteQrCode}
-        onCancel={cancelDeleteQrCode}
-        isDeleting={isDeletingQrCode}
-      />
-
-      {/* QR Code Modal */}
-      <QrCodeModal
-        url={urlForQrCode}
-        isOpen={qrModalOpen}
-        onClose={handleCloseQrModal}
-      />
-
-      {/* QR Code Preview Modal */}
-      <QrCodePreviewModal
-        qrCode={selectedQrCode}
-        isOpen={qrPreviewOpen}
-        onClose={() => setQrPreviewOpen(false)}
-      />
-
-      {/* QR Code Edit Modal */}
-      <QrCodeEditModal
-        qrCode={qrCodeToEdit}
-        isOpen={qrEditOpen}
-        onClose={() => setQrEditOpen(false)}
-        onUpdated={() => {
-          setTimeout(() => {
-            router.refresh();
-          }, 500);
-        }}
-      />
-    </>
+    <AnalyticsDashboardTemplate
+      dashboardData={dashboardData}
+      onCopyUrl={handleCopyUrl}
+    />
   );
 }
