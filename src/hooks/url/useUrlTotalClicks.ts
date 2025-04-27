@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { get } from "@/services/api";
 import {
   UrlTotalClicksData,
@@ -37,6 +37,15 @@ export const useUrlTotalClicks = (
   const [isError, setIsError] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   const [timeSeriesData, setTimeSeriesData] = useState<ChartDataPoint[]>([]);
+
+  // Use ref to store the latest params and prevent unnecessary fetches
+  const paramsRef = useRef<UrlTotalClicksParams>(params);
+  // Use ref to track if a fetch is already in progress
+  const fetchInProgressRef = useRef<boolean>(false);
+  // Use ref to track if data has been fetched at least once
+  const hasDataBeenFetchedRef = useRef<boolean>(false);
+  // Use ref to track the current effect instance
+  const effectInstanceRef = useRef<number>(0);
 
   /**
    * Build the query string from parameters
@@ -86,48 +95,126 @@ export const useUrlTotalClicks = (
   );
 
   /**
+   * Checks if params have changed enough to warrant a new fetch
+   */
+  const haveParamsChanged = useCallback(
+    (
+      prevParams: UrlTotalClicksParams,
+      newParams: UrlTotalClicksParams
+    ): boolean => {
+      // Check if any important params have changed
+      return (
+        prevParams.comparison !== newParams.comparison ||
+        prevParams.group_by !== newParams.group_by ||
+        prevParams.limit !== newParams.limit ||
+        prevParams.start_date !== newParams.start_date ||
+        prevParams.end_date !== newParams.end_date ||
+        prevParams.custom_comparison_start !==
+          newParams.custom_comparison_start ||
+        prevParams.custom_comparison_end !== newParams.custom_comparison_end
+      );
+    },
+    []
+  );
+
+  /**
    * Fetch URL total clicks data from API
    */
-  const fetchTotalClicks = useCallback(async () => {
-    setIsLoading(true);
-    setIsError(false);
-    setError(null);
-
-    try {
-      const queryString = buildQueryString(params);
-      const endpoint = `/api/v1/urls/total-clicks${
-        queryString ? `?${queryString}` : ""
-      }`;
-
-      const response = await get<UrlTotalClicksResponse>(endpoint);
-
-      if (response && response.data) {
-        setData(response.data);
-
-        // Transform time series data for the chart
-        const chartData = transformTimeSeriesData(
-          response.data.time_series.data
-        );
-        setTimeSeriesData(chartData);
-      } else {
-        throw new Error("Invalid API response format");
+  const fetchTotalClicks = useCallback(
+    async (effectInstance?: number) => {
+      // If an effect instance is provided, make sure it matches the current one
+      if (
+        effectInstance !== undefined &&
+        effectInstance !== effectInstanceRef.current
+      ) {
+        console.log("Stale effect instance, skipping...");
+        return;
       }
-    } catch (err) {
-      console.error("Failed to fetch URL total clicks:", err);
-      setIsError(true);
-      setError(
-        err instanceof Error
-          ? err
-          : new Error("Failed to fetch URL total clicks")
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [params, buildQueryString, transformTimeSeriesData]);
 
-  // Fetch data on mount and when params change
+      // Prevent concurrent fetches
+      if (fetchInProgressRef.current) {
+        console.log("Fetch already in progress, skipping...");
+        return;
+      }
+
+      // Check if params have changed enough to justify a new fetch
+      if (
+        hasDataBeenFetchedRef.current &&
+        !haveParamsChanged(paramsRef.current, params)
+      ) {
+        console.log("Params unchanged, skipping fetch...");
+        return;
+      }
+
+      // Update the params ref to the latest values
+      paramsRef.current = { ...params };
+      fetchInProgressRef.current = true;
+
+      setIsLoading(true);
+      setIsError(false);
+      setError(null);
+
+      try {
+        const queryString = buildQueryString(params);
+        const endpoint = `/api/v1/urls/total-clicks${
+          queryString ? `?${queryString}` : ""
+        }`;
+
+        console.log(`Fetching URL total clicks from ${endpoint}`);
+        const response = await get<UrlTotalClicksResponse>(endpoint);
+
+        // Check if the effect instance is still current
+        if (
+          effectInstance !== undefined &&
+          effectInstance !== effectInstanceRef.current
+        ) {
+          console.log(
+            "Effect instance changed during fetch, discarding result..."
+          );
+          return;
+        }
+
+        if (response && response.data) {
+          setData(response.data);
+
+          // Transform time series data for the chart
+          const chartData = transformTimeSeriesData(
+            response.data.time_series.data
+          );
+          setTimeSeriesData(chartData);
+          hasDataBeenFetchedRef.current = true;
+        } else {
+          throw new Error("Invalid API response format");
+        }
+      } catch (err) {
+        console.error("Failed to fetch URL total clicks:", err);
+        setIsError(true);
+        setError(
+          err instanceof Error
+            ? err
+            : new Error("Failed to fetch URL total clicks")
+        );
+      } finally {
+        setIsLoading(false);
+        fetchInProgressRef.current = false;
+      }
+    },
+    [params, buildQueryString, transformTimeSeriesData, haveParamsChanged]
+  );
+
+  // Fetch data when params change
   useEffect(() => {
-    fetchTotalClicks();
+    // Increment the effect instance to track which instance is current
+    effectInstanceRef.current += 1;
+    const currentEffectInstance = effectInstanceRef.current;
+
+    // Fetch data with the current effect instance
+    fetchTotalClicks(currentEffectInstance);
+
+    // Cleanup function to handle component unmount
+    return () => {
+      // Nothing to cleanup as we're using the effect instance pattern
+    };
   }, [fetchTotalClicks]);
 
   return {
@@ -135,7 +222,7 @@ export const useUrlTotalClicks = (
     isLoading,
     isError,
     error,
-    refetch: fetchTotalClicks,
+    refetch: () => fetchTotalClicks(), // Pass no instance to force a refresh
     timeSeriesData,
   };
 };
