@@ -3,8 +3,6 @@ import DashboardHeader from "@/components/molecules/DashboardHeader";
 import KpiCardsSection from "@/components/molecules/KpiCardsSection";
 import UrlPerformanceTrend from "@/components/molecules/UrlPerformanceTrend";
 import TopPerformingUrls from "@/components/molecules/TopPerformingUrls";
-import CtrBreakdownChart from "@/components/molecules/CtrBreakdownChart";
-import RecentActivity from "@/components/molecules/RecentActivity";
 import { DashboardAnalyticsData } from "@/interfaces/dashboard";
 import { Url } from "@/interfaces/url";
 
@@ -44,25 +42,13 @@ const AnalyticsDashboardTemplate: React.FC<AnalyticsDashboardTemplateProps> = ({
       {/* URL Performance Trend Chart */}
       <UrlPerformanceTrend performanceData={dashboardData.urlPerformance} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid gap-6">
         {/* Top Performing URLs */}
         <TopPerformingUrls
           urls={dashboardData.urlPerformance.topPerformingUrls}
           isLoading={dashboardData.urlPerformance.isLoading}
           isError={dashboardData.urlPerformance.isError}
           onCopyUrl={onCopyUrl}
-        />
-
-        {/* CTR Breakdown */}
-        <CtrBreakdownChart breakdownData={dashboardData.ctrBreakdown} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <RecentActivity
-          items={dashboardData.recentActivity.items}
-          isLoading={dashboardData.recentActivity.isLoading}
-          isError={dashboardData.recentActivity.isError}
         />
       </div>
     </div>
