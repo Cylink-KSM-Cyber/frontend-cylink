@@ -136,7 +136,7 @@ const TopPerformingUrls: React.FC<TopPerformingUrlsProps> = ({
                 <RiFileCopyLine className="w-4 h-4" />
               </button>
               <a
-                href={`https://${url.short_url}`}
+                href={`${url.short_url}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-blue-600 transition-colors duration-200"
