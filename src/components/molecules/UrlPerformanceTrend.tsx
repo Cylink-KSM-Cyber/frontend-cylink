@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import VisxLineChart from "@/components/atoms/VisxLineChart";
 import { useUrlTotalClicks } from "@/hooks/url/useUrlTotalClicks";
 import { UrlTotalClicksParams } from "@/interfaces/urlTotalClicks";
@@ -17,13 +17,16 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
   // Time period selection state
   const [timePeriod, setTimePeriod] = useState<"7" | "14" | "30" | "90">("30");
 
-  // Parameters for the API call
-  const apiParams: UrlTotalClicksParams = {
-    comparison: timePeriod,
-    group_by: "day",
-    limit: parseInt(timePeriod),
-    page: 1,
-  };
+  // Parameters for the API call - memoized to prevent recreation on each render
+  const apiParams = useMemo<UrlTotalClicksParams>(
+    () => ({
+      comparison: timePeriod,
+      group_by: "day",
+      limit: parseInt(timePeriod),
+      page: 1,
+    }),
+    [timePeriod]
+  );
 
   // Fetch total clicks data using our custom hook
   const { timeSeriesData, data, isLoading, isError } =
