@@ -37,6 +37,13 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
     setTimePeriod(period);
   };
 
+  // Format change percentage with plus sign and rounding
+  const formatChangePercentage = (value: number | undefined) => {
+    if (value === undefined) return "—";
+    const formattedValue = value.toFixed(2);
+    return value > 0 ? `+${formattedValue}%` : `${formattedValue}%`;
+  };
+
   // Error state
   if (isError) {
     return (
@@ -50,13 +57,6 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
       </div>
     );
   }
-
-  // Format change percentage with plus sign and rounding
-  const formatChangePercentage = (value: number | undefined) => {
-    if (value === undefined) return "—";
-    const formattedValue = value.toFixed(2);
-    return value > 0 ? `+${formattedValue}%` : `${formattedValue}%`;
-  };
 
   return (
     <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
@@ -77,6 +77,7 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
               onClick={() =>
                 handleTimePeriodChange(period as "7" | "14" | "30" | "90")
               }
+              disabled={isLoading}
             >
               {period} Days
             </button>
@@ -84,74 +85,104 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
         </div>
       </div>
 
-      {/* Summary stats */}
-      {data && (
-        <div className="grid grid-cols-3 gap-4 mb-4">
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-500">Total Clicks</p>
-            <p className="text-xl font-semibold">
-              {data.summary.total_clicks.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-500">
-              <span
-                className={
-                  data.summary.comparison.total_clicks.change_percentage > 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }
-              >
-                {formatChangePercentage(
-                  data.summary.comparison.total_clicks.change_percentage
-                )}
-              </span>{" "}
-              vs previous period
-            </p>
-          </div>
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-500">Active URLs</p>
-            <p className="text-xl font-semibold">
-              {data.summary.total_urls.toLocaleString()}
-            </p>
-            <p className="text-sm text-gray-500">
-              <span
-                className={
-                  data.summary.comparison.active_urls.change_percentage > 0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }
-              >
-                {formatChangePercentage(
-                  data.summary.comparison.active_urls.change_percentage
-                )}
-              </span>{" "}
-              vs previous period
-            </p>
-          </div>
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-sm text-gray-500">Avg. Clicks/URL</p>
-            <p className="text-xl font-semibold">
-              {data.summary.avg_clicks_per_url.toLocaleString(undefined, {
-                maximumFractionDigits: 2,
-              })}
-            </p>
-            <p className="text-sm text-gray-500">
-              <span
-                className={
-                  data.summary.comparison.avg_clicks_per_url.change_percentage >
-                  0
-                    ? "text-green-500"
-                    : "text-red-500"
-                }
-              >
-                {formatChangePercentage(
-                  data.summary.comparison.avg_clicks_per_url.change_percentage
-                )}
-              </span>{" "}
-              vs previous period
-            </p>
-          </div>
+      {/* Summary stats - with loading skeleton */}
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        {/* Total Clicks Stat */}
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-500">Total Clicks</p>
+          {isLoading || !data ? (
+            <div className="animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-20 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </div>
+          ) : (
+            <>
+              <p className="text-xl font-semibold">
+                {data.summary.total_clicks.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500">
+                <span
+                  className={
+                    data.summary.comparison.total_clicks.change_percentage > 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }
+                >
+                  {formatChangePercentage(
+                    data.summary.comparison.total_clicks.change_percentage
+                  )}
+                </span>{" "}
+                vs previous period
+              </p>
+            </>
+          )}
         </div>
-      )}
+
+        {/* Active URLs Stat */}
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-500">Active URLs</p>
+          {isLoading || !data ? (
+            <div className="animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-16 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </div>
+          ) : (
+            <>
+              <p className="text-xl font-semibold">
+                {data.summary.total_urls.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-500">
+                <span
+                  className={
+                    data.summary.comparison.active_urls.change_percentage > 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }
+                >
+                  {formatChangePercentage(
+                    data.summary.comparison.active_urls.change_percentage
+                  )}
+                </span>{" "}
+                vs previous period
+              </p>
+            </>
+          )}
+        </div>
+
+        {/* Avg. Clicks/URL Stat */}
+        <div className="p-3 bg-gray-50 rounded-lg">
+          <p className="text-sm text-gray-500">Avg. Clicks/URL</p>
+          {isLoading || !data ? (
+            <div className="animate-pulse">
+              <div className="h-6 bg-gray-200 rounded w-14 mb-2"></div>
+              <div className="h-4 bg-gray-200 rounded w-24"></div>
+            </div>
+          ) : (
+            <>
+              <p className="text-xl font-semibold">
+                {data.summary.avg_clicks_per_url.toLocaleString(undefined, {
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <p className="text-sm text-gray-500">
+                <span
+                  className={
+                    data.summary.comparison.avg_clicks_per_url
+                      .change_percentage > 0
+                      ? "text-green-500"
+                      : "text-red-500"
+                  }
+                >
+                  {formatChangePercentage(
+                    data.summary.comparison.avg_clicks_per_url.change_percentage
+                  )}
+                </span>{" "}
+                vs previous period
+              </p>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Chart */}
       <div className="h-64">
@@ -164,14 +195,27 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
         />
       </div>
 
-      {/* Top performing days */}
-      {data && data.top_performing_days.length > 0 && (
-        <div className="mt-6">
-          <h3 className="text-md font-medium text-gray-900 mb-2">
-            Top Performing Days
-          </h3>
-          <div className="space-y-2">
-            {data.top_performing_days.slice(0, 3).map((day, index) => (
+      {/* Top performing days - with loading skeleton */}
+      <div className="mt-6">
+        <h3 className="text-md font-medium text-gray-900 mb-2">
+          Top Performing Days
+        </h3>
+        <div className="space-y-2">
+          {isLoading || !data ? (
+            // Loading skeleton for top performing days
+            <>
+              {[1, 2, 3].map((index) => (
+                <div key={index} className="animate-pulse">
+                  <div className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                    <div className="h-4 bg-gray-200 rounded w-16"></div>
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : (
+            // Actual top performing days data
+            data.top_performing_days.slice(0, 3).map((day, index) => (
               <div
                 key={index}
                 className="flex justify-between items-center p-2 bg-gray-50 rounded"
@@ -187,10 +231,10 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
                   {day.clicks.toLocaleString()} clicks
                 </span>
               </div>
-            ))}
-          </div>
+            ))
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
