@@ -1,9 +1,6 @@
 import { get, del, put } from "./api";
 import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
-import {
-  UrlAnalyticsParams,
-  UrlAnalyticsResponse,
-} from "@/interfaces/urlAnalytics";
+import { UrlAnalyticsResponse } from "@/interfaces/urlAnalytics";
 
 /**
  * URL Service
