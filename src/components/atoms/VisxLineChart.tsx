@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { Group } from "@visx/group";
 import { scaleTime, scaleLinear } from "@visx/scale";
 import { AreaClosed, LinePath, Bar } from "@visx/shape";
@@ -8,7 +8,7 @@ import { curveMonotoneX } from "@visx/curve";
 import { AxisLeft, AxisBottom } from "@visx/axis";
 import { GridRows } from "@visx/grid";
 import { LinearGradient } from "@visx/gradient";
-import { useTooltip, TooltipWithBounds } from "@visx/tooltip";
+import { useTooltip, defaultStyles } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
 import { bisector } from "d3-array";
 import { ChartDataPoint } from "@/interfaces/dashboard";
@@ -21,6 +21,26 @@ const margin = { top: 20, right: 20, bottom: 40, left: 50 };
 const getDate = (d: ChartDataPoint) => new Date(d.date);
 const getValue = (d: ChartDataPoint) => d.value;
 const bisectDate = bisector<ChartDataPoint, Date>((d) => new Date(d.date)).left;
+
+// Fixed tooltip styles
+const tooltipStyles = {
+  ...defaultStyles,
+  background: "white",
+  border: "1px solid #ddd",
+  color: "black",
+  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+  borderRadius: "4px",
+  padding: "8px 12px",
+  fontSize: "12px",
+  fontFamily: "sans-serif",
+  lineHeight: "1.4",
+  zIndex: 1000,
+  minWidth: "100px",
+  textAlign: "center" as const,
+};
+
+// Define pointer-events const for type safety
+const pointerEventsNone = "none" as const;
 
 export type VisxLineChartProps = {
   data: ChartDataPoint[];
@@ -50,17 +70,20 @@ const LineChartBase = ({
   isLoading = false,
   onHover,
 }: VisxLineChartProps) => {
+  // State to track active tooltip and its position
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+
   // Calculate bounds
   const innerWidth = width ? width - margin.left - margin.right : 0;
   const innerHeight = height ? height - margin.top - margin.bottom : 0;
 
-  // Tooltip state
+  // Tooltip state with visx useTooltip hook
   const {
+    tooltipData,
+    tooltipLeft,
+    tooltipTop,
     showTooltip: handleShowTooltip,
     hideTooltip: handleHideTooltip,
-    tooltipData,
-    tooltipLeft = 0,
-    tooltipTop = 0,
   } = useTooltip<ChartDataPoint>();
 
   // Create scales
@@ -94,47 +117,86 @@ const LineChartBase = ({
   }, [innerHeight, data]);
 
   // Format date for tooltip
-  const formatDate = (date: Date) => {
+  const formatDate = useCallback((date: Date) => {
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric",
     });
-  };
+  }, []);
 
   // Format value for tooltip
-  const formatValue = (value: number) => {
+  const formatValue = useCallback((value: number) => {
     return value.toLocaleString();
-  };
+  }, []);
 
-  // Handle tooltip
-  const handleTooltip = (
-    event: React.TouchEvent<SVGRectElement> | React.MouseEvent<SVGRectElement>
-  ) => {
-    if (!showTooltip) return;
+  // Handle tooltip - simplified and more robust
+  const handleTooltip = useCallback(
+    (
+      event: React.TouchEvent<SVGRectElement> | React.MouseEvent<SVGRectElement>
+    ) => {
+      // Don't do anything if showTooltip is false
+      if (!showTooltip) return;
 
-    const { x } = localPoint(event) || { x: 0 };
-    const x0 = timeScale.invert(x - margin.left);
-    const index = bisectDate(data, x0, 1);
-    const d0 = data[index - 1];
-    const d1 = data[index];
+      try {
+        // Get the mouse position relative to the SVG
+        const { x } = localPoint(event) || { x: 0 };
 
-    if (!d0 || !d1) return;
+        // Convert x position to date
+        const xValue = timeScale.invert(x - margin.left);
 
-    const d =
-      x0.getTime() - getDate(d0).getTime() >
-      getDate(d1).getTime() - x0.getTime()
-        ? d1
-        : d0;
+        // Find the closest data point
+        const index = bisectDate(data, xValue, 1);
 
-    handleShowTooltip({
-      tooltipData: d,
-      tooltipLeft: timeScale(getDate(d)),
-      tooltipTop: valueScale(getValue(d)),
-    });
+        // Make sure we have at least two points to compare
+        if (index <= 0 || index >= data.length) return;
 
-    if (onHover) onHover(d);
-  };
+        const d0 = data[index - 1];
+        const d1 = data[index];
+
+        // Determine the closest point to the mouse
+        const d =
+          xValue.getTime() - getDate(d0).getTime() >
+          getDate(d1).getTime() - xValue.getTime()
+            ? d1
+            : d0;
+
+        // Get the scaled positions for the tooltip
+        const left = timeScale(getDate(d));
+        const top = valueScale(getValue(d));
+
+        // Show the tooltip at the proper position
+        handleShowTooltip({
+          tooltipData: d,
+          tooltipLeft: left,
+          tooltipTop: top,
+        });
+
+        // Make tooltip visible and call onHover if needed
+        setTooltipVisible(true);
+        if (onHover) onHover(d);
+
+        // Log for debugging
+        console.log("Tooltip shown", {
+          date: d.date,
+          value: d.value,
+          left,
+          top,
+        });
+      } catch (error) {
+        console.error("Error showing tooltip:", error);
+        setTooltipVisible(false);
+        handleHideTooltip();
+      }
+    },
+    [data, timeScale, valueScale, showTooltip, handleShowTooltip, onHover]
+  );
+
+  // Mouse leave handler to hide tooltip
+  const handleMouseLeave = useCallback(() => {
+    setTooltipVisible(false);
+    handleHideTooltip();
+    if (onHover) onHover(null);
+  }, [handleHideTooltip, onHover]);
 
   // Empty state
   if (!data || data.length === 0) {
@@ -158,7 +220,7 @@ const LineChartBase = ({
   }
 
   return (
-    <div>
+    <div className="relative" style={{ position: "relative" }}>
       <svg width={width} height={height}>
         <Group left={margin.left} top={margin.top}>
           {/* Gradient for area */}
@@ -231,6 +293,35 @@ const LineChartBase = ({
             curve={curveMonotoneX}
           />
 
+          {/* Tooltip indicator - shows if we have tooltip data */}
+          {tooltipData &&
+            tooltipLeft !== undefined &&
+            tooltipTop !== undefined &&
+            tooltipVisible && (
+              <g>
+                <circle
+                  cx={tooltipLeft}
+                  cy={tooltipTop}
+                  r={5}
+                  fill="white"
+                  stroke={lineColor}
+                  strokeWidth={2}
+                  pointerEvents="none"
+                />
+                <line
+                  x1={tooltipLeft}
+                  y1={0}
+                  x2={tooltipLeft}
+                  y2={innerHeight}
+                  stroke={lineColor}
+                  strokeWidth={1}
+                  strokeDasharray="4,4"
+                  strokeOpacity={0.5}
+                  pointerEvents="none"
+                />
+              </g>
+            )}
+
           {/* Overlay for tooltip */}
           <Bar
             width={innerWidth}
@@ -239,67 +330,38 @@ const LineChartBase = ({
             onTouchStart={handleTooltip}
             onTouchMove={handleTooltip}
             onMouseMove={handleTooltip}
-            onMouseLeave={() => {
-              handleHideTooltip();
-              if (onHover) onHover(null);
-            }}
+            onMouseLeave={handleMouseLeave}
           />
-
-          {/* Tooltip indicator */}
-          {tooltipData && (
-            <g>
-              <circle
-                cx={timeScale(getDate(tooltipData))}
-                cy={valueScale(getValue(tooltipData))}
-                r={4}
-                fill="white"
-                stroke={lineColor}
-                strokeWidth={2}
-                pointerEvents="none"
-              />
-              <line
-                x1={timeScale(getDate(tooltipData))}
-                y1={0}
-                x2={timeScale(getDate(tooltipData))}
-                y2={innerHeight}
-                stroke={lineColor}
-                strokeWidth={1}
-                strokeDasharray="4,4"
-                strokeOpacity={0.5}
-                pointerEvents="none"
-              />
-            </g>
-          )}
         </Group>
       </svg>
 
-      {/* Tooltip */}
-      {tooltipData && showTooltip && (
-        <TooltipWithBounds
-          key={Math.random()}
-          top={tooltipTop - 40}
-          left={tooltipLeft + margin.left}
-          style={{
-            backgroundColor: "white",
-            color: "#333",
-            borderRadius: "6px",
-            boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
-            padding: "8px 12px",
-            fontSize: "12px",
-            pointerEvents: "none",
-            transform: "translate(-50%, -100%)",
-            zIndex: 100,
-          }}
-        >
-          <div className="font-medium">{formatDate(getDate(tooltipData))}</div>
-          <div className="text-blue-600 font-semibold">
-            {formatValue(getValue(tooltipData))} clicks
+      {/* Simplified but robust tooltip */}
+      {tooltipData &&
+        tooltipLeft !== undefined &&
+        tooltipTop !== undefined &&
+        tooltipVisible && (
+          <div
+            style={{
+              position: "absolute",
+              top: tooltipTop + margin.top - 45,
+              left: tooltipLeft + margin.left,
+              transform: "translate(-50%, -100%)",
+              pointerEvents: pointerEventsNone,
+              ...tooltipStyles,
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <div style={{ color: "#6b7280", fontSize: "11px" }}>
+                {formatDate(getDate(tooltipData))}
+              </div>
+              <div
+                style={{ color: "#3b82f6", fontWeight: 600, marginTop: "2px" }}
+              >
+                {formatValue(getValue(tooltipData))} clicks
+              </div>
+            </div>
           </div>
-          {tooltipData.label && (
-            <div className="text-gray-500 text-xs">{tooltipData.label}</div>
-          )}
-        </TooltipWithBounds>
-      )}
+        )}
     </div>
   );
 };
