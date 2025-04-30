@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  admin:
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
+    container_name: ${DOCKERHUB_APP_ID}.admin
+    volumes:
+      - ./:/app
+      - admin-dependencies:/app/node_modules
+      - admin-build:/app/.next
+    networks:
+      - app
+    restart: unless-stopped
+
+  webserver:    
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}-webserver:prod
+    container_name: ${DOCKERHUB_APP_ID}.webserver
+    ports:
+      - "${APP_PORT_HTTP}:80"
+      - "${APP_PORT_HTTPS}:443"
+    networks:
+      - app
+    depends_on:
+      - admin
+    restart: unless-stopped
+
+volumes:
+  admin-dependencies:
+    name: ${DOCKERHUB_APP_ID}.admin.dependencies
+  admin-build:
+    name: ${DOCKERHUB_APP_ID}.admin.build
+
+networks:
+  app:
+    driver: bridge
+    name: ${DOCKERHUB_APP_ID}.app
