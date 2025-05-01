@@ -6,6 +6,8 @@ COPY . .
 ARG NEXT_PUBLIC_BASE_API_URL
 ENV NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL
 
+RUN echo "NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL" >> .env.local
+
 RUN npm ci --legacy-peer-deps && npm run build
 
 # Production Stage
