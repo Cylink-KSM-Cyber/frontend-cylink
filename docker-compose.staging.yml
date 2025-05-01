@@ -10,7 +10,6 @@ services:
       - staging-admin-build:/app/.next
   
   webserver:
-    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}-webserver:staging
     container_name: ${DOCKERHUB_APP_ID}.webserver.staging
 
 volumes:
