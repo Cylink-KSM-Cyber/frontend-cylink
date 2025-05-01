@@ -42,23 +42,6 @@ jobs:
         build-args: |
           NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}
     
-    - name: Create .env file from secrets
-      uses: 0ndt/envfile@v2
-      with:
-        secrets: ${{ toJSON(secrets) }}
-        exclude: VPS_SSH_KEY, PRODUCTION_*
-    
-    - name: Upload .env to VPS
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        port: ${{ secrets.VPS_PORT }}
-        username: ${{ secrets.VPS_USER }}
-        key: |
-          ${{ secrets.VPS_SSH_KEY }}
-        source: ".env"
-        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/staging"
-    
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -70,9 +53,6 @@ jobs:
         script: |
           cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/staging
           git pull
-
-          # Remove prefix
-          sed -i 's/^STAGING_//g' .env
 
           docker-compose pull
           docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate --remove-orphans
