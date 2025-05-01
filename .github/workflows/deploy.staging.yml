@@ -22,15 +22,9 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push webserver image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./docker/webserver
-        file: ./docker/webserver/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-webserver:staging
-        build-args: |
-          SERVER_NAME=${{ secrets.STAGING_APP_DOMAIN_NAME }}
+    - name: Generate .env file
+      run: |
+        echo "NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}" > .env
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
@@ -39,23 +33,7 @@ jobs:
         file: ./docker/admin/Dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
-    
-    - name: Create .env file from secrets
-      uses: 0ndt/envfile@v2
-      with:
-        secrets: ${{ toJSON(secrets) }}
-        exclude: VPS_SSH_KEY, PRODUCTION_*
-    
-    - name: Upload .env to VPS
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        port: ${{ secrets.VPS_PORT }}
-        username: ${{ secrets.VPS_USER }}
-        key: |
-          ${{ secrets.VPS_SSH_KEY }}
-        source: ".env"
-        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/staging"
+        no-cache: true
     
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.0
@@ -69,8 +47,5 @@ jobs:
           cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/staging
           git pull
 
-          # Remove prefix
-          sed -i 's/^STAGING_//g' .env
-
           docker-compose pull
-          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d
+          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate --remove-orphans
