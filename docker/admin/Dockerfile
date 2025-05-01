@@ -1,20 +1,26 @@
 # Build Stage
 FROM node:18-alpine AS builder
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps
+
 COPY . .
+COPY .env .env
 
-ARG NEXT_PUBLIC_BASE_API_URL
-ENV NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL
+RUN npm run build
 
-RUN echo "Building with NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL"
-RUN echo "NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL" >> .env
+# ARG NEXT_PUBLIC_BASE_API_URL
+# ENV NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL
 
-RUN npm ci --legacy-peer-deps && npm run build
+# RUN echo "Building with NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL"
+# RUN echo "NEXT_PUBLIC_BASE_API_URL=$NEXT_PUBLIC_BASE_API_URL" >> .env
+
+# RUN npm ci --legacy-peer-deps && npm run build
 
 # Production Stage
 FROM node:18-alpine
 WORKDIR /app
-COPY --from=builder /app/.env .env
+# COPY --from=builder /app/.env .env
 COPY --from=builder /app/.next .next
 COPY --from=builder /app/public public
 COPY --from=builder /app/package*.json ./
