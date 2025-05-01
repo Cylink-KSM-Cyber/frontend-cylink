@@ -21,16 +21,10 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-    
-    - name: Build and push webserver image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./docker/webserver
-        file: ./docker/webserver/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-webserver:prod
-        build-args: |
-          SERVER_NAME=${{ secrets.PRODUCTION_APP_DOMAIN_NAME }}
+
+    - name: Generate .env file
+      run: |
+        echo "NEXT_PUBLIC_BASE_API_URL=${{ secrets.PRODUCTION_NEXT_PUBLIC_BASE_API_URL }}" > .env
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
@@ -39,8 +33,7 @@ jobs:
         file: ./docker/admin/Dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:prod
-        build-args: |
-          NEXT_PUBLIC_BASE_API_URL=${{ secrets.PRODUCTION_NEXT_PUBLIC_BASE_API_URL }}
+        no-cache: true
     
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.0

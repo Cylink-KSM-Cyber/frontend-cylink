@@ -22,16 +22,6 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build and push webserver image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./docker/webserver
-        file: ./docker/webserver/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}-webserver:staging
-        build-args: |
-          SERVER_NAME=${{ secrets.STAGING_APP_DOMAIN_NAME }}
-
     - name: Generate .env file
       run: |
         echo "NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}" > .env
@@ -44,8 +34,6 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
         no-cache: true
-        # build-args: |
-        #   NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}
     
     - name: Deploy to VPS
       uses: appleboy/ssh-action@v1.0.0
