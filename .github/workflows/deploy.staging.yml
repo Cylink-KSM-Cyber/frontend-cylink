@@ -39,6 +39,8 @@ jobs:
         file: ./docker/admin/Dockerfile
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
+        build-args: |
+          NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}
     
     - name: Create .env file from secrets
       uses: 0ndt/envfile@v2
