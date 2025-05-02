@@ -2,14 +2,14 @@ version: '3.8'
 
 services:
   admin:
+    image: ${DOCKERHUB_USERNAME}/${DOCKERHUB_APP_ID}:prod
     networks:
       - app
     restart: unless-stopped
 
   webserver:    
-    image: nginx:latest
-    volumes:
-      - ./docker/webserver/nginx.conf:/etc/nginx/conf.d/default.conf
+    build:
+      context: ./docker/webserver
     ports:
       - "${APP_PORT_HTTP}:80"
       - "${APP_PORT_HTTPS}:443"
