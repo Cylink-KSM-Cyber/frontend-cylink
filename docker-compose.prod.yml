@@ -7,3 +7,8 @@ services:
 
   webserver:    
     container_name: ${DOCKERHUB_APP_ID}.webserver
+
+networks:
+  app:
+    driver: bridge
+    name: ${DOCKERHUB_APP_ID}.app.prod
