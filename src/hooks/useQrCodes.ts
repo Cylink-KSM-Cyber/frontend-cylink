@@ -1,8 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { QrCode } from "@/interfaces/url";
 import { fetchQrCodes, deleteQrCodeById } from "@/services/qrcode";
 import { QrCodeFilter } from "@/interfaces/qrcode";
 import { useToast } from "@/contexts/ToastContext";
+
+// Helper function to check if two filters are equal
+const areFiltersEqual = (
+  filterA: QrCodeFilter,
+  filterB: QrCodeFilter
+): boolean => {
+  // Specifically compare relevant fields that would trigger a new API call
+  return (
+    filterA.page === filterB.page &&
+    filterA.limit === filterB.limit &&
+    filterA.sortBy === filterB.sortBy &&
+    filterA.sortOrder === filterB.sortOrder &&
+    filterA.search === filterB.search &&
+    filterA.color === filterB.color &&
+    filterA.includeLogo === filterB.includeLogo &&
+    filterA.includeUrl === filterB.includeUrl
+  );
+};
 
 /**
  * Custom hook for fetching and managing QR Codes
@@ -21,6 +39,13 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
       includeUrl: true,
     }
   );
+
+  // Keep track of previous filter to prevent unnecessary fetches
+  const prevFilterRef = useRef<QrCodeFilter | null>(null);
+
+  // Fetch in progress flag to prevent concurrent fetches
+  const isFetchingRef = useRef<boolean>(false);
+
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -33,25 +58,39 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
 
   useEffect(() => {
     const fetchQrCodesList = async () => {
+      // Skip if a fetch is already in progress
+      if (isFetchingRef.current) {
+        console.log("Skipping QR codes fetch as one is already in progress");
+        return;
+      }
+
+      // Skip if filter is the same as previous one
+      if (
+        prevFilterRef.current &&
+        areFiltersEqual(filter, prevFilterRef.current)
+      ) {
+        console.log("Skipping QR codes fetch as filter is unchanged", filter);
+        return;
+      }
+
+      console.log("Fetching QR codes with filter:", filter);
+
+      // Set fetching flag
+      isFetchingRef.current = true;
       setIsLoading(true);
       setError(null);
 
       try {
+        // Update previous filter reference
+        prevFilterRef.current = { ...filter };
+
         // Get QR codes from API
         const response = await fetchQrCodes(filter);
 
         // Map API response to our internal QrCode type
         const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
           // For debugging
-          console.log("Raw API QR Code data:", {
-            id: qrCode.id,
-            color: qrCode.color,
-            background_color: qrCode.background_color,
-            include_logo: qrCode.include_logo,
-            logo_size: qrCode.logo_size,
-            size: qrCode.size,
-            short_url: qrCode.short_url,
-          });
+          console.log("QR Code data received:", qrCode.id);
 
           return {
             id: qrCode.id,
@@ -79,6 +118,8 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
           };
         });
 
+        console.log(`Fetched ${mappedQrCodes.length} QR codes`);
+
         // Update state with mapped QR codes and pagination info
         setQrCodes(mappedQrCodes);
         setPagination(response.pagination);
@@ -90,6 +131,7 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
         showToast(errorMessage, "error", 5000);
       } finally {
         setIsLoading(false);
+        isFetchingRef.current = false;
       }
     };
 
@@ -101,7 +143,19 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
    * @param newFilter - New filter parameters to apply
    */
   const updateFilter = (newFilter: Partial<QrCodeFilter>) => {
-    setFilter((prev) => ({ ...prev, ...newFilter }));
+    console.log("Updating filter:", newFilter);
+
+    // Create a new filter object by merging the previous filter with the new filter
+    const updatedFilter = { ...filter, ...newFilter };
+
+    // Check if the filter is actually changing
+    if (areFiltersEqual(filter, updatedFilter)) {
+      console.log("Filter unchanged, skipping update");
+      return;
+    }
+
+    console.log("Setting new filter:", updatedFilter);
+    setFilter(updatedFilter);
   };
 
   /**
@@ -172,23 +226,25 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
    * Refresh QR Code data
    */
   const refreshQrCodes = async () => {
+    // Skip if a fetch is already in progress
+    if (isFetchingRef.current) {
+      console.log(
+        "Skipping QR codes refresh as a fetch is already in progress"
+      );
+      return false;
+    }
+
+    console.log("Refreshing QR codes with current filter:", filter);
+
+    isFetchingRef.current = true;
+    setIsLoading(true);
+
     try {
       // Get QR codes from API with current filter
       const response = await fetchQrCodes(filter);
 
       // Map API response to our internal QrCode type
       const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
-        // For debugging
-        console.log("Raw API QR Code data:", {
-          id: qrCode.id,
-          color: qrCode.color,
-          background_color: qrCode.background_color,
-          include_logo: qrCode.include_logo,
-          logo_size: qrCode.logo_size,
-          size: qrCode.size,
-          short_url: qrCode.short_url,
-        });
-
         return {
           id: qrCode.id,
           urlId: qrCode.url_id,
@@ -215,6 +271,8 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
         };
       });
 
+      console.log(`Refreshed ${mappedQrCodes.length} QR codes`);
+
       // Update state with mapped QR codes and pagination info
       setQrCodes(mappedQrCodes);
       setPagination(response.pagination);
@@ -226,6 +284,9 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
       console.error("Failed to refresh QR codes:", err);
       showToast(errorMessage, "error", 5000);
       return false;
+    } finally {
+      setIsLoading(false);
+      isFetchingRef.current = false;
     }
   };
 
