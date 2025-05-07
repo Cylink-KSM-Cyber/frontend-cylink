@@ -33,22 +33,13 @@ export const useQrCodeSearch = (
       const currentSearchTerm = searchTerm.trim();
       const prevSearchTerm = prevSearchTermRef.current;
 
-      console.log("Search effect running with:", {
-        currentSearchTerm,
-        prevSearchTerm,
-        isSearchActive,
-        isProcessing: isProcessingRef.current,
-      });
-
       // Prevent running the effect if it's already processing
       if (isProcessingRef.current) {
-        console.log("Skipping search effect as another one is in progress");
         return;
       }
 
       // Only proceed if the search term has actually changed
       if (currentSearchTerm === prevSearchTerm) {
-        console.log("Search term unchanged, skipping update");
         return;
       }
 
@@ -61,20 +52,15 @@ export const useQrCodeSearch = (
       try {
         if (currentSearchTerm !== "") {
           // Set active search flag when searching
-          console.log("Applying search filter:", currentSearchTerm);
           setIsSearchActive(true);
           updateFilter({ search: currentSearchTerm, page: 1 });
         } else if (isSearchActive) {
           // Only clear search and refresh when coming from an active search state
-          console.log("Clearing search filter, was active");
           setIsSearchActive(false);
           updateFilter({ search: undefined, page: 1 });
 
           // Force refresh to get all QR codes
-          console.log("Refreshing QR codes after clearing search");
-          refreshQrCodes().then((success) => {
-            console.log("QR codes refresh completed, success:", success);
-          });
+          refreshQrCodes();
         }
       } finally {
         // Clear processing flag when done
@@ -92,7 +78,6 @@ export const useQrCodeSearch = (
    * @param value - New search term
    */
   const handleSearch = (value: string) => {
-    console.log("Search term changed to:", value);
     setSearchTerm(value);
   };
 
