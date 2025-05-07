@@ -239,6 +239,10 @@ class QrCodeDownloadService {
     console.log("[QrCodeDownloadService] Rendering QR code for capture");
 
     try {
+      // Apply a small fixed padding of 4px
+      const paddingSize = 4;
+      const innerSize = size - paddingSize * 2;
+
       // Create a temporary div to render the QR code with logo
       const tempContainer = document.createElement("div");
       tempContainer.style.position = "fixed";
@@ -261,7 +265,7 @@ class QrCodeDownloadService {
       // Generate QR code
       const qrCodeDataUrl = await QRCodeLib.toDataURL(url, {
         errorCorrectionLevel: "H",
-        width: size,
+        width: innerSize,
         margin: 0,
         color: {
           dark: foregroundColor,
@@ -269,7 +273,7 @@ class QrCodeDownloadService {
         },
       });
 
-      // Create the container with styling similar to the QrCodePreview component
+      // Create the outer container with padding
       tempContainer.style.width = `${size}px`;
       tempContainer.style.height = `${size}px`;
       tempContainer.style.backgroundColor = backgroundColor;
@@ -277,23 +281,35 @@ class QrCodeDownloadService {
       tempContainer.style.alignItems = "center";
       tempContainer.style.justifyContent = "center";
       tempContainer.style.position = "relative";
+      tempContainer.style.padding = `${paddingSize}px`;
+      tempContainer.style.boxSizing = "border-box";
+
+      // Create inner container for QR code
+      const innerContainer = document.createElement("div");
+      innerContainer.style.width = `${innerSize}px`;
+      innerContainer.style.height = `${innerSize}px`;
+      innerContainer.style.position = "relative";
+      tempContainer.appendChild(innerContainer);
 
       // Add the QR code image
       const qrImg = document.createElement("img");
       qrImg.src = qrCodeDataUrl;
-      qrImg.width = size;
-      qrImg.height = size;
+      qrImg.width = innerSize;
+      qrImg.height = innerSize;
       qrImg.style.maxWidth = "100%";
       qrImg.style.maxHeight = "100%";
-      tempContainer.appendChild(qrImg);
+      innerContainer.appendChild(qrImg);
 
       // Add logo if needed
       if (includeLogo) {
-        const logoSizePixels = Math.round(size * logoSize);
+        const logoSizePixels = Math.round(innerSize * logoSize);
         const logoContainerSize = Math.round(logoSizePixels * 1.4); // 40% padding around logo
 
         const logoContainer = document.createElement("div");
         logoContainer.style.position = "absolute";
+        logoContainer.style.top = "50%";
+        logoContainer.style.left = "50%";
+        logoContainer.style.transform = "translate(-50%, -50%)";
         logoContainer.style.display = "flex";
         logoContainer.style.alignItems = "center";
         logoContainer.style.justifyContent = "center";
@@ -316,7 +332,7 @@ class QrCodeDownloadService {
         }
 
         logoContainer.appendChild(logo);
-        tempContainer.appendChild(logoContainer);
+        innerContainer.appendChild(logoContainer);
       }
 
       // Wait a moment for images to load
