@@ -50,7 +50,7 @@ interface QrCodePreviewProps {
  * QrCodePreview Component
  * @description A component for previewing QR codes with custom styling
  */
-const QrCodePreview = forwardRef<SVGSVGElement, QrCodePreviewProps>(
+const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
   (
     {
       foregroundColor,
@@ -65,11 +65,11 @@ const QrCodePreview = forwardRef<SVGSVGElement, QrCodePreviewProps>(
     },
     ref
   ) => {
-    // Internal ref to capture the actual DOM element
-    const internalQrCodeRef = useRef<SVGSVGElement | null>(null);
+    // Internal ref to capture the container element for download
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Expose the internal ref to parent components
-    useImperativeHandle(ref, () => internalQrCodeRef.current as SVGSVGElement);
+    // Expose the container ref to parent components
+    useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
     // If we have a generated QR URL, display it instead of the preview
     if (generatedQrUrl) {
@@ -77,6 +77,7 @@ const QrCodePreview = forwardRef<SVGSVGElement, QrCodePreviewProps>(
         <div
           className="relative flex items-center justify-center rounded-lg overflow-hidden"
           style={{ backgroundColor, width: size, height: size }}
+          ref={containerRef}
         >
           <Image
             src={generatedQrUrl}
@@ -113,6 +114,7 @@ const QrCodePreview = forwardRef<SVGSVGElement, QrCodePreviewProps>(
         className="relative flex items-center justify-center rounded-lg overflow-hidden"
         style={{ width: size, height: size, backgroundColor }}
         data-testid="qr-code-preview"
+        ref={containerRef}
       >
         {/* The QR Code */}
         <QRCode
@@ -122,15 +124,6 @@ const QrCodePreview = forwardRef<SVGSVGElement, QrCodePreviewProps>(
           bgColor={backgroundColor}
           level={errorCorrectionLevel}
           style={{ maxWidth: "100%", maxHeight: "100%" }}
-          // Use DOM ref to get the actual SVG element
-          ref={(el: unknown) => {
-            // QRCode from react-qr-code renders an SVG
-            // We capture the SVG element from the DOM
-            if (el) {
-              const svgElement = el as SVGSVGElement;
-              internalQrCodeRef.current = svgElement;
-            }
-          }}
         />
 
         {/* Logo overlay */}
