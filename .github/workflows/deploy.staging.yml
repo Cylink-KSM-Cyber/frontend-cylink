@@ -22,7 +22,7 @@ jobs:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Generate .env file
+    - name: Generate .env file for build stage
       run: |
         echo "NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}" > .env
 
@@ -34,6 +34,23 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
         no-cache: true
+    
+    - name: Create .env file from secrets for Docker
+      uses: 0ndt/envfile@v2
+      with:
+        secrets: ${{ toJSON(secrets) }}
+        exclude: DEPLOYMENT_*, PRODUCTION_*
+    
+    - name: Upload .env to VPS
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.DEPLOYMENT_HOST }}
+        port: ${{ secrets.DEPLOYMENT_PORT }}
+        username: ${{ secrets.DEPLOYMENT_USER }}
+        key: |
+          ${{ secrets.DEPLOYMENT_SSH_KEY }}
+        source: ".env"
+        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/staging"
     
     - name: Deploy to Deployment Server
       uses: appleboy/ssh-action@v1.0.0
@@ -48,5 +65,8 @@ jobs:
           git fetch origin
           git reset --hard origin/staging
           git clean -fd
+
+          # Remove prefix
+          sed -i 's/^STAGING_//g' .env
 
           docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate --pull always
