@@ -46,10 +46,6 @@ const SearchInput: React.FC<SearchInputProps> = ({
   // Set initial value when it changes from parent
   useEffect(() => {
     if (initialValue !== inputValue) {
-      console.log("SearchInput: initialValue changed", {
-        initialValue,
-        inputValue,
-      });
       setInputValue(initialValue);
       // Only update last search value if it's an explicit update from parent
       lastSearchValueRef.current = initialValue;
@@ -69,11 +65,6 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
 
-    console.log("SearchInput: value changed", {
-      from: inputValue,
-      to: newValue,
-    });
-
     setInputValue(newValue);
 
     // Clear existing timeout
@@ -85,24 +76,14 @@ const SearchInput: React.FC<SearchInputProps> = ({
     debounceTimerRef.current = setTimeout(() => {
       // Only call onSearch if the value has actually changed from last search
       if (newValue !== lastSearchValueRef.current) {
-        console.log("SearchInput: executing search", {
-          value: newValue,
-          lastSearchValue: lastSearchValueRef.current,
-        });
         lastSearchValueRef.current = newValue;
         onSearch(newValue);
-      } else {
-        console.log("SearchInput: skipping search (no change)", {
-          value: newValue,
-        });
       }
     }, debounceMs);
   };
 
   // Handle clear button click with explicit logging
   const handleClear = () => {
-    console.log("SearchInput: clear button clicked");
-
     // Clear existing timeout to prevent race conditions
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -113,11 +94,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
     // Only trigger search if it's different from last search value
     if (lastSearchValueRef.current !== "") {
-      console.log("SearchInput: triggering empty search after clear");
       lastSearchValueRef.current = "";
       onSearch("");
-    } else {
-      console.log("SearchInput: skipping empty search (already empty)");
     }
   };
 
@@ -127,16 +105,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
     // Only trigger search if it's different from last search value
     if (inputValue !== lastSearchValueRef.current) {
-      console.log("SearchInput: form submitted with new search", {
-        value: inputValue,
-      });
       lastSearchValueRef.current = inputValue;
       onSearch(inputValue);
-    } else {
-      console.log(
-        "SearchInput: form submitted with unchanged search (skipping)",
-        { value: inputValue }
-      );
     }
   };
 
@@ -173,16 +143,8 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
             // Only trigger search if it's different from last search value
             if (inputValue !== lastSearchValueRef.current) {
-              console.log("SearchInput: Enter key pressed with new search", {
-                value: inputValue,
-              });
               lastSearchValueRef.current = inputValue;
               onSearch(inputValue);
-            } else {
-              console.log(
-                "SearchInput: Enter key pressed with unchanged search (skipping)",
-                { value: inputValue }
-              );
             }
           }
         }}
