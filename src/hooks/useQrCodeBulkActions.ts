@@ -2,6 +2,7 @@
 
 import { useToast } from "@/contexts/ToastContext";
 import { QrCode } from "@/interfaces/url";
+import { qrCodeDownloadService } from "@/services/qrCodeDownloadService";
 
 /**
  * Custom hook for handling QR code bulk actions
@@ -54,14 +55,48 @@ export const useQrCodeBulkActions = (
    * @param qrCode - QR code to download
    * @param format - Format to download (png or svg)
    */
-  const handleDownloadQrCode = (qrCode: QrCode, format: "png" | "svg") => {
-    // This will be handled in the preview modal, but we can implement a direct download here
-    if (qrCode.shortUrl) {
-      // For demonstration, let's show a toast
+  const handleDownloadQrCode = async (
+    qrCode: QrCode,
+    format: "png" | "svg" = "png"
+  ) => {
+    console.log(
+      `[useQrCodeBulkActions] Initiating download for QR code ID: ${qrCode.id}, format: ${format}`
+    );
+
+    try {
+      showToast(`Preparing QR code download...`, "info", 2000);
+
+      const success = await qrCodeDownloadService.downloadQrCode(
+        qrCode,
+        format
+      );
+
+      if (success) {
+        console.log(
+          `[useQrCodeBulkActions] Download successful for QR code ID: ${qrCode.id}`
+        );
+        showToast(`QR code downloaded successfully`, "success", 3000);
+      } else {
+        console.error(
+          `[useQrCodeBulkActions] Download failed for QR code ID: ${qrCode.id}`
+        );
+        showToast(
+          `Failed to download QR code. Please try again.`,
+          "error",
+          5000
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[useQrCodeBulkActions] Error downloading QR code ${qrCode.id}:`,
+        error
+      );
       showToast(
-        `Downloading QR code for ${qrCode.shortUrl} as ${format}`,
-        "info",
-        3000
+        `Error downloading QR code: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
+        "error",
+        5000
       );
     }
   };
