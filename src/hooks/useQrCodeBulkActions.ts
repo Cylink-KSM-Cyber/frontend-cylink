@@ -54,13 +54,17 @@ export const useQrCodeBulkActions = (
    * Handle download QR code
    * @param qrCode - QR code to download
    * @param format - Format to download (png or svg)
+   * @param containerRef - Optional ref to the QR code container element
    */
   const handleDownloadQrCode = async (
     qrCode: QrCode,
-    format: "png" | "svg" = "png"
+    format: "png" | "svg" = "png",
+    containerRef?: React.RefObject<HTMLElement>
   ) => {
     console.log(
-      `[useQrCodeBulkActions] Initiating download for QR code ID: ${qrCode.id}, format: ${format}`
+      `[useQrCodeBulkActions] Initiating download for QR code ID: ${
+        qrCode.id
+      }, format: ${format}, hasContainerRef: ${!!containerRef?.current}`
     );
 
     try {
@@ -68,7 +72,8 @@ export const useQrCodeBulkActions = (
 
       const success = await qrCodeDownloadService.downloadQrCode(
         qrCode,
-        format
+        format,
+        containerRef
       );
 
       if (success) {
