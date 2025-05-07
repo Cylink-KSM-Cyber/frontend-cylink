@@ -130,7 +130,6 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     } else {
       handleCloseDialog();
     }
-    reset();
     onClose();
   };
 
