@@ -21,7 +21,7 @@ export const useEditUrl = () => {
         short_code: formData.shortCode || "",
       };
 
-      console.log("Sending update request with payload:", payload);
+      // Debug logging removed to prevent unintended exposure of payload data
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/urls/${id}`,
