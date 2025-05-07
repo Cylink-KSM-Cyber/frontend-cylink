@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import Image from "next/image";
 import QRCode from "react-qr-code";
 
@@ -50,99 +50,123 @@ interface QrCodePreviewProps {
  * QrCodePreview Component
  * @description A component for previewing QR codes with custom styling
  */
-const QrCodePreview: React.FC<QrCodePreviewProps> = ({
-  foregroundColor,
-  backgroundColor,
-  includeLogoChecked,
-  size = 300,
-  generatedQrUrl = null,
-  isLoading = false,
-  value = "https://example.com",
-  errorCorrectionLevel = "H",
-  logoSize = 0.25,
-}) => {
-  // If we have a generated QR URL, display it instead of the preview
-  if (generatedQrUrl) {
+const QrCodePreview = forwardRef<SVGSVGElement, QrCodePreviewProps>(
+  (
+    {
+      foregroundColor,
+      backgroundColor,
+      includeLogoChecked,
+      size = 300,
+      generatedQrUrl = null,
+      isLoading = false,
+      value = "https://example.com",
+      errorCorrectionLevel = "H",
+      logoSize = 0.25,
+    },
+    ref
+  ) => {
+    // Internal ref to capture the actual DOM element
+    const internalQrCodeRef = useRef<SVGSVGElement | null>(null);
+
+    // Expose the internal ref to parent components
+    useImperativeHandle(ref, () => internalQrCodeRef.current as SVGSVGElement);
+
+    // If we have a generated QR URL, display it instead of the preview
+    if (generatedQrUrl) {
+      return (
+        <div
+          className="relative flex items-center justify-center rounded-lg overflow-hidden"
+          style={{ backgroundColor, width: size, height: size }}
+        >
+          <Image
+            src={generatedQrUrl}
+            alt="Generated QR Code"
+            width={size}
+            height={size}
+            className="object-contain"
+            unoptimized
+            priority
+          />
+        </div>
+      );
+    }
+
+    // Show loading skeleton
+    if (isLoading) {
+      return (
+        <div
+          className="animate-pulse flex items-center justify-center rounded-lg"
+          style={{ backgroundColor: "#f3f4f6", width: size, height: size }}
+        >
+          <div className="w-12 h-12 rounded-full bg-gray-300"></div>
+        </div>
+      );
+    }
+
+    // Calculate logo size relative to QR code size
+    const logoSizePixels = Math.round(size * logoSize);
+    const logoContainerSize = Math.round(logoSizePixels * 1.4); // 40% padding around logo
+
+    // Show QR code with react-qr-code
     return (
       <div
         className="relative flex items-center justify-center rounded-lg overflow-hidden"
-        style={{ backgroundColor, width: size, height: size }}
+        style={{ width: size, height: size, backgroundColor }}
+        data-testid="qr-code-preview"
       >
-        <Image
-          src={generatedQrUrl}
-          alt="Generated QR Code"
-          width={size}
-          height={size}
-          className="object-contain"
-          unoptimized
-          priority
-        />
-      </div>
-    );
-  }
-
-  // Show loading skeleton
-  if (isLoading) {
-    return (
-      <div
-        className="animate-pulse flex items-center justify-center rounded-lg"
-        style={{ backgroundColor: "#f3f4f6", width: size, height: size }}
-      >
-        <div className="w-12 h-12 rounded-full bg-gray-300"></div>
-      </div>
-    );
-  }
-
-  // Calculate logo size relative to QR code size
-  const logoSizePixels = Math.round(size * logoSize);
-  const logoContainerSize = Math.round(logoSizePixels * 1.4); // 40% padding around logo
-
-  // Show QR code with react-qr-code
-  return (
-    <div
-      className="relative flex items-center justify-center rounded-lg overflow-hidden"
-      style={{ width: size, height: size, backgroundColor }}
-    >
-      {/* The QR Code */}
-      <QRCode
-        value={value}
-        size={size - 20} // Slight padding
-        fgColor={foregroundColor}
-        bgColor={backgroundColor}
-        level={errorCorrectionLevel}
-        style={{ maxWidth: "100%", maxHeight: "100%" }}
-      />
-
-      {/* Logo overlay */}
-      {includeLogoChecked && (
-        <div
-          className="absolute flex items-center justify-center rounded-full"
-          style={{
-            width: logoContainerSize,
-            height: logoContainerSize,
-            backgroundColor,
-            boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+        {/* The QR Code */}
+        <QRCode
+          value={value}
+          size={size - 20} // Slight padding
+          fgColor={foregroundColor}
+          bgColor={backgroundColor}
+          level={errorCorrectionLevel}
+          style={{ maxWidth: "100%", maxHeight: "100%" }}
+          // Use DOM ref to get the actual SVG element
+          ref={(el: unknown) => {
+            // QRCode from react-qr-code renders an SVG
+            // We capture the SVG element from the DOM
+            if (el) {
+              const svgElement = el as SVGSVGElement;
+              internalQrCodeRef.current = svgElement;
+            }
           }}
-        >
-          <Image
-            src="/logo/logo-ksm.svg"
-            alt="KSM Logo"
-            width={logoSizePixels}
-            height={logoSizePixels}
+        />
+
+        {/* Logo overlay */}
+        {includeLogoChecked && (
+          <div
+            className="absolute flex items-center justify-center rounded-full"
             style={{
-              filter:
-                foregroundColor !== "#000000"
-                  ? `brightness(0) saturate(100%) ${getColorFilterForSvg(
-                      foregroundColor
-                    )}`
-                  : undefined,
+              width: logoContainerSize,
+              height: logoContainerSize,
+              backgroundColor,
+              boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
             }}
-          />
-        </div>
-      )}
-    </div>
-  );
-};
+          >
+            <Image
+              src="/logo/logo-ksm.svg"
+              alt="KSM Logo"
+              width={logoSizePixels}
+              height={logoSizePixels}
+              style={{
+                filter:
+                  foregroundColor !== "#000000"
+                    ? `brightness(0) saturate(100%) ${getColorFilterForSvg(
+                        foregroundColor
+                      )}`
+                    : undefined,
+              }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+// Add display name for better debugging
+QrCodePreview.displayName = "QrCodePreview";
 
 /**
  * Helper function to generate CSS filter for coloring SVG
