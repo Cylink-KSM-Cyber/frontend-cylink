@@ -1,5 +1,6 @@
 import { QrCode } from "@/interfaces/url";
 import QRCodeLib from "qrcode";
+import html2canvas from "html2canvas";
 
 /**
  * Service for downloading QR codes as images (PNG, SVG)
@@ -11,7 +12,7 @@ class QrCodeDownloadService {
    * @param size - Size of the output image
    * @returns Promise resolving to a PNG data URL
    */
-  async convertSvgToPng(svgString: string, size = 300): Promise<string> {
+  async convertSvgToPng(svgString: string, size = 500): Promise<string> {
     console.log("[QrCodeDownloadService] Converting SVG to PNG", { size });
 
     return new Promise((resolve, reject) => {
@@ -97,7 +98,7 @@ class QrCodeDownloadService {
    * @param size - Size of the QR code
    * @returns Promise resolving to SVG string
    */
-  async generateSvgString(qrCode: QrCode, size = 300): Promise<string> {
+  async generateSvgString(qrCode: QrCode, size = 500): Promise<string> {
     console.log("[QrCodeDownloadService] Generating SVG string", {
       qrCodeId: qrCode.id,
       foregroundColor: qrCode.customization?.foregroundColor || "#000000",
@@ -144,7 +145,7 @@ class QrCodeDownloadService {
    * @param size - Size of the QR code
    * @returns Promise resolving to PNG data URL
    */
-  async generatePngDataUrl(qrCode: QrCode, size = 300): Promise<string> {
+  async generatePngDataUrl(qrCode: QrCode, size = 500): Promise<string> {
     console.log("[QrCodeDownloadService] Generating PNG data URL", {
       qrCodeId: qrCode.id,
       size,
@@ -178,20 +179,185 @@ class QrCodeDownloadService {
   }
 
   /**
+   * Capture a DOM element as an image
+   * @param element - DOM element to capture
+   * @param outputSize - Size of the output image
+   * @returns Promise resolving to a data URL of the captured image
+   */
+  async captureElementAsImage(
+    element: HTMLElement,
+    outputSize = 500
+  ): Promise<string> {
+    console.log(
+      "[QrCodeDownloadService] Capturing element as image, output size:",
+      outputSize
+    );
+
+    try {
+      // Use html2canvas to capture the element
+      const canvas = await html2canvas(element, {
+        backgroundColor: null,
+        logging: false,
+        scale: 8, // Higher scale for better quality
+        useCORS: true,
+      });
+
+      // Create a new square canvas with the desired output size
+      const outputCanvas = document.createElement("canvas");
+      outputCanvas.width = outputSize;
+      outputCanvas.height = outputSize;
+
+      // Get context and fill with background color if needed
+      const ctx = outputCanvas.getContext("2d");
+      if (!ctx) {
+        throw new Error("Failed to get canvas context");
+      }
+
+      // Draw the captured image to the new canvas, preserving aspect ratio
+      ctx.drawImage(canvas, 0, 0, outputSize, outputSize);
+
+      // Convert canvas to data URL
+      const dataUrl = outputCanvas.toDataURL("image/png", 1.0);
+      console.log(
+        "[QrCodeDownloadService] Element captured successfully, resized to:",
+        outputSize
+      );
+      return dataUrl;
+    } catch (err) {
+      console.error("[QrCodeDownloadService] Failed to capture element:", err);
+      throw err;
+    }
+  }
+
+  /**
+   * Render QR code with logo in a temporary element for capture
+   * @param qrCode - QR code data
+   * @param size - Size of the QR code
+   * @returns Promise resolving to a data URL of the captured QR code
+   */
+  async renderAndCaptureQrCode(qrCode: QrCode, size = 500): Promise<string> {
+    console.log("[QrCodeDownloadService] Rendering QR code for capture");
+
+    try {
+      // Create a temporary div to render the QR code with logo
+      const tempContainer = document.createElement("div");
+      tempContainer.style.position = "fixed";
+      tempContainer.style.left = "-9999px";
+      tempContainer.style.top = "-9999px";
+      document.body.appendChild(tempContainer);
+
+      // Get customization settings
+      const url = qrCode.shortUrl || `https://example.com/${qrCode.id}`;
+      const foregroundColor =
+        qrCode.customization?.foregroundColor || "#000000";
+      const backgroundColor =
+        qrCode.customization?.backgroundColor || "#FFFFFF";
+      const includeLogo = qrCode.customization?.includeLogo || false;
+      const logoSize =
+        typeof qrCode.customization?.logoSize === "string"
+          ? parseFloat(qrCode.customization.logoSize)
+          : qrCode.customization?.logoSize || 0.25;
+
+      // Generate QR code
+      const qrCodeDataUrl = await QRCodeLib.toDataURL(url, {
+        errorCorrectionLevel: "H",
+        width: size,
+        margin: 0,
+        color: {
+          dark: foregroundColor,
+          light: backgroundColor,
+        },
+      });
+
+      // Create the container with styling similar to the QrCodePreview component
+      tempContainer.style.width = `${size}px`;
+      tempContainer.style.height = `${size}px`;
+      tempContainer.style.backgroundColor = backgroundColor;
+      tempContainer.style.display = "flex";
+      tempContainer.style.alignItems = "center";
+      tempContainer.style.justifyContent = "center";
+      tempContainer.style.position = "relative";
+
+      // Add the QR code image
+      const qrImg = document.createElement("img");
+      qrImg.src = qrCodeDataUrl;
+      qrImg.width = size;
+      qrImg.height = size;
+      qrImg.style.maxWidth = "100%";
+      qrImg.style.maxHeight = "100%";
+      tempContainer.appendChild(qrImg);
+
+      // Add logo if needed
+      if (includeLogo) {
+        const logoSizePixels = Math.round(size * logoSize);
+        const logoContainerSize = Math.round(logoSizePixels * 1.4); // 40% padding around logo
+
+        const logoContainer = document.createElement("div");
+        logoContainer.style.position = "absolute";
+        logoContainer.style.display = "flex";
+        logoContainer.style.alignItems = "center";
+        logoContainer.style.justifyContent = "center";
+        logoContainer.style.width = `${logoContainerSize}px`;
+        logoContainer.style.height = `${logoContainerSize}px`;
+        logoContainer.style.backgroundColor = backgroundColor;
+        logoContainer.style.borderRadius = "50%";
+        logoContainer.style.boxShadow = "0 0 10px rgba(0, 0, 0, 0.1)";
+
+        const logo = document.createElement("img");
+        logo.src = "/logo/logo-ksm.svg";
+        logo.width = logoSizePixels;
+        logo.height = logoSizePixels;
+
+        // Apply color filter if needed
+        if (foregroundColor !== "#000000") {
+          logo.style.filter = `brightness(0) saturate(100%)`;
+          // We'd need a more complex implementation to match the exact filter from getColorFilterForSvg
+          // This is a simplified approach
+        }
+
+        logoContainer.appendChild(logo);
+        tempContainer.appendChild(logoContainer);
+      }
+
+      // Wait a moment for images to load
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // Use html2canvas to capture the element with logo
+      const dataUrl = await this.captureElementAsImage(tempContainer, size);
+
+      // Clean up
+      document.body.removeChild(tempContainer);
+
+      return dataUrl;
+    } catch (err) {
+      console.error(
+        "[QrCodeDownloadService] Failed to render and capture QR code:",
+        err
+      );
+      throw err;
+    }
+  }
+
+  /**
    * Download QR code as image
    * @param qrCode - QR code data
    * @param format - Image format (png or svg)
-   * @param svgRef - Optional React ref to SVG element
+   * @param containerRef - Optional React ref to QR code container element
    */
   async downloadQrCode(
     qrCode: QrCode,
     format: "png" | "svg",
-    svgRef?: React.RefObject<SVGSVGElement>
+    containerRef?: React.RefObject<HTMLElement>
   ): Promise<boolean> {
+    // Default download size is larger for better quality
+    const downloadSize = 500;
+
     console.log("[QrCodeDownloadService] Downloading QR code", {
       qrCodeId: qrCode.id,
       format,
-      hasSvgRef: !!svgRef?.current,
+      downloadSize,
+      hasContainerRef: !!containerRef?.current,
+      customization: qrCode.customization,
     });
 
     try {
@@ -201,32 +367,17 @@ class QrCodeDownloadService {
 
       let dataUrl: string;
 
-      // If we have a direct SVG reference from a React component
-      if (svgRef?.current) {
-        console.log("[QrCodeDownloadService] Using SVG ref");
-        const svgString = new XMLSerializer().serializeToString(svgRef.current);
-        console.log(
-          "[QrCodeDownloadService] Serialized SVG length:",
-          svgString.length
-        );
+      // For better consistency and to ensure all settings are applied correctly,
+      // let's use the renderAndCaptureQrCode method for all cases
+      dataUrl = await this.renderAndCaptureQrCode(qrCode, downloadSize);
 
-        if (format === "svg") {
-          dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-            svgString
-          )}`;
-        } else {
-          dataUrl = await this.convertSvgToPng(svgString);
-        }
-      } else {
-        // Generate based on format
-        if (format === "svg") {
-          const svgString = await this.generateSvgString(qrCode);
-          dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-            svgString
-          )}`;
-        } else {
-          dataUrl = await this.generatePngDataUrl(qrCode);
-        }
+      // For SVG format when no logo is needed
+      if (format === "svg" && !qrCode.customization?.includeLogo) {
+        // Generate SVG with the correct customization
+        const svgString = await this.generateSvgString(qrCode, downloadSize);
+        dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+          svgString
+        )}`;
       }
 
       console.log(
