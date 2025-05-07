@@ -60,7 +60,6 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
     const fetchQrCodesList = async () => {
       // Skip if a fetch is already in progress
       if (isFetchingRef.current) {
-        console.log("Skipping QR codes fetch as one is already in progress");
         return;
       }
 
@@ -69,11 +68,8 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
         prevFilterRef.current &&
         areFiltersEqual(filter, prevFilterRef.current)
       ) {
-        console.log("Skipping QR codes fetch as filter is unchanged", filter);
         return;
       }
-
-      console.log("Fetching QR codes with filter:", filter);
 
       // Set fetching flag
       isFetchingRef.current = true;
@@ -89,9 +85,6 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
 
         // Map API response to our internal QrCode type
         const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
-          // For debugging
-          console.log("QR Code data received:", qrCode.id);
-
           return {
             id: qrCode.id,
             urlId: qrCode.url_id,
@@ -118,8 +111,6 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
           };
         });
 
-        console.log(`Fetched ${mappedQrCodes.length} QR codes`);
-
         // Update state with mapped QR codes and pagination info
         setQrCodes(mappedQrCodes);
         setPagination(response.pagination);
@@ -143,18 +134,14 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
    * @param newFilter - New filter parameters to apply
    */
   const updateFilter = (newFilter: Partial<QrCodeFilter>) => {
-    console.log("Updating filter:", newFilter);
-
     // Create a new filter object by merging the previous filter with the new filter
     const updatedFilter = { ...filter, ...newFilter };
 
     // Check if the filter is actually changing
     if (areFiltersEqual(filter, updatedFilter)) {
-      console.log("Filter unchanged, skipping update");
       return;
     }
 
-    console.log("Setting new filter:", updatedFilter);
     setFilter(updatedFilter);
   };
 
@@ -228,13 +215,8 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
   const refreshQrCodes = async () => {
     // Skip if a fetch is already in progress
     if (isFetchingRef.current) {
-      console.log(
-        "Skipping QR codes refresh as a fetch is already in progress"
-      );
       return false;
     }
-
-    console.log("Refreshing QR codes with current filter:", filter);
 
     isFetchingRef.current = true;
     setIsLoading(true);
@@ -270,8 +252,6 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
           },
         };
       });
-
-      console.log(`Refreshed ${mappedQrCodes.length} QR codes`);
 
       // Update state with mapped QR codes and pagination info
       setQrCodes(mappedQrCodes);
