@@ -35,6 +35,23 @@ jobs:
         tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:prod
         no-cache: true
     
+    - name: Create .env file from secrets
+      uses: 0ndt/envfile@v2
+      with:
+        secrets: ${{ toJSON(secrets) }}
+        exclude: DEPLOYMENT_*, STAGING_*
+    
+    - name: Upload .env to VPS
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.DEPLOYMENT_HOST }}
+        port: ${{ secrets.DEPLOYMENT_PORT }}
+        username: ${{ secrets.DEPLOYMENT_USER }}
+        key: |
+          ${{ secrets.DEPLOYMENT_SSH_KEY }}
+        source: ".env"
+        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/production"
+    
     - name: Deploy to Deployment Server
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -48,5 +65,8 @@ jobs:
           git fetch origin
           git reset --hard origin/master
           git clean -fd
+
+          # Remove prefix
+          sed -i 's/^PRODUCTION_//g' .env
 
           docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-prod -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate --pull always
