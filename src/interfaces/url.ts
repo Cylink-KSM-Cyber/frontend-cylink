@@ -391,13 +391,13 @@ export interface CreateUrlFormResponse {
 
 export interface EditUrlFormData {
   originalUrl: string;
-  customCode?: string;
+  shortCode?: string;
   title?: string;
   expiryDate?: string;
 }
 
 export interface EditUrlFormResponse {
-  staus: number;
+  status: number;
   message: string;
   data: {
     id: number;

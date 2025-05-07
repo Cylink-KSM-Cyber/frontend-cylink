@@ -13,6 +13,16 @@ export const useEditUrl = () => {
     const token = Cookies.get("accessToken");
 
     try {
+      // Create the payload according to the backend API requirements
+      const payload = {
+        title: formData.title,
+        original_url: formData.originalUrl,
+        expiry_date: formData.expiryDate,
+        short_code: formData.shortCode || "",
+      };
+
+      // Debug logging removed to prevent unintended exposure of payload data
+
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/urls/${id}`,
         {
@@ -21,12 +31,7 @@ export const useEditUrl = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            title: formData.title,
-            original_url: formData.originalUrl,
-            custom_code: formData.customCode || "",
-            expiry_date: formData.expiryDate,
-          }),
+          body: JSON.stringify(payload),
           credentials: "same-origin",
         }
       );

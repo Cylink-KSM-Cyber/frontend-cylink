@@ -228,7 +228,7 @@ export default function UrlsPage() {
       const response = await editUrl(urlToEdit?.id as number, data);
 
       showToast(
-        `URL "${response.data.title}" updated succesfully`,
+        `URL "${response.data.title}" updated successfully`,
         "success",
         2000
       );
@@ -236,7 +236,9 @@ export default function UrlsPage() {
       refreshUrls();
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Something went wrong",
+        err instanceof Error
+          ? err.message
+          : "Something went wrong updating the URL",
         "error",
         3000
       );
