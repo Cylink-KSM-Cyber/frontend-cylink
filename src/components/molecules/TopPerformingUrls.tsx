@@ -1,7 +1,7 @@
 import React from "react";
 import { Url } from "@/interfaces/url";
 import { RiExternalLinkLine, RiFileCopyLine } from "react-icons/ri";
-import { formatShortUrl, logUrlFormatting } from "@/utils/urlFormatter";
+import { formatShortUrl } from "@/utils/urlFormatter";
 
 interface TopPerformingUrlsProps {
   urls: Url[];
@@ -94,7 +94,6 @@ const TopPerformingUrls: React.FC<TopPerformingUrlsProps> = ({
       onCopyUrl(url);
     } else {
       const fullUrl = formatShortUrl(url.short_url);
-      logUrlFormatting("TopPerformingUrls", url.short_url, fullUrl);
 
       navigator.clipboard.writeText(fullUrl);
     }
