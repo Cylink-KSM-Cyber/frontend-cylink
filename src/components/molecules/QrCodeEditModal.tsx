@@ -67,12 +67,27 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
     updateQrCode,
   } = useQrCode();
 
+  // Track if initial values are set
+  const initialValuesSetRef = useRef(false);
+
   // Load colors and set initial values when modal opens
   useEffect(() => {
-    if (isOpen && qrCode) {
+    if (isOpen && qrCode && !initialValuesSetRef.current) {
+      console.log("[QrCodeEditModal] Modal opened with QR code:", qrCode.id);
+      console.log(
+        "[QrCodeEditModal] Current customization:",
+        qrCode.customization
+      );
+
       // Prevent unnecessary re-renders by loading colors only once per modal open
       if (foregroundColors.length === 0 || backgroundColors.length === 0) {
+        console.log("[QrCodeEditModal] Loading colors from API");
         loadColors();
+      } else {
+        console.log("[QrCodeEditModal] Colors already loaded:", {
+          foregroundColors: foregroundColors.length,
+          backgroundColors: backgroundColors.length,
+        });
       }
 
       // Set initial values based on the QR code
@@ -80,11 +95,22 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
       const bgColor = qrCode.customization?.backgroundColor || "#FFFFFF";
       const includeLogo = qrCode.customization?.includeLogo || false;
 
+      console.log("[QrCodeEditModal] Initial values:", {
+        foregroundColor: fgColor,
+        backgroundColor: bgColor,
+        includeLogo: includeLogo,
+      });
+
       // Find matching colors in the palette or use the first one
       if (foregroundColors.length > 0) {
         const matchedFgColor =
           foregroundColors.find((c) => c.hex === fgColor) ||
           foregroundColors[0];
+
+        console.log(
+          "[QrCodeEditModal] Setting initial foreground color:",
+          matchedFgColor
+        );
         setSelectedForegroundColor(matchedFgColor);
       }
 
@@ -92,12 +118,22 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
         const matchedBgColor =
           backgroundColors.find((c) => c.hex === bgColor) ||
           backgroundColors[0];
+
+        console.log(
+          "[QrCodeEditModal] Setting initial background color:",
+          matchedBgColor
+        );
         setSelectedBackgroundColor(matchedBgColor);
       }
 
       setIncludeLogoChecked(includeLogo);
-
       qrUpdatedRef.current = false;
+      initialValuesSetRef.current = true;
+    }
+
+    // Reset initialValuesSetRef when modal closes
+    if (!isOpen) {
+      initialValuesSetRef.current = false;
     }
   }, [
     isOpen,
@@ -136,9 +172,20 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
       size: qrSize || 300,
     };
 
+    console.log("QR Code update requested with data:", {
+      id: qrCode.id,
+      current_foreground: qrCode.customization?.foregroundColor,
+      current_background: qrCode.customization?.backgroundColor,
+      new_foreground: editData.color,
+      new_background: editData.background_color,
+      include_logo: editData.include_logo,
+    });
+
     try {
       // Update QR code
-      await updateQrCode(qrCode.id, editData);
+      console.log("Sending update request to API...");
+      const response = await updateQrCode(qrCode.id, editData);
+      console.log("Update QR code response:", response);
       qrUpdatedRef.current = true;
 
       // Close modal after a short delay to show success
@@ -184,7 +231,11 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
     <Modal
       title="Edit QR Code"
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={() => {
+        // Reset state sebelum menutup modal
+        initialValuesSetRef.current = false;
+        onClose();
+      }}
       variant="default"
       size="md"
       footer={renderFooterButtons()}
@@ -195,6 +246,7 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
           {/* QR Code Preview - Make more compact */}
           <div className="flex items-center justify-center md:w-2/5">
             <QrCodePreview
+              key={`${selectedForegroundColor?.hex}-${selectedBackgroundColor?.hex}-${includeLogoChecked}`}
               foregroundColor={selectedForegroundColor?.hex || "#000000"}
               backgroundColor={selectedBackgroundColor?.hex || "#FFFFFF"}
               includeLogoChecked={includeLogoChecked}
@@ -233,7 +285,14 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
                             : "border-gray-200"
                         }`}
                         style={{ backgroundColor: color.hex }}
-                        onClick={() => setSelectedForegroundColor(color)}
+                        onClick={() => {
+                          console.log(
+                            "Foreground color clicked:",
+                            color.name,
+                            color.hex
+                          );
+                          setSelectedForegroundColor(color);
+                        }}
                         disabled={isLoading || isGenerating}
                         title={color.name}
                         aria-label={`Select ${color.name} color`}
@@ -258,7 +317,14 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
                             : "border-gray-200"
                         }`}
                         style={{ backgroundColor: color.hex }}
-                        onClick={() => setSelectedBackgroundColor(color)}
+                        onClick={() => {
+                          console.log(
+                            "Background color clicked:",
+                            color.name,
+                            color.hex
+                          );
+                          setSelectedBackgroundColor(color);
+                        }}
                         disabled={isLoading || isGenerating}
                         title={color.name}
                         aria-label={`Select ${color.name} color`}
