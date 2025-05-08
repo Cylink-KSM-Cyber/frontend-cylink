@@ -66,13 +66,12 @@ export default function UrlsPage() {
   });
 
   // Fetch dashboard stats data
-  const { stats, isLoading: isStatsLoading, error: statsError } = useUrlStats();
+  const { stats, isLoading: isStatsLoading } = useUrlStats();
 
   // Fetch URL data with filter
   const {
     urls,
     isLoading: isUrlsLoading,
-    error: urlsError,
     pagination,
     updateFilter,
     refreshUrls,
@@ -90,7 +89,7 @@ export default function UrlsPage() {
   const { editUrl, isEditing } = useEditUrl();
 
   // URL deletion hook
-  const { deleteUrl, isDeleting, error: deleteError } = useDeleteUrl();
+  const { deleteUrl, isDeleting } = useDeleteUrl();
 
   // Handle search query changes
   const handleSearch = (value: string) => {
