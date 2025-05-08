@@ -279,7 +279,20 @@ class QrCodeDownloadService {
       }
 
       // Wait a moment for images to load
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      const images = tempContainer.querySelectorAll("img");
+      await Promise.all(
+        Array.from(images).map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete) {
+                resolve();
+              } else {
+                img.onload = () => resolve();
+                img.onerror = () => resolve(); // Resolve even if an image fails to load
+              }
+            })
+        )
+      );
 
       // Use html2canvas to capture the element with logo
       const dataUrl = await this.captureElementAsImage(tempContainer, size);
