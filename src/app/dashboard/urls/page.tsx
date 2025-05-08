@@ -224,7 +224,7 @@ export default function UrlsPage() {
       const response = await editUrl(urlToEdit?.id as number, data);
 
       showToast(
-        `URL "${response.data.title}" updated succesfully`,
+        `URL "${response.data.title}" updated successfully`,
         "success",
         2000
       );
