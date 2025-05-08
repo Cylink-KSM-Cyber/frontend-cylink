@@ -18,7 +18,7 @@ import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { formatShortUrl, logUrlFormatting } from "@/utils/urlFormatter";
+import { formatShortUrl } from "@/utils/urlFormatter";
 
 /**
  * Dashboard page
@@ -130,8 +130,6 @@ export default function UrlsPage() {
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
     const fullUrl = formatShortUrl(url.short_url);
-    logUrlFormatting("UrlsPage", url.short_url, fullUrl);
-
     navigator.clipboard.writeText(fullUrl);
     showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
@@ -139,7 +137,6 @@ export default function UrlsPage() {
   // Handle URL edit
   const handleEditUrl = (url: Url) => {
     setUrlToEdit(url);
-    console.log("handleEditUrl", url);
     setEditModalOpen(true);
   };
 
@@ -203,8 +200,6 @@ export default function UrlsPage() {
   // Add a new function to handle the actual form submission
   const handleSubmitUrlForm = async (data: CreateUrlFormData) => {
     try {
-      console.log("Form submitted:", data);
-
       const response = await createUrl(data); // Call the hook's function
 
       showToast(
@@ -227,8 +222,6 @@ export default function UrlsPage() {
 
   const handleSubmitEditUrlForm = async (data: EditUrlFormData) => {
     try {
-      console.log("Form submitted:", data);
-
       const response = await editUrl(urlToEdit?.id as number, data);
 
       showToast(
@@ -257,12 +250,6 @@ export default function UrlsPage() {
       setActiveItemId("dashboard");
     }
   }, [tabParam, setActiveItemId]);
-
-  // If there are errors, we could show error states
-  // For now, we'll just log them and continue with available data
-  if (statsError) console.error("Stats error:", statsError);
-  if (urlsError) console.error("URLs error:", urlsError);
-  if (deleteError) console.error("Delete error:", deleteError);
 
   // Default stats if none are available
   const urlStats = stats || {
