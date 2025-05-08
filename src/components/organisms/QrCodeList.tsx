@@ -39,7 +39,7 @@ interface QrCodeListProps {
   onDownload?: (
     qrCode: QrCode,
     format: "png" | "svg",
-    containerRef?: React.RefObject<HTMLElement>
+    containerRef?: React.RefObject<HTMLElement | null>
   ) => void;
   /**
    * Array of selected QR codes
@@ -63,9 +63,9 @@ interface DownloadDropdownProps {
   onDownload: (
     qrCode: QrCode,
     format: "png" | "svg",
-    containerRef?: React.RefObject<HTMLElement>
+    containerRef?: React.RefObject<HTMLElement | null>
   ) => void;
-  containerRef?: React.RefObject<HTMLElement>;
+  containerRef?: React.RefObject<HTMLElement | null>;
 }
 
 const DownloadDropdown: React.FC<DownloadDropdownProps> = ({
@@ -157,7 +157,7 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
 }) => {
   // Create a stable reference to hold our ref map
   const qrCodeRefsMapRef = useRef<
-    Record<string | number, React.RefObject<HTMLDivElement>>
+    Record<string | number, React.RefObject<HTMLDivElement | null>>
   >({});
 
   // Create refs for each QR code
@@ -165,7 +165,8 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
     // Update refs map for current QR codes
     qrCodes.forEach((qrCode) => {
       if (!qrCodeRefsMapRef.current[qrCode.id]) {
-        qrCodeRefsMapRef.current[qrCode.id] = React.createRef<HTMLDivElement>();
+        qrCodeRefsMapRef.current[qrCode.id] =
+          React.createRef<HTMLDivElement | null>();
       }
     });
 
@@ -177,12 +178,14 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
     (
       qrCode: QrCode,
       format: "png" | "svg",
-      containerRef?: React.RefObject<HTMLElement>
+      containerRef?: React.RefObject<HTMLElement | null>
     ) => {
       if (onDownload) {
         const ref =
           containerRef ||
-          (qrCodeRefs[qrCode.id] as unknown as React.RefObject<HTMLElement>);
+          (qrCodeRefs[
+            qrCode.id
+          ] as unknown as React.RefObject<HTMLElement | null>);
         console.log(
           `[QrCodeList] Downloading QR code ID: ${
             qrCode.id
@@ -420,7 +423,7 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
                       containerRef={
                         qrCodeRefs[
                           qrCode.id
-                        ] as unknown as React.RefObject<HTMLElement>
+                        ] as unknown as React.RefObject<HTMLElement | null>
                       }
                     />
                   )}
