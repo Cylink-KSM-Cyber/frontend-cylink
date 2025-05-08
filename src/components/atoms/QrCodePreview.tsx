@@ -164,8 +164,44 @@ const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
 QrCodePreview.displayName = "QrCodePreview";
 
 /**
- * Helper function to generate CSS filter for coloring SVG
- * @param hexColor - Hex color to convert to CSS filter
+ * Calculate hue rotation for a hex color
+ * @param hexColor - Hex color to calculate hue rotation for
+ * @returns Hue rotation in degrees
+ */
+function getHueRotation(hexColor: string): number {
+  // Simple approximate hue rotation calculation
+  try {
+    // Convert hex to RGB
+    const r = parseInt(hexColor.substring(1, 3), 16);
+    const g = parseInt(hexColor.substring(3, 5), 16);
+    const b = parseInt(hexColor.substring(5, 7), 16);
+
+    // Calculate hue
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+
+    if (max === min) {
+      h = 0; // No hue (grayscale)
+    } else if (max === r) {
+      h = 60 * (0 + (g - b) / (max - min));
+    } else if (max === g) {
+      h = 60 * (2 + (b - r) / (max - min));
+    } else {
+      h = 60 * (4 + (r - g) / (max - min));
+    }
+
+    if (h < 0) h += 360;
+    return h;
+  } catch {
+    // In case of invalid hex, return 0
+    return 0;
+  }
+}
+
+/**
+ * Convert hex color to CSS filter for SVG
+ * @param hexColor - Hex color to convert
  * @returns CSS filter string
  */
 function getColorFilterForSvg(hexColor: string): string {
@@ -189,30 +225,6 @@ function getColorFilterForSvg(hexColor: string): string {
         hexColor
       )}deg) brightness(92%) contrast(95%)`;
   }
-}
-
-/**
- * Calculate hue rotation for a hex color
- * @param hexColor - Hex color to calculate hue rotation for
- * @returns Hue rotation in degrees
- */
-function getHueRotation(hexColor: string): number {
-  // Simple approximate hue rotation calculation
-  // Convert hex to RGB
-  const r = parseInt(hexColor.slice(1, 3), 16) / 255;
-  const g = parseInt(hexColor.slice(3, 5), 16) / 255;
-  const b = parseInt(hexColor.slice(5, 7), 16) / 255;
-
-  // Get the hue angle (simplified version)
-  let hue = 0;
-  if (r >= g && g >= b) hue = 60 * ((g - b) / (r - b));
-  else if (g > r && r >= b) hue = 60 * (2 - (r - b) / (g - b));
-  else if (g >= b && b > r) hue = 60 * (2 + (b - r) / (g - r));
-  else if (b > g && g > r) hue = 60 * (4 - (g - r) / (b - r));
-  else if (b > r && r >= g) hue = 60 * (4 + (r - g) / (b - g));
-  else if (r >= b && b > g) hue = 60 * (6 - (b - g) / (r - g));
-
-  return Math.round(hue);
 }
 
 export default QrCodePreview;

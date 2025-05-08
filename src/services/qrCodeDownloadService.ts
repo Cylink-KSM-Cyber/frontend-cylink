@@ -13,15 +13,12 @@ class QrCodeDownloadService {
    * @returns Promise resolving to a PNG data URL
    */
   async convertSvgToPng(svgString: string, size = 500): Promise<string> {
-    console.log("[QrCodeDownloadService] Converting SVG to PNG", { size });
-
     return new Promise((resolve, reject) => {
       try {
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
         if (!ctx) {
-          console.error("[QrCodeDownloadService] Failed to get canvas context");
           reject(new Error("Could not get canvas context"));
           return;
         }
@@ -43,50 +40,31 @@ class QrCodeDownloadService {
         });
         const svgUrl = URL.createObjectURL(svgBlob);
 
-        console.log(
-          "[QrCodeDownloadService] Created SVG URL:",
-          svgUrl.substring(0, 50) + "..."
-        );
-
         // When image loads, draw to canvas and convert to PNG
         img.onload = () => {
-          console.log("[QrCodeDownloadService] SVG image loaded");
           ctx.drawImage(img, 0, 0, size, size);
           URL.revokeObjectURL(svgUrl);
 
           try {
             // Convert canvas to PNG data URL
             const pngUrl = canvas.toDataURL("image/png");
-            console.log(
-              "[QrCodeDownloadService] Generated PNG URL:",
-              pngUrl.substring(0, 50) + "..."
-            );
             resolve(pngUrl);
           } catch (err) {
-            console.error(
-              "[QrCodeDownloadService] Canvas to PNG conversion failed:",
-              err
-            );
+            console.error("Failed to convert canvas to PNG", err);
             reject(err);
           }
         };
 
         // Handle image load error
         img.onerror = (err) => {
-          console.error(
-            "[QrCodeDownloadService] Failed to load SVG image:",
-            err
-          );
           URL.revokeObjectURL(svgUrl);
+          console.error("Failed to load SVG image", err);
           reject(new Error("Failed to load SVG image"));
         };
 
         img.src = svgUrl;
       } catch (err) {
-        console.error(
-          "[QrCodeDownloadService] SVG to PNG conversion failed:",
-          err
-        );
+        console.error("SVG to PNG conversion failed", err);
         reject(err);
       }
     });
@@ -99,13 +77,6 @@ class QrCodeDownloadService {
    * @returns Promise resolving to SVG string
    */
   async generateSvgString(qrCode: QrCode, size = 500): Promise<string> {
-    console.log("[QrCodeDownloadService] Generating SVG string", {
-      qrCodeId: qrCode.id,
-      foregroundColor: qrCode.customization?.foregroundColor || "#000000",
-      backgroundColor: qrCode.customization?.backgroundColor || "#FFFFFF",
-      size,
-    });
-
     const url = qrCode.shortUrl || `https://example.com/${qrCode.id}`;
     const foregroundColor = qrCode.customization?.foregroundColor || "#000000";
     const backgroundColor = qrCode.customization?.backgroundColor || "#FFFFFF";
@@ -124,17 +95,9 @@ class QrCodeDownloadService {
         margin: 1, // QR code margin
       });
 
-      console.log(
-        "[QrCodeDownloadService] Generated SVG string length:",
-        svgString.length
-      );
-
-      // If qrCode has logo, we could modify the SVG to include it
-      // For simplicity, we'll keep the logo handling separate for now
-
       return svgString;
     } catch (err) {
-      console.error("[QrCodeDownloadService] Failed to generate SVG:", err);
+      console.error("Failed to generate SVG", err);
       throw err;
     }
   }
@@ -146,11 +109,6 @@ class QrCodeDownloadService {
    * @returns Promise resolving to PNG data URL
    */
   async generatePngDataUrl(qrCode: QrCode, size = 500): Promise<string> {
-    console.log("[QrCodeDownloadService] Generating PNG data URL", {
-      qrCodeId: qrCode.id,
-      size,
-    });
-
     const url = qrCode.shortUrl || `https://example.com/${qrCode.id}`;
     const foregroundColor = qrCode.customization?.foregroundColor || "#000000";
     const backgroundColor = qrCode.customization?.backgroundColor || "#FFFFFF";
@@ -167,13 +125,9 @@ class QrCodeDownloadService {
         margin: 1,
       });
 
-      console.log(
-        "[QrCodeDownloadService] Generated PNG data URL:",
-        dataUrl.substring(0, 50) + "..."
-      );
       return dataUrl;
     } catch (err) {
-      console.error("[QrCodeDownloadService] Failed to generate PNG:", err);
+      console.error("Failed to generate PNG data URL", err);
       throw err;
     }
   }
@@ -188,11 +142,6 @@ class QrCodeDownloadService {
     element: HTMLElement,
     outputSize = 500
   ): Promise<string> {
-    console.log(
-      "[QrCodeDownloadService] Capturing element as image, output size:",
-      outputSize
-    );
-
     try {
       // Use html2canvas to capture the element
       const canvas = await html2canvas(element, {
@@ -218,13 +167,9 @@ class QrCodeDownloadService {
 
       // Convert canvas to data URL
       const dataUrl = outputCanvas.toDataURL("image/png", 1.0);
-      console.log(
-        "[QrCodeDownloadService] Element captured successfully, resized to:",
-        outputSize
-      );
       return dataUrl;
     } catch (err) {
-      console.error("[QrCodeDownloadService] Failed to capture element:", err);
+      console.error("Failed to capture element as image", err);
       throw err;
     }
   }
@@ -236,11 +181,9 @@ class QrCodeDownloadService {
    * @returns Promise resolving to a data URL of the captured QR code
    */
   async renderAndCaptureQrCode(qrCode: QrCode, size = 500): Promise<string> {
-    console.log("[QrCodeDownloadService] Rendering QR code for capture");
-
     try {
-      // Apply a small fixed padding of 4px
-      const paddingSize = 4;
+      // Apply padding (16px for a more spacious, elegant look)
+      const paddingSize = 16;
       const innerSize = size - paddingSize * 2;
 
       // Create a temporary div to render the QR code with logo
@@ -346,10 +289,7 @@ class QrCodeDownloadService {
 
       return dataUrl;
     } catch (err) {
-      console.error(
-        "[QrCodeDownloadService] Failed to render and capture QR code:",
-        err
-      );
+      console.error("Failed to render and capture QR code", err);
       throw err;
     }
   }
@@ -358,28 +298,17 @@ class QrCodeDownloadService {
    * Download QR code as image
    * @param qrCode - QR code data
    * @param format - Image format (png or svg)
-   * @param containerRef - Optional React ref to QR code container element
    */
   async downloadQrCode(
     qrCode: QrCode,
-    format: "png" | "svg",
-    containerRef?: React.RefObject<HTMLElement | null>
+    format: "png" | "svg"
   ): Promise<boolean> {
     // Default download size is larger for better quality
     const downloadSize = 500;
 
-    console.log("[QrCodeDownloadService] Downloading QR code", {
-      qrCodeId: qrCode.id,
-      format,
-      downloadSize,
-      hasContainerRef: containerRef && !!containerRef.current,
-      customization: qrCode.customization,
-    });
-
     try {
       // Generate filename
       const filename = `qrcode-${qrCode.shortCode || qrCode.id}.${format}`;
-      console.log("[QrCodeDownloadService] Generated filename:", filename);
 
       let dataUrl: string;
 
@@ -396,29 +325,21 @@ class QrCodeDownloadService {
         )}`;
       }
 
-      console.log(
-        "[QrCodeDownloadService] Created data URL:",
-        dataUrl.substring(0, 50) + "..."
-      );
-
       // Create download link
       const link = document.createElement("a");
       link.href = dataUrl;
       link.download = filename;
       document.body.appendChild(link);
 
-      console.log("[QrCodeDownloadService] Created download link");
-
       // Trigger download
       link.click();
 
       // Clean up
       document.body.removeChild(link);
-      console.log("[QrCodeDownloadService] Download initiated successfully");
 
       return true;
     } catch (error) {
-      console.error("[QrCodeDownloadService] Download failed:", error);
+      console.error("QR code download failed", error);
       return false;
     }
   }

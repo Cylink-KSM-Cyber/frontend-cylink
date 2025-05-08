@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useMemo } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { QrCode } from "@/interfaces/url";
 import QrCodePreview from "@/components/atoms/QrCodePreview";
 import Button from "@/components/atoms/Button";
@@ -36,11 +36,7 @@ interface QrCodeListProps {
   /**
    * Function to call when download button is clicked
    */
-  onDownload?: (
-    qrCode: QrCode,
-    format: "png" | "svg",
-    containerRef?: React.RefObject<HTMLElement | null>
-  ) => void;
+  onDownload?: (qrCode: QrCode, format: "png" | "svg") => void;
   /**
    * Array of selected QR codes
    */
@@ -60,18 +56,12 @@ interface QrCodeListProps {
  */
 interface DownloadDropdownProps {
   qrCode: QrCode;
-  onDownload: (
-    qrCode: QrCode,
-    format: "png" | "svg",
-    containerRef?: React.RefObject<HTMLElement | null>
-  ) => void;
-  containerRef?: React.RefObject<HTMLElement | null>;
+  onDownload: (qrCode: QrCode, format: "png" | "svg") => void;
 }
 
 const DownloadDropdown: React.FC<DownloadDropdownProps> = ({
   qrCode,
   onDownload,
-  containerRef,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -94,10 +84,7 @@ const DownloadDropdown: React.FC<DownloadDropdownProps> = ({
   }, []);
 
   const handleFormatSelect = (format: "png" | "svg") => {
-    console.log(
-      `[DownloadDropdown] Selected format: ${format} for QR code ID: ${qrCode.id}`
-    );
-    onDownload(qrCode, format, containerRef);
+    onDownload(qrCode, format);
     setIsOpen(false);
   };
 
@@ -155,46 +142,14 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
   onSelectQrCode,
   className = "",
 }) => {
-  // Create a stable reference to hold our ref map
-  const qrCodeRefsMapRef = useRef<
-    Record<string | number, React.RefObject<HTMLDivElement | null>>
-  >({});
-
-  // Create refs for each QR code
-  const qrCodeRefs = useMemo(() => {
-    // Update refs map for current QR codes
-    qrCodes.forEach((qrCode) => {
-      if (!qrCodeRefsMapRef.current[qrCode.id]) {
-        qrCodeRefsMapRef.current[qrCode.id] =
-          React.createRef<HTMLDivElement | null>();
-      }
-    });
-
-    return qrCodeRefsMapRef.current;
-  }, [qrCodes]);
-
-  // Wrap the onDownload function to include container refs
+  // Wrap the onDownload function
   const handleDownload = useCallback(
-    (
-      qrCode: QrCode,
-      format: "png" | "svg",
-      containerRef?: React.RefObject<HTMLElement | null>
-    ) => {
+    (qrCode: QrCode, format: "png" | "svg") => {
       if (onDownload) {
-        const ref =
-          containerRef ||
-          (qrCodeRefs[
-            qrCode.id
-          ] as unknown as React.RefObject<HTMLElement | null>);
-        console.log(
-          `[QrCodeList] Downloading QR code ID: ${
-            qrCode.id
-          }, format: ${format}, hasRef: ${!!ref?.current}`
-        );
-        onDownload(qrCode, format, ref);
+        onDownload(qrCode, format);
       }
     },
-    [onDownload, qrCodeRefs]
+    [onDownload]
   );
 
   // Format date for display
@@ -367,7 +322,6 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
                       errorCorrectionLevel="M"
                       logoSize={qrCode.customization?.logoSize || 0.25}
                       generatedQrUrl={null}
-                      ref={qrCodeRefs[qrCode.id]}
                     />
                   </div>
                 </div>
@@ -420,11 +374,6 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
                     <DownloadDropdown
                       qrCode={qrCode}
                       onDownload={handleDownload}
-                      containerRef={
-                        qrCodeRefs[
-                          qrCode.id
-                        ] as unknown as React.RefObject<HTMLElement | null>
-                      }
                     />
                   )}
 

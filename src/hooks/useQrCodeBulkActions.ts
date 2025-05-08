@@ -54,37 +54,22 @@ export const useQrCodeBulkActions = (
    * Handle download QR code
    * @param qrCode - QR code to download
    * @param format - Format to download (png or svg)
-   * @param containerRef - Optional ref to the QR code container element
    */
   const handleDownloadQrCode = async (
     qrCode: QrCode,
-    format: "png" | "svg" = "png",
-    containerRef?: React.RefObject<HTMLElement | null>
+    format: "png" | "svg" = "png"
   ) => {
-    console.log(
-      `[useQrCodeBulkActions] Initiating download for QR code ID: ${
-        qrCode.id
-      }, format: ${format}, hasContainerRef: ${!!containerRef?.current}`
-    );
-
     try {
       showToast(`Preparing QR code download...`, "info", 2000);
 
       const success = await qrCodeDownloadService.downloadQrCode(
         qrCode,
-        format,
-        containerRef
+        format
       );
 
       if (success) {
-        console.log(
-          `[useQrCodeBulkActions] Download successful for QR code ID: ${qrCode.id}`
-        );
         showToast(`QR code downloaded successfully`, "success", 3000);
       } else {
-        console.error(
-          `[useQrCodeBulkActions] Download failed for QR code ID: ${qrCode.id}`
-        );
         showToast(
           `Failed to download QR code. Please try again.`,
           "error",
@@ -92,10 +77,6 @@ export const useQrCodeBulkActions = (
         );
       }
     } catch (error) {
-      console.error(
-        `[useQrCodeBulkActions] Error downloading QR code ${qrCode.id}:`,
-        error
-      );
       showToast(
         `Error downloading QR code: ${
           error instanceof Error ? error.message : "Unknown error"
