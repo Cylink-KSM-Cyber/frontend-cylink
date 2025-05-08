@@ -46,6 +46,12 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
   onClose,
   onSubmit,
 }) => {
+  console.log("[DEBUG] EditUrlModal - Received props:", {
+    url: url ? { id: url.id, title: url.title } : null,
+    isOpen,
+    isEditing,
+  });
+
   const {
     register,
     handleSubmit,
@@ -62,29 +68,174 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     },
   });
 
+  // Function to format ISO date string to yyyy-MM-dd for date input
+  const formatDateForInput = (
+    dateString: string | undefined | null
+  ): string => {
+    // Return empty string if date is null or undefined
+    if (!dateString) return "";
+
+    console.log("[DEBUG] formatDateForInput - Input date string:", dateString);
+
+    try {
+      // Parse the ISO date string
+      const date = new Date(dateString);
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.log("[DEBUG] Invalid date format:", dateString);
+        return "";
+      }
+
+      // Format as YYYY-MM-DD for date input
+      const formattedDate = date.toISOString().split("T")[0];
+      console.log(
+        "[DEBUG] formatDateForInput - Formatted date:",
+        formattedDate
+      );
+      return formattedDate;
+    } catch (error) {
+      console.error("[DEBUG] Error formatting date:", error);
+      return "";
+    }
+  };
+
+  // Effect untuk mengisi form ketika URL berubah atau modal dibuka
   React.useEffect(() => {
-    if (url) {
+    console.log(
+      "[DEBUG] EditUrlModal - useEffect triggered with url:",
+      url
+        ? JSON.stringify(
+            {
+              id: url?.id,
+              title: url?.title,
+              original_url: url?.original_url,
+              short_code: url?.short_code,
+              expiry_date: url?.expiry_date,
+            },
+            null,
+            2
+          )
+        : "null"
+    );
+    console.log("[DEBUG] EditUrlModal - isOpen:", isOpen);
+
+    if (url && isOpen) {
+      console.log("[DEBUG] EditUrlModal - Resetting form with url data");
+
+      // Format expiry date correctly for date input
+      const formattedExpiryDate = formatDateForInput(url.expiry_date);
+      console.log(
+        "[DEBUG] EditUrlModal - Formatted expiry date:",
+        formattedExpiryDate
+      );
+
+      // Memastikan semua properti yang dibutuhkan ada sebelum mengisi form
+      const formData = {
+        title: url.title || "",
+        originalUrl: url.original_url || "",
+        customCode: url.short_code || "", // Use short_code instead of customDomain
+        expiryDate: formattedExpiryDate,
+      };
+
+      console.log("[DEBUG] EditUrlModal - Form data to be set:", formData);
+
+      // Reset form dengan data URL
+      reset(formData);
+
+      console.log("[DEBUG] EditUrlModal - Form has been reset with URL data");
+    }
+  }, [url, isOpen, reset]);
+
+  // Effect untuk mengisi form ketika modal dibuka
+  React.useEffect(() => {
+    console.log(
+      "[DEBUG] EditUrlModal - useEffect triggered with isOpen:",
+      isOpen
+    );
+
+    // Ketika modal dibuka, lakukan pengisian form secara langsung
+    if (isOpen && url) {
+      console.log(
+        "[DEBUG] EditUrlModal - Modal opened with URL data:",
+        url.id,
+        url.title
+      );
+      console.log(
+        "[DEBUG] EditUrlModal - Full URL data:",
+        JSON.stringify(
+          {
+            id: url.id,
+            title: url.title,
+            original_url: url.original_url,
+            short_code: url.short_code,
+            expiry_date: url.expiry_date,
+          },
+          null,
+          2
+        )
+      );
+
+      // Tunggu sedikit untuk memastikan modal sudah sepenuhnya terbuka
+      setTimeout(() => {
+        console.log(
+          "[DEBUG] EditUrlModal - Setting form values after small delay"
+        );
+
+        // Format expiry date correctly for date input
+        const formattedExpiryDate = formatDateForInput(url.expiry_date);
+
+        reset({
+          title: url.title || "",
+          originalUrl: url.original_url || "",
+          customCode: url.short_code || "", // Use short_code instead of customDomain
+          expiryDate: formattedExpiryDate,
+        });
+      }, 100);
+    }
+  }, [isOpen, url, reset]);
+
+  // Reset form ketika modal ditutup
+  React.useEffect(() => {
+    if (!isOpen) {
+      console.log("[DEBUG] EditUrlModal - Modal closed, reset form");
       reset({
-        title: url.title,
-        originalUrl: url.original_url,
-        customCode: url.customDomain,
-        expiryDate: url.expiry_date,
+        title: "",
+        originalUrl: "",
+        customCode: "",
+        expiryDate: "",
       });
     }
-  }, [url, reset]);
+  }, [isOpen, reset]);
 
   const [hasChanges, setHasChanges] = useState(false);
 
   const currentValues = watch();
 
-  console.log("url from modal", url);
+  console.log("[DEBUG] EditUrlModal - Current form values:", currentValues);
 
   React.useEffect(() => {
+    // For proper comparison, format the URL's expiry date the same way as the form's expiryDate
+    const formattedUrlExpiryDate = url?.expiry_date
+      ? formatDateForInput(url.expiry_date)
+      : "";
+
     const hasValueChanged =
       currentValues.title !== url?.title ||
       currentValues.originalUrl !== url?.original_url ||
-      currentValues.customCode !== url?.customDomain ||
-      currentValues.expiryDate !== url?.expiry_date;
+      currentValues.customCode !== url?.short_code ||
+      currentValues.expiryDate !== formattedUrlExpiryDate;
+
+    console.log("[DEBUG] EditUrlModal - Change detection:", {
+      formValues: currentValues,
+      urlValues: {
+        title: url?.title,
+        originalUrl: url?.original_url,
+        customCode: url?.short_code,
+        expiryDate: formattedUrlExpiryDate,
+      },
+      hasValueChanged,
+    });
 
     setHasChanges(hasValueChanged);
   }, [
@@ -94,21 +245,57 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     currentValues.expiryDate,
     url?.title,
     url?.original_url,
-    url?.customDomain,
+    url?.short_code,
     url?.expiry_date,
   ]);
 
   const handleCloseDialog = () => {
-    reset();
+    console.log("[DEBUG] EditUrlModal - Closing dialog and resetting form");
+    reset({
+      title: "",
+      originalUrl: "",
+      customCode: "",
+      expiryDate: "",
+    });
     setHasChanges(false);
   };
 
   const handleFormSubmit = (data: EditUrlFormSchema) => {
+    console.log(
+      "[DEBUG] EditUrlModal - Form submitted with data:",
+      JSON.stringify(data, null, 2)
+    );
+
+    // Format the URL's expiry date for proper comparison
+    const formattedUrlExpiryDate = url?.expiry_date
+      ? formatDateForInput(url.expiry_date)
+      : "";
+
+    console.log(
+      "[DEBUG] EditUrlModal - Comparing with original url data:",
+      url
+        ? JSON.stringify(
+            {
+              title: url.title,
+              originalUrl: url.original_url,
+              customCode: url.short_code,
+              expiryDate: formattedUrlExpiryDate,
+            },
+            null,
+            2
+          )
+        : "null"
+    );
+
     onSubmit(data);
     reset();
   };
 
   const handleCancel = () => {
+    console.log(
+      "[DEBUG] EditUrlModal - Cancel button clicked, hasChanges:",
+      hasChanges
+    );
     if (hasChanges) {
       if (
         window.confirm(
@@ -120,7 +307,6 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     } else {
       handleCloseDialog();
     }
-    reset();
     onClose();
   };
 
