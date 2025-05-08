@@ -49,6 +49,21 @@ export default function UrlsPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [urlToEdit, setUrlToEdit] = useState<Url | null>(null);
 
+  // Effect untuk melacak perubahan state modal edit
+  useEffect(() => {
+    console.log("[DEBUG] UrlsPage - editModalOpen changed:", editModalOpen);
+    console.log(
+      "[DEBUG] UrlsPage - urlToEdit:",
+      urlToEdit
+        ? {
+            id: urlToEdit.id,
+            title: urlToEdit.title,
+            original_url: urlToEdit.original_url,
+          }
+        : "null"
+    );
+  }, [editModalOpen, urlToEdit]);
+
   // QR Code modal state
   const [qrModalOpen, setQrModalOpen] = useState(false);
   const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
@@ -134,9 +149,23 @@ export default function UrlsPage() {
 
   // Handle URL edit
   const handleEditUrl = (url: Url) => {
+    console.log(
+      "[DEBUG] handleEditUrl - URL data received:",
+      JSON.stringify(url, null, 2)
+    );
+    console.log(
+      "[DEBUG] handleEditUrl - Setting urlToEdit state with URL:",
+      url.id,
+      url.title
+    );
     setUrlToEdit(url);
-    console.log("handleEditUrl", url);
+    console.log(
+      "[DEBUG] handleEditUrl - After setUrlToEdit, urlToEdit will be:",
+      url
+    );
+    console.log("[DEBUG] handleEditUrl - Opening edit modal");
     setEditModalOpen(true);
+    console.log("[DEBUG] handleEditUrl - Edit modal should now be open:", true);
   };
 
   // Open delete confirmation modal
@@ -172,7 +201,15 @@ export default function UrlsPage() {
   };
 
   const closeEditUrl = () => {
+    console.log("[DEBUG] UrlsPage - closeEditUrl called, closing edit modal");
     setEditModalOpen(false);
+    // Tambahkan delay kecil sebelum menghapus urlToEdit untuk menghindari race condition
+    setTimeout(() => {
+      console.log(
+        "[DEBUG] UrlsPage - Resetting urlToEdit to null after modal close"
+      );
+      setUrlToEdit(null);
+    }, 300);
   };
 
   // Handle QR code generation
@@ -223,9 +260,26 @@ export default function UrlsPage() {
 
   const handleSubmitEditUrlForm = async (data: EditUrlFormData) => {
     try {
-      console.log("Form submitted:", data);
+      console.log(
+        "[DEBUG] handleSubmitEditUrlForm - Form data submitted:",
+        JSON.stringify(data, null, 2)
+      );
+      console.log(
+        "[DEBUG] handleSubmitEditUrlForm - Current urlToEdit:",
+        urlToEdit
+          ? {
+              id: urlToEdit.id,
+              title: urlToEdit.title,
+              original_url: urlToEdit.original_url,
+            }
+          : "null"
+      );
 
       const response = await editUrl(urlToEdit?.id as number, data);
+      console.log(
+        "[DEBUG] handleSubmitEditUrlForm - Edit API response:",
+        response
+      );
 
       showToast(
         `URL "${response.data.title}" updated succesfully`,
@@ -235,6 +289,7 @@ export default function UrlsPage() {
       setEditModalOpen(false);
       refreshUrls();
     } catch (err) {
+      console.error("[DEBUG] handleSubmitEditUrlForm - Error:", err);
       showToast(
         err instanceof Error ? err.message : "Something went wrong",
         "error",
