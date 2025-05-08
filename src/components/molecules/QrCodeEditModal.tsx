@@ -73,21 +73,9 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
   // Load colors and set initial values when modal opens
   useEffect(() => {
     if (isOpen && qrCode && !initialValuesSetRef.current) {
-      console.log("[QrCodeEditModal] Modal opened with QR code:", qrCode.id);
-      console.log(
-        "[QrCodeEditModal] Current customization:",
-        qrCode.customization
-      );
-
       // Prevent unnecessary re-renders by loading colors only once per modal open
       if (foregroundColors.length === 0 || backgroundColors.length === 0) {
-        console.log("[QrCodeEditModal] Loading colors from API");
         loadColors();
-      } else {
-        console.log("[QrCodeEditModal] Colors already loaded:", {
-          foregroundColors: foregroundColors.length,
-          backgroundColors: backgroundColors.length,
-        });
       }
 
       // Set initial values based on the QR code
@@ -95,22 +83,11 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
       const bgColor = qrCode.customization?.backgroundColor || "#FFFFFF";
       const includeLogo = qrCode.customization?.includeLogo || false;
 
-      console.log("[QrCodeEditModal] Initial values:", {
-        foregroundColor: fgColor,
-        backgroundColor: bgColor,
-        includeLogo: includeLogo,
-      });
-
       // Find matching colors in the palette or use the first one
       if (foregroundColors.length > 0) {
         const matchedFgColor =
           foregroundColors.find((c) => c.hex === fgColor) ||
           foregroundColors[0];
-
-        console.log(
-          "[QrCodeEditModal] Setting initial foreground color:",
-          matchedFgColor
-        );
         setSelectedForegroundColor(matchedFgColor);
       }
 
@@ -118,11 +95,6 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
         const matchedBgColor =
           backgroundColors.find((c) => c.hex === bgColor) ||
           backgroundColors[0];
-
-        console.log(
-          "[QrCodeEditModal] Setting initial background color:",
-          matchedBgColor
-        );
         setSelectedBackgroundColor(matchedBgColor);
       }
 
@@ -172,20 +144,9 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
       size: qrSize || 300,
     };
 
-    console.log("QR Code update requested with data:", {
-      id: qrCode.id,
-      current_foreground: qrCode.customization?.foregroundColor,
-      current_background: qrCode.customization?.backgroundColor,
-      new_foreground: editData.color,
-      new_background: editData.background_color,
-      include_logo: editData.include_logo,
-    });
-
     try {
       // Update QR code
-      console.log("Sending update request to API...");
-      const response = await updateQrCode(qrCode.id, editData);
-      console.log("Update QR code response:", response);
+      await updateQrCode(qrCode.id, editData);
       qrUpdatedRef.current = true;
 
       // Close modal after a short delay to show success
@@ -193,7 +154,7 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
         onClose();
       }, 1500);
     } catch (err) {
-      console.error("Error updating QR code:", err);
+      console.error(`Failed to update QR code: ${err}`);
     }
   };
 
@@ -286,11 +247,6 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
                         }`}
                         style={{ backgroundColor: color.hex }}
                         onClick={() => {
-                          console.log(
-                            "Foreground color clicked:",
-                            color.name,
-                            color.hex
-                          );
                           setSelectedForegroundColor(color);
                         }}
                         disabled={isLoading || isGenerating}
@@ -318,11 +274,6 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
                         }`}
                         style={{ backgroundColor: color.hex }}
                         onClick={() => {
-                          console.log(
-                            "Background color clicked:",
-                            color.name,
-                            color.hex
-                          );
                           setSelectedBackgroundColor(color);
                         }}
                         disabled={isLoading || isGenerating}
