@@ -30,24 +30,3 @@ export function formatShortUrl(shortUrl: string): string {
 
   return fullUrl;
 }
-
-/**
- * Log detailed information about URL formatting for debugging
- *
- * @param component Component name for logging context
- * @param shortUrl Original short URL
- * @param formattedUrl Formatted URL
- */
-export function logUrlFormatting(
-  component: string,
-  shortUrl: string,
-  formattedUrl: string
-): void {
-  if (process.env.NODE_ENV === "development") {
-    console.log(`[${component}] URL Formatting:`, {
-      originalUrl: shortUrl,
-      formattedUrl: formattedUrl,
-      baseUrl: process.env.NEXT_PUBLIC_APP_URL || "https://cylink.id",
-    });
-  }
-}
