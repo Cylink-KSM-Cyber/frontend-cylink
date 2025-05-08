@@ -62,15 +62,6 @@ const QrCodePreview: React.FC<QrCodePreviewProps> = React.memo(
     errorCorrectionLevel = "H",
     logoSize = 0.25,
   }) => {
-    // Debug log untuk pemantauan perubahan warna
-    React.useEffect(() => {
-      console.log("[QrCodePreview] Re-rendered with colors:", {
-        foreground: foregroundColor,
-        background: backgroundColor,
-        logoIncluded: includeLogoChecked,
-      });
-    }, [foregroundColor, backgroundColor, includeLogoChecked]);
-
     // Cache nilai properti untuk mencegah perubahan tak diinginkan
     const fgColor = React.useMemo(() => foregroundColor, [foregroundColor]);
     const bgColor = React.useMemo(() => backgroundColor, [backgroundColor]);
