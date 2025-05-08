@@ -18,6 +18,7 @@ import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formatShortUrl, logUrlFormatting } from "@/utils/urlFormatter";
 
 /**
  * Dashboard page
@@ -128,7 +129,10 @@ export default function UrlsPage() {
 
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
-    navigator.clipboard.writeText(`https://${url.short_url}`);
+    const fullUrl = formatShortUrl(url.short_url);
+    logUrlFormatting("UrlsPage", url.short_url, fullUrl);
+
+    navigator.clipboard.writeText(fullUrl);
     showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
 
