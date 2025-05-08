@@ -246,7 +246,9 @@ export default function UrlsPage() {
       refreshUrls();
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Something went wrong",
+        err instanceof Error
+          ? err.message
+          : "Something went wrong updating the URL",
         "error",
         3000
       );
