@@ -95,7 +95,7 @@ export default function UrlsPage() {
   const handleSearch = (value: string) => {
     setSearchQuery(value);
 
-    if (searchQuery) {
+    if (value) {
       updateFilter({ search: value });
     } else {
       updateFilter({ search: "" });
@@ -132,10 +132,12 @@ export default function UrlsPage() {
     showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
 
-  // Handle URL edit
+  /**
+   * Opens the edit modal with the selected URL data
+   * @param {Url} url - The URL object to edit
+   */
   const handleEditUrl = (url: Url) => {
     setUrlToEdit(url);
-    console.log("handleEditUrl", url);
     setEditModalOpen(true);
   };
 
@@ -171,8 +173,14 @@ export default function UrlsPage() {
     setCreateModalOpen(false);
   };
 
+  /**
+   * Closes the edit URL modal with a short delay before cleaning up state
+   */
   const closeEditUrl = () => {
     setEditModalOpen(false);
+    setTimeout(() => {
+      setUrlToEdit(null);
+    }, 300);
   };
 
   // Handle QR code generation
@@ -221,14 +229,16 @@ export default function UrlsPage() {
     }
   };
 
+  /**
+   * Handles the form submission for editing a URL
+   * @param {EditUrlFormData} data - The form data with updated URL information
+   */
   const handleSubmitEditUrlForm = async (data: EditUrlFormData) => {
     try {
-      console.log("Form submitted:", data);
-
       const response = await editUrl(urlToEdit?.id as number, data);
 
       showToast(
-        `URL "${response.data.title}" updated succesfully`,
+        `URL "${response.data.title}" updated successfully`,
         "success",
         2000
       );
@@ -236,7 +246,9 @@ export default function UrlsPage() {
       refreshUrls();
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Something went wrong",
+        err instanceof Error
+          ? err.message
+          : "Something went wrong updating the URL",
         "error",
         3000
       );
