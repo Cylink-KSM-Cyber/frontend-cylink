@@ -59,7 +59,7 @@ export const useQrCodeBulkActions = (
   const handleDownloadQrCode = async (
     qrCode: QrCode,
     format: "png" | "svg" = "png",
-    containerRef?: React.RefObject<HTMLElement>
+    containerRef?: React.RefObject<HTMLElement | null>
   ) => {
     console.log(
       `[useQrCodeBulkActions] Initiating download for QR code ID: ${
@@ -106,8 +106,5 @@ export const useQrCodeBulkActions = (
     }
   };
 
-  return {
-    handleBulkDeleteQrCodes,
-    handleDownloadQrCode,
-  };
+  return { handleBulkDeleteQrCodes, handleDownloadQrCode };
 };
