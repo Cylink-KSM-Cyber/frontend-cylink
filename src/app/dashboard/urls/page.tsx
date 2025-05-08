@@ -18,6 +18,7 @@ import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formatShortUrl } from "@/utils/urlFormatter";
 
 /**
  * Dashboard page
@@ -65,13 +66,12 @@ export default function UrlsPage() {
   });
 
   // Fetch dashboard stats data
-  const { stats, isLoading: isStatsLoading, error: statsError } = useUrlStats();
+  const { stats, isLoading: isStatsLoading } = useUrlStats();
 
   // Fetch URL data with filter
   const {
     urls,
     isLoading: isUrlsLoading,
-    error: urlsError,
     pagination,
     updateFilter,
     refreshUrls,
@@ -89,7 +89,7 @@ export default function UrlsPage() {
   const { editUrl, isEditing } = useEditUrl();
 
   // URL deletion hook
-  const { deleteUrl, isDeleting, error: deleteError } = useDeleteUrl();
+  const { deleteUrl, isDeleting } = useDeleteUrl();
 
   // Handle search query changes
   const handleSearch = (value: string) => {
@@ -128,7 +128,8 @@ export default function UrlsPage() {
 
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
-    navigator.clipboard.writeText(`https://${url.short_url}`);
+    const fullUrl = formatShortUrl(url.short_url);
+    navigator.clipboard.writeText(fullUrl);
     showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
 
@@ -207,8 +208,6 @@ export default function UrlsPage() {
   // Add a new function to handle the actual form submission
   const handleSubmitUrlForm = async (data: CreateUrlFormData) => {
     try {
-      console.log("Form submitted:", data);
-
       const response = await createUrl(data); // Call the hook's function
 
       showToast(
@@ -265,12 +264,6 @@ export default function UrlsPage() {
       setActiveItemId("dashboard");
     }
   }, [tabParam, setActiveItemId]);
-
-  // If there are errors, we could show error states
-  // For now, we'll just log them and continue with available data
-  if (statsError) console.error("Stats error:", statsError);
-  if (urlsError) console.error("URLs error:", urlsError);
-  if (deleteError) console.error("Delete error:", deleteError);
 
   // Default stats if none are available
   const urlStats = stats || {

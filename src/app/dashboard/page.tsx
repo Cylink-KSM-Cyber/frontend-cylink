@@ -6,6 +6,7 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
 import AnalyticsDashboardTemplate from "@/components/templates/AnalyticsDashboardTemplate";
 import { Url } from "@/interfaces/url";
+import { formatShortUrl } from "@/utils/urlFormatter";
 import "@/styles/analyticsDashboard.css";
 
 /**
@@ -30,7 +31,8 @@ export default function DashboardPage() {
 
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
-    navigator.clipboard.writeText(`https://${url.short_url}`);
+    const fullUrl = formatShortUrl(url.short_url);
+    navigator.clipboard.writeText(fullUrl);
     showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
 

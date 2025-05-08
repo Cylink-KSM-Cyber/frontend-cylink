@@ -1,13 +1,20 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+/**
+ * Middleware function for handling authentication and route protection
+ * Only protects dashboard routes - all other routes are publicly accessible
+ */
 export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
-
   const { pathname } = request.nextUrl;
 
-  // If no access token and not on login page, redirect to login
-  if (!accessToken && pathname !== "/login") {
+  // Only protect /dashboard routes
+  const isDashboardRoute =
+    pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+
+  // If trying to access dashboard without access token, redirect to login
+  if (isDashboardRoute && !accessToken) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
@@ -19,6 +26,9 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
+/**
+ * Configuration for which routes the middleware applies to
+ */
 export const config = {
   matcher: [
     /**
