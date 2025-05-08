@@ -29,16 +29,16 @@ interface EditUrlModalProps {
 const EditUrlSchema = z.object({
   title: z.string().min(1, "Title is required"),
   originalUrl: z.string().url("Please enter a valid URL"),
-  shortCode: z
+  customCode: z
     .string()
     .optional()
     .refine(
       (value) => !value || /^[a-zA-Z0-9-]+$/.test(value),
-      "Short code must contain only letters, numbers, and hyphens"
+      "Custom code must contain only letters, numbers, and hyphens"
     )
     .refine(
       (value) => !value || value.length <= 50,
-      "Short code must be 50 characters or less"
+      "Custom code must be 50 characters or less"
     ),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
@@ -90,7 +90,7 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     defaultValues: {
       title: "",
       originalUrl: "",
-      shortCode: "",
+      customCode: "",
       expiryDate: "",
     },
   });
@@ -165,7 +165,7 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
   }, [
     currentValues.title,
     currentValues.originalUrl,
-    currentValues.shortCode,
+    currentValues.customCode,
     currentValues.expiryDate,
     url?.title,
     url?.original_url,
@@ -297,7 +297,7 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
 
           <div>
             <label
-              htmlFor="shortCode"
+              htmlFor="customCode"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Custom Back-half
@@ -308,18 +308,18 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
               </span>
               <input
                 type="text"
-                id="shortCode"
+                id="customCode"
                 placeholder="custom-url"
-                {...register("shortCode")}
+                {...register("customCode")}
                 className="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <p className="mt-1 text-xs text-gray-600">
               Use letters, numbers, and hyphens for your custom URL
             </p>
-            {errors.shortCode && (
+            {errors.customCode && (
               <p className="mt-1 text-sm text-red-600">
-                {errors.shortCode.message}
+                {errors.customCode.message}
               </p>
             )}
           </div>

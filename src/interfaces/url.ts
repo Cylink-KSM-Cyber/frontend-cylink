@@ -391,7 +391,7 @@ export interface CreateUrlFormResponse {
 
 export interface EditUrlFormData {
   originalUrl: string;
-  shortCode?: string;
+  customCode?: string;
   title?: string;
   expiryDate?: string;
 }
