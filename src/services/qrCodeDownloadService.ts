@@ -363,7 +363,7 @@ class QrCodeDownloadService {
   async downloadQrCode(
     qrCode: QrCode,
     format: "png" | "svg",
-    containerRef?: React.RefObject<HTMLElement>
+    containerRef?: React.RefObject<HTMLElement | null>
   ): Promise<boolean> {
     // Default download size is larger for better quality
     const downloadSize = 500;
@@ -372,7 +372,7 @@ class QrCodeDownloadService {
       qrCodeId: qrCode.id,
       format,
       downloadSize,
-      hasContainerRef: !!containerRef?.current,
+      hasContainerRef: containerRef && !!containerRef.current,
       customization: qrCode.customization,
     });
 
