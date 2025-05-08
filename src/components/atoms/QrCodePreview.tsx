@@ -50,7 +50,7 @@ interface QrCodePreviewProps {
  * QrCodePreview Component
  * @description A component for previewing QR codes with custom styling
  */
-const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
+const QrCodePreview = React.memo(forwardRef<HTMLDivElement, QrCodePreviewProps>(
   (
     {
       foregroundColor,
@@ -69,16 +69,19 @@ const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Expose the container ref to parent components
-    // Using 'as HTMLDivElement' lets TypeScript know we're aware this could be null
-    // but the component is guaranteed to have a ref when used
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
+
+    // Cache nilai properti untuk mencegah perubahan tak diinginkan
+    const fgColor = React.useMemo(() => foregroundColor, [foregroundColor]);
+    const bgColor = React.useMemo(() => backgroundColor, [backgroundColor]);
+    const includeLogo = React.useMemo(() => includeLogoChecked, [includeLogoChecked]);
 
     // If we have a generated QR URL, display it instead of the preview
     if (generatedQrUrl) {
       return (
         <div
           className="relative flex items-center justify-center rounded-lg overflow-hidden"
-          style={{ backgroundColor, width: size, height: size }}
+          style={{ backgroundColor: bgColor, width: size, height: size }}
           ref={containerRef}
         >
           <Image
@@ -114,7 +117,7 @@ const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
     return (
       <div
         className="relative flex items-center justify-center rounded-lg overflow-hidden"
-        style={{ width: size, height: size, backgroundColor }}
+        style={{ width: size, height: size, backgroundColor: bgColor }}
         data-testid="qr-code-preview"
         ref={containerRef}
       >
@@ -122,20 +125,20 @@ const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
         <QRCode
           value={value}
           size={size - 20} // Slight padding
-          fgColor={foregroundColor}
-          bgColor={backgroundColor}
+          fgColor={fgColor}
+          bgColor={bgColor}
           level={errorCorrectionLevel}
           style={{ maxWidth: "100%", maxHeight: "100%" }}
         />
 
         {/* Logo overlay */}
-        {includeLogoChecked && (
+        {includeLogo && (
           <div
             className="absolute flex items-center justify-center rounded-full"
             style={{
               width: logoContainerSize,
               height: logoContainerSize,
-              backgroundColor,
+              backgroundColor: bgColor,
               boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
             }}
           >
@@ -146,9 +149,9 @@ const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
               height={logoSizePixels}
               style={{
                 filter:
-                  foregroundColor !== "#000000"
+                  fgColor !== "#000000"
                     ? `brightness(0) saturate(100%) ${getColorFilterForSvg(
-                        foregroundColor
+                        fgColor
                       )}`
                     : undefined,
               }}
@@ -158,7 +161,7 @@ const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
       </div>
     );
   }
-);
+));
 
 // Add display name for better debugging
 QrCodePreview.displayName = "QrCodePreview";

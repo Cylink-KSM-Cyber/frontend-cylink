@@ -67,9 +67,12 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
     updateQrCode,
   } = useQrCode();
 
+  // Track if initial values are set
+  const initialValuesSetRef = useRef(false);
+
   // Load colors and set initial values when modal opens
   useEffect(() => {
-    if (isOpen && qrCode) {
+    if (isOpen && qrCode && !initialValuesSetRef.current) {
       // Prevent unnecessary re-renders by loading colors only once per modal open
       if (foregroundColors.length === 0 || backgroundColors.length === 0) {
         loadColors();
@@ -96,8 +99,13 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
       }
 
       setIncludeLogoChecked(includeLogo);
-
       qrUpdatedRef.current = false;
+      initialValuesSetRef.current = true;
+    }
+
+    // Reset initialValuesSetRef when modal closes
+    if (!isOpen) {
+      initialValuesSetRef.current = false;
     }
   }, [
     isOpen,
@@ -146,7 +154,7 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
         onClose();
       }, 1500);
     } catch (err) {
-      console.error("Error updating QR code:", err);
+      console.error(`Failed to update QR code: ${err}`);
     }
   };
 
@@ -184,7 +192,11 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
     <Modal
       title="Edit QR Code"
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={() => {
+        // Reset state sebelum menutup modal
+        initialValuesSetRef.current = false;
+        onClose();
+      }}
       variant="default"
       size="md"
       footer={renderFooterButtons()}
@@ -195,6 +207,7 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
           {/* QR Code Preview - Make more compact */}
           <div className="flex items-center justify-center md:w-2/5">
             <QrCodePreview
+              key={`${selectedForegroundColor?.hex}-${selectedBackgroundColor?.hex}-${includeLogoChecked}`}
               foregroundColor={selectedForegroundColor?.hex || "#000000"}
               backgroundColor={selectedBackgroundColor?.hex || "#FFFFFF"}
               includeLogoChecked={includeLogoChecked}
@@ -233,7 +246,9 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
                             : "border-gray-200"
                         }`}
                         style={{ backgroundColor: color.hex }}
-                        onClick={() => setSelectedForegroundColor(color)}
+                        onClick={() => {
+                          setSelectedForegroundColor(color);
+                        }}
                         disabled={isLoading || isGenerating}
                         title={color.name}
                         aria-label={`Select ${color.name} color`}
@@ -258,7 +273,9 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
                             : "border-gray-200"
                         }`}
                         style={{ backgroundColor: color.hex }}
-                        onClick={() => setSelectedBackgroundColor(color)}
+                        onClick={() => {
+                          setSelectedBackgroundColor(color);
+                        }}
                         disabled={isLoading || isGenerating}
                         title={color.name}
                         aria-label={`Select ${color.name} color`}
