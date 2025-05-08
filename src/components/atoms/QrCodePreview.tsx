@@ -69,6 +69,8 @@ const QrCodePreview = forwardRef<HTMLDivElement, QrCodePreviewProps>(
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Expose the container ref to parent components
+    // Using 'as HTMLDivElement' lets TypeScript know we're aware this could be null
+    // but the component is guaranteed to have a ref when used
     useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
     // If we have a generated QR URL, display it instead of the preview
