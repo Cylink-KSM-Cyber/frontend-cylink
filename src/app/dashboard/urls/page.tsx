@@ -95,7 +95,7 @@ export default function UrlsPage() {
   const handleSearch = (value: string) => {
     setSearchQuery(value);
 
-    if (searchQuery) {
+    if (value) {
       updateFilter({ search: value });
     } else {
       updateFilter({ search: "" });
