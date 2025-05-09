@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import logger from "@/utils/logger";
 
 /**
  * Prop types for SearchInput component
@@ -40,24 +41,21 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [inputValue, setInputValue] = useState(initialValue);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Log component render with current state
-  console.log("[SearchInput] Rendering with inputValue:", inputValue);
-
   // Set initial value when it changes from parent
   useEffect(() => {
     if (initialValue !== inputValue) {
-      console.log("[SearchInput] initialValue changed:", initialValue);
       setInputValue(initialValue);
+      logger.debug("SearchInput initialValue changed", { initialValue });
     }
   }, [initialValue]);
 
   // Clear debounce timer on unmount
   useEffect(() => {
-    console.log("[SearchInput] Component mounted");
+    logger.debug("SearchInput component mounted");
     return () => {
-      console.log("[SearchInput] Component unmounting, clearing timer");
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
+        logger.debug("SearchInput component unmounted and timer cleared");
       }
     };
   }, []);
@@ -65,7 +63,6 @@ const SearchInput: React.FC<SearchInputProps> = ({
   // Handle input change with debounce
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
-    console.log("[SearchInput] Input value changed:", newValue);
     setInputValue(newValue);
 
     // Clear existing timeout
@@ -75,26 +72,25 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
     // Set new timeout
     debounceTimerRef.current = setTimeout(() => {
-      console.log(
-        "[SearchInput] Debounce timer fired, calling onSearch with:",
-        newValue
-      );
       onSearch(newValue);
+      logger.debug("SearchInput debounce triggered search", {
+        value: newValue,
+      });
     }, debounceMs);
   };
 
   // Handle clear button click
   const handleClear = () => {
-    console.log("[SearchInput] Clear button clicked");
     setInputValue("");
     onSearch("");
+    logger.userAction("SearchInput clear button clicked");
   };
 
   // Handle form submission (prevent default)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("[SearchInput] Form submitted with value:", inputValue);
     onSearch(inputValue);
+    logger.userAction("SearchInput form submitted", { value: inputValue });
   };
 
   // CSS to hide browser's native clear button on search inputs
@@ -144,8 +140,10 @@ const SearchInput: React.FC<SearchInputProps> = ({
           // Handle Enter key by preventing default form submission
           if (e.key === "Enter") {
             e.preventDefault();
-            console.log("[SearchInput] Enter key pressed");
             onSearch(inputValue);
+            logger.userAction("SearchInput enter key pressed", {
+              value: inputValue,
+            });
           }
         }}
       />
