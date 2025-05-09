@@ -41,6 +41,9 @@ const SearchInput: React.FC<SearchInputProps> = ({
   const [inputValue, setInputValue] = useState(initialValue);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Keep track of last search value to avoid unnecessary callbacks
+  const lastSearchValueRef = useRef<string>(initialValue);
+
   // Set initial value when it changes from parent
   useEffect(() => {
     if (initialValue !== inputValue) {
@@ -63,6 +66,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   // Handle input change with debounce
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
+
     setInputValue(newValue);
 
     // Clear existing timeout
@@ -72,25 +76,45 @@ const SearchInput: React.FC<SearchInputProps> = ({
 
     // Set new timeout
     debounceTimerRef.current = setTimeout(() => {
-      onSearch(newValue);
-      logger.debug("SearchInput debounce triggered search", {
-        value: newValue,
-      });
+      // Only call onSearch if the value has actually changed from last search
+      if (newValue !== lastSearchValueRef.current) {
+        lastSearchValueRef.current = newValue;
+        onSearch(newValue);
+        logger.debug("SearchInput debounce triggered search", {
+          value: newValue,
+        });
+      }
     }, debounceMs);
   };
 
-  // Handle clear button click
+  // Handle clear button click with explicit logging
   const handleClear = () => {
+    // Clear existing timeout to prevent race conditions
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+
     setInputValue("");
-    onSearch("");
-    logger.userAction("SearchInput clear button clicked");
+
+    // Only trigger search if it's different from last search value
+    if (lastSearchValueRef.current !== "") {
+      lastSearchValueRef.current = "";
+      onSearch("");
+      logger.userAction("SearchInput clear button clicked");
+    }
   };
 
   // Handle form submission (prevent default)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(inputValue);
-    logger.userAction("SearchInput form submitted", { value: inputValue });
+
+    // Only trigger search if it's different from last search value
+    if (inputValue !== lastSearchValueRef.current) {
+      lastSearchValueRef.current = inputValue;
+      onSearch(inputValue);
+      logger.userAction("SearchInput form submitted", { value: inputValue });
+    }
   };
 
   // CSS to hide browser's native clear button on search inputs
@@ -140,10 +164,15 @@ const SearchInput: React.FC<SearchInputProps> = ({
           // Handle Enter key by preventing default form submission
           if (e.key === "Enter") {
             e.preventDefault();
-            onSearch(inputValue);
-            logger.userAction("SearchInput enter key pressed", {
-              value: inputValue,
-            });
+
+            // Only trigger search if it's different from last search value
+            if (inputValue !== lastSearchValueRef.current) {
+              lastSearchValueRef.current = inputValue;
+              onSearch(inputValue);
+              logger.userAction("SearchInput enter key pressed", {
+                value: inputValue,
+              });
+            }
           }
         }}
       />

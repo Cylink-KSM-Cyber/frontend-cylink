@@ -29,15 +29,48 @@ interface EditUrlModalProps {
 const EditUrlSchema = z.object({
   title: z.string().min(1, "Title is required"),
   originalUrl: z.string().url("Please enter a valid URL"),
-  customCode: z.string().optional(),
+  customCode: z
+    .string()
+    .optional()
+    .refine(
+      (value) => !value || /^[a-zA-Z0-9-]+$/.test(value),
+      "Custom code must contain only letters, numbers, and hyphens"
+    )
+    .refine(
+      (value) => !value || value.length <= 50,
+      "Custom code must be 50 characters or less"
+    ),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
 
 type EditUrlFormSchema = z.infer<typeof EditUrlSchema>;
 
 /**
+ * Format an ISO date string to yyyy-MM-dd format for input fields
+ * @param {string | undefined | null} dateString - The ISO date string to format
+ * @returns {string} The formatted date string in yyyy-MM-dd format or empty string if invalid
+ */
+const formatDateForInput = (dateString: string | undefined | null): string => {
+  if (!dateString) return "";
+
+  try {
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+      console.warn("Invalid date format encountered:", dateString);
+      return "";
+    }
+
+    return date.toISOString().split("T")[0];
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return "";
+  }
+};
+
+/**
  * EditUrlModal Component
- * @description Modal for creating a new URL with form validation
+ * @description Modal for editing an existing URL with form validation
  */
 const EditUrlModal: React.FC<EditUrlModalProps> = ({
   url,
@@ -62,29 +95,71 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     },
   });
 
+  // Effect to populate form when URL changes or modal opens
   React.useEffect(() => {
-    if (url) {
+    if (url && isOpen) {
+      // Format expiry date correctly for date input
+      const formattedExpiryDate = formatDateForInput(url.expiry_date);
+
+      // Prepare data for form
+      const formData = {
+        title: url.title || "",
+        originalUrl: url.original_url || "",
+        customCode: url.short_code || "", // Use short_code instead of customDomain
+        expiryDate: formattedExpiryDate,
+      };
+
+      // Reset form with URL data
+      reset(formData);
+    }
+  }, [url, isOpen, reset]);
+
+  // Secondary effect to ensure form is populated when modal opens
+  React.useEffect(() => {
+    if (isOpen && url) {
+      // Wait for modal to be fully open
+      setTimeout(() => {
+        // Format expiry date correctly for date input
+        const formattedExpiryDate = formatDateForInput(url.expiry_date);
+
+        reset({
+          title: url.title || "",
+          originalUrl: url.original_url || "",
+          customCode: url.short_code || "", // Use short_code instead of customDomain
+          expiryDate: formattedExpiryDate,
+        });
+      }, 100);
+    }
+  }, [isOpen, url, reset]);
+
+  // Reset form when modal closes
+  React.useEffect(() => {
+    if (!isOpen) {
       reset({
-        title: url.title,
-        originalUrl: url.original_url,
-        customCode: url.customDomain,
-        expiryDate: url.expiry_date,
+        title: "",
+        originalUrl: "",
+        customCode: "",
+        expiryDate: "",
       });
     }
-  }, [url, reset]);
+  }, [isOpen, reset]);
 
   const [hasChanges, setHasChanges] = useState(false);
 
   const currentValues = watch();
 
-  console.log("url from modal", url);
-
+  // Track form changes
   React.useEffect(() => {
+    // Format the URL's expiry date the same way as the form's expiryDate for comparison
+    const formattedUrlExpiryDate = url?.expiry_date
+      ? formatDateForInput(url.expiry_date)
+      : "";
+
     const hasValueChanged =
       currentValues.title !== url?.title ||
       currentValues.originalUrl !== url?.original_url ||
-      currentValues.customCode !== url?.customDomain ||
-      currentValues.expiryDate !== url?.expiry_date;
+      currentValues.customCode !== url?.short_code ||
+      currentValues.expiryDate !== formattedUrlExpiryDate;
 
     setHasChanges(hasValueChanged);
   }, [
@@ -94,20 +169,35 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     currentValues.expiryDate,
     url?.title,
     url?.original_url,
-    url?.customDomain,
+    url?.short_code,
     url?.expiry_date,
   ]);
 
+  /**
+   * Clean up form state and close modal
+   */
   const handleCloseDialog = () => {
-    reset();
+    reset({
+      title: "",
+      originalUrl: "",
+      customCode: "",
+      expiryDate: "",
+    });
     setHasChanges(false);
   };
 
+  /**
+   * Handle form submission
+   * @param {EditUrlFormSchema} data - The form data
+   */
   const handleFormSubmit = (data: EditUrlFormSchema) => {
     onSubmit(data);
     reset();
   };
 
+  /**
+   * Handle cancel button click with unsaved changes warning
+   */
   const handleCancel = () => {
     if (hasChanges) {
       if (
@@ -120,7 +210,6 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     } else {
       handleCloseDialog();
     }
-    reset();
     onClose();
   };
 
@@ -211,7 +300,7 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
               htmlFor="customCode"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Custom Back-half (Optional)
+              Custom Back-half
             </label>
             <div className="flex">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
@@ -225,6 +314,9 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
                 className="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
+            <p className="mt-1 text-xs text-gray-600">
+              Use letters, numbers, and hyphens for your custom URL
+            </p>
             {errors.customCode && (
               <p className="mt-1 text-sm text-red-600">
                 {errors.customCode.message}

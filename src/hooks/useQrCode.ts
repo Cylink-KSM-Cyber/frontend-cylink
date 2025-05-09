@@ -29,9 +29,9 @@ export const useQrCode = () => {
   const [backgroundColors, setBackgroundColors] = useState<QrCodeColor[]>([]);
 
   // State for selected options
-  const [selectedForegroundColor, setSelectedForegroundColor] =
+  const [selectedForegroundColor, _setSelectedForegroundColor] =
     useState<QrCodeColor | null>(null);
-  const [selectedBackgroundColor, setSelectedBackgroundColor] =
+  const [selectedBackgroundColor, _setSelectedBackgroundColor] =
     useState<QrCodeColor | null>(null);
   const [includeLogoChecked, setIncludeLogoChecked] = useState<boolean>(false);
   const [logoSize, setLogoSize] = useState<number>(0.25); // Default 25%
@@ -93,6 +93,10 @@ export const useQrCode = () => {
     try {
       const response = await fetchQrCodeColors();
 
+      // Jika sudah memiliki warna yang dipilih, jangan ubah seleksi
+      const hasSelectedForegroundColor = selectedForegroundColor !== null;
+      const hasSelectedBackgroundColor = selectedBackgroundColor !== null;
+
       // If API returns empty arrays, add at least black and white options
       const fgColors =
         response.data.foreground_colors.length > 0
@@ -107,28 +111,33 @@ export const useQrCode = () => {
       setForegroundColors(fgColors);
       setBackgroundColors(bgColors);
 
-      // Set defaults
-      if (fgColors.length > 0 && !selectedForegroundColor) {
-        setSelectedForegroundColor(fgColors[0]);
+      // Set defaults if not already set - ONLY if we don't have current selections
+      if (fgColors.length > 0 && !hasSelectedForegroundColor) {
+        _setSelectedForegroundColor(fgColors[0]);
       }
-      if (bgColors.length > 0 && !selectedBackgroundColor) {
-        setSelectedBackgroundColor(bgColors[0]);
+
+      if (bgColors.length > 0 && !hasSelectedBackgroundColor) {
+        _setSelectedBackgroundColor(bgColors[0]);
       }
 
       // Mark colors as loaded
       colorsLoadedRef.current = true;
     } catch (err) {
-      console.error("Error loading QR code colors:", err);
+      console.error(`Error loading QR code colors: ${err}`);
 
       // Set default colors when API fails
-      setForegroundColors([{ name: "Black", hex: "#000000" }]);
-      setBackgroundColors([{ name: "White", hex: "#FFFFFF" }]);
+      const defaultFg = { name: "Black", hex: "#000000" };
+      const defaultBg = { name: "White", hex: "#FFFFFF" };
+
+      setForegroundColors([defaultFg]);
+      setBackgroundColors([defaultBg]);
 
       if (!selectedForegroundColor) {
-        setSelectedForegroundColor({ name: "Black", hex: "#000000" });
+        _setSelectedForegroundColor(defaultFg);
       }
+
       if (!selectedBackgroundColor) {
-        setSelectedBackgroundColor({ name: "White", hex: "#FFFFFF" });
+        _setSelectedBackgroundColor(defaultBg);
       }
 
       setError(
@@ -143,6 +152,8 @@ export const useQrCode = () => {
     backgroundColors.length,
     selectedForegroundColor,
     selectedBackgroundColor,
+    _setSelectedForegroundColor,
+    _setSelectedBackgroundColor,
   ]);
 
   /**
@@ -276,31 +287,54 @@ export const useQrCode = () => {
     setIsGenerating(true);
 
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/qr-codes/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            // Add any authentication headers if needed
-          },
-          body: JSON.stringify(editData),
-        }
-      );
+      const apiUrl = `${process.env.NEXT_PUBLIC_BASE_API_URL}/api/v1/qr-codes/${id}`;
+      const requestBody = JSON.stringify(editData);
+
+      const res = await fetch(apiUrl, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          // Add any authentication headers if needed
+        },
+        body: requestBody,
+      });
 
       if (!res.ok) {
-        throw new Error(`Failed to update QR code: ${res.status}`);
+        const errorText = await res.text();
+        throw new Error(
+          `Failed to update QR code: ${res.status} - ${errorText}`
+        );
       }
 
       const data = await res.json();
+
+      // Show success toast
+      showToast("QR Code updated successfully", "success", 4000);
+
       setIsGenerating(false);
       return data;
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error(`QR code update error: ${errorMessage}`);
+
       setError(err as Error);
       setIsGenerating(false);
+
+      // Show error toast
+      showToast(`Failed to update QR code: ${errorMessage}`, "error", 4000);
+
       throw err;
     }
   };
+
+  // Fungsi wrapper untuk state setter
+  const setSelectedForegroundColor = useCallback((color: QrCodeColor) => {
+    _setSelectedForegroundColor(() => color);
+  }, []);
+
+  const setSelectedBackgroundColor = useCallback((color: QrCodeColor) => {
+    _setSelectedBackgroundColor(() => color);
+  }, []);
 
   return {
     // State

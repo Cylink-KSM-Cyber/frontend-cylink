@@ -11,4 +11,4 @@ services:
 networks:
   app:
     driver: bridge
-    name: ${DOCKERHUB_APP_ID}.app.prod
+    name: ${DOCKERHUB_APP_ID}.app

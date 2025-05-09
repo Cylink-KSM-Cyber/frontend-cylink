@@ -1,6 +1,7 @@
 import React from "react";
 import { Url } from "@/interfaces/url";
 import { RiExternalLinkLine, RiFileCopyLine } from "react-icons/ri";
+import { formatShortUrl } from "@/utils/urlFormatter";
 
 interface TopPerformingUrlsProps {
   urls: Url[];
@@ -92,7 +93,9 @@ const TopPerformingUrls: React.FC<TopPerformingUrlsProps> = ({
     if (onCopyUrl) {
       onCopyUrl(url);
     } else {
-      navigator.clipboard.writeText(`https://${url.short_url}`);
+      const fullUrl = formatShortUrl(url.short_url);
+
+      navigator.clipboard.writeText(fullUrl);
     }
   };
 
@@ -105,56 +108,41 @@ const TopPerformingUrls: React.FC<TopPerformingUrlsProps> = ({
         {urls.map((url) => (
           <div
             key={url.id}
-            className="p-3 border border-gray-100 rounded-lg hover:shadow-sm transition-shadow duration-200"
+            className="flex items-center justify-between p-3 border border-gray-100 rounded-lg"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h3 className="font-medium truncate">{url.short_url}</h3>
-                <p
-                  className="text-sm text-gray-500 truncate"
-                  title={url.original_url}
-                >
-                  {url.original_url}
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Created on {formatDate(url.created_at)}
-                </p>
-              </div>
-              <div className="flex flex-col items-end">
-                <div className="text-lg font-bold text-blue-600">
-                  {url.clicks}
-                </div>
-                <div className="text-xs text-gray-500">clicks</div>
-              </div>
-            </div>
-            <div className="flex justify-end mt-2 space-x-2">
-              <button
-                onClick={() => handleCopy(url)}
-                className="text-gray-500 hover:text-blue-600 transition-colors duration-200"
-                title="Copy URL"
-              >
-                <RiFileCopyLine className="w-4 h-4" />
-              </button>
+            <div className="flex-1">
               <a
-                href={`${url.short_url}`}
+                href={formatShortUrl(url.short_url)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-500 hover:text-blue-600 transition-colors duration-200"
-                title="Open URL"
+                className="text-blue-500 hover:underline"
               >
-                <RiExternalLinkLine className="w-4 h-4" />
+                {url.short_url}
+              </a>
+              <p className="text-sm text-gray-500">{url.original_url}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Created on {formatDate(url.created_at)}
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-500">{url.clicks} clicks</span>
+              <button
+                onClick={() => handleCopy(url)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <RiFileCopyLine />
+              </button>
+              <a
+                href={formatShortUrl(url.short_url)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <RiExternalLinkLine />
               </a>
             </div>
           </div>
         ))}
-      </div>
-      <div className="mt-4 text-center">
-        <a
-          href="/dashboard/urls"
-          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-        >
-          View all URLs
-        </a>
       </div>
     </div>
   );

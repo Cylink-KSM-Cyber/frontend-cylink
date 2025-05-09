@@ -18,6 +18,7 @@ import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { formatShortUrl } from "@/utils/urlFormatter";
 
 /**
  * Dashboard page
@@ -65,13 +66,12 @@ export default function UrlsPage() {
   });
 
   // Fetch dashboard stats data
-  const { stats, isLoading: isStatsLoading, error: statsError } = useUrlStats();
+  const { stats, isLoading: isStatsLoading } = useUrlStats();
 
   // Fetch URL data with filter
   const {
     urls,
     isLoading: isUrlsLoading,
-    error: urlsError,
     pagination,
     updateFilter,
     refreshUrls,
@@ -89,13 +89,13 @@ export default function UrlsPage() {
   const { editUrl, isEditing } = useEditUrl();
 
   // URL deletion hook
-  const { deleteUrl, isDeleting, error: deleteError } = useDeleteUrl();
+  const { deleteUrl, isDeleting } = useDeleteUrl();
 
   // Handle search query changes
   const handleSearch = (value: string) => {
     setSearchQuery(value);
 
-    if (searchQuery) {
+    if (value) {
       updateFilter({ search: value });
     } else {
       updateFilter({ search: "" });
@@ -128,14 +128,17 @@ export default function UrlsPage() {
 
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
-    navigator.clipboard.writeText(`https://${url.short_url}`);
+    const fullUrl = formatShortUrl(url.short_url);
+    navigator.clipboard.writeText(fullUrl);
     showToast(`URL "${url.short_url}" copied to clipboard`, "success", 2000);
   };
 
-  // Handle URL edit
+  /**
+   * Opens the edit modal with the selected URL data
+   * @param {Url} url - The URL object to edit
+   */
   const handleEditUrl = (url: Url) => {
     setUrlToEdit(url);
-    console.log("handleEditUrl", url);
     setEditModalOpen(true);
   };
 
@@ -171,8 +174,14 @@ export default function UrlsPage() {
     setCreateModalOpen(false);
   };
 
+  /**
+   * Closes the edit URL modal with a short delay before cleaning up state
+   */
   const closeEditUrl = () => {
     setEditModalOpen(false);
+    setTimeout(() => {
+      setUrlToEdit(null);
+    }, 300);
   };
 
   // Handle QR code generation
@@ -199,8 +208,6 @@ export default function UrlsPage() {
   // Add a new function to handle the actual form submission
   const handleSubmitUrlForm = async (data: CreateUrlFormData) => {
     try {
-      console.log("Form submitted:", data);
-
       const response = await createUrl(data); // Call the hook's function
 
       showToast(
@@ -221,14 +228,16 @@ export default function UrlsPage() {
     }
   };
 
+  /**
+   * Handles the form submission for editing a URL
+   * @param {EditUrlFormData} data - The form data with updated URL information
+   */
   const handleSubmitEditUrlForm = async (data: EditUrlFormData) => {
     try {
-      console.log("Form submitted:", data);
-
       const response = await editUrl(urlToEdit?.id as number, data);
 
       showToast(
-        `URL "${response.data.title}" updated succesfully`,
+        `URL "${response.data.title}" updated successfully`,
         "success",
         2000
       );
@@ -236,7 +245,9 @@ export default function UrlsPage() {
       refreshUrls();
     } catch (err) {
       showToast(
-        err instanceof Error ? err.message : "Something went wrong",
+        err instanceof Error
+          ? err.message
+          : "Something went wrong updating the URL",
         "error",
         3000
       );
@@ -253,12 +264,6 @@ export default function UrlsPage() {
       setActiveItemId("dashboard");
     }
   }, [tabParam, setActiveItemId]);
-
-  // If there are errors, we could show error states
-  // For now, we'll just log them and continue with available data
-  if (statsError) console.error("Stats error:", statsError);
-  if (urlsError) console.error("URLs error:", urlsError);
-  if (deleteError) console.error("Delete error:", deleteError);
 
   // Default stats if none are available
   const urlStats = stats || {
