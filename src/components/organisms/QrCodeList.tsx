@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { QrCode } from "@/interfaces/url";
 import QrCodePreview from "@/components/atoms/QrCodePreview";
 import Button from "@/components/atoms/Button";
@@ -52,6 +52,82 @@ interface QrCodeListProps {
 }
 
 /**
+ * Component for download format dropdown
+ */
+interface DownloadDropdownProps {
+  qrCode: QrCode;
+  onDownload: (qrCode: QrCode, format: "png" | "svg") => void;
+}
+
+const DownloadDropdown: React.FC<DownloadDropdownProps> = ({
+  qrCode,
+  onDownload,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleFormatSelect = (format: "png" | "svg") => {
+    onDownload(qrCode, format);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <Button
+        onClick={() => setIsOpen(!isOpen)}
+        variant="text"
+        size="sm"
+        aria-label="Download"
+        startIcon={<RiDownload2Line className="text-lg" />}
+        data-testid="download-qr-button"
+      >
+        <span className="sr-only">Download</span>
+      </Button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
+          <div className="py-1" role="menu" aria-orientation="vertical">
+            <button
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              role="menuitem"
+              onClick={() => handleFormatSelect("png")}
+              data-testid="download-png-option"
+            >
+              Download as PNG
+            </button>
+            <button
+              className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              role="menuitem"
+              onClick={() => handleFormatSelect("svg")}
+              data-testid="download-svg-option"
+            >
+              Download as SVG
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/**
  * QrCodeList Component
  * @description Displays QR codes in a list/table view with detailed information and actions
  */
@@ -66,6 +142,16 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
   onSelectQrCode,
   className = "",
 }) => {
+  // Wrap the onDownload function
+  const handleDownload = useCallback(
+    (qrCode: QrCode, format: "png" | "svg") => {
+      if (onDownload) {
+        onDownload(qrCode, format);
+      }
+    },
+    [onDownload]
+  );
+
   // Format date for display
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -284,15 +370,12 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
                     <span className="sr-only">Preview</span>
                   </Button>
 
-                  <Button
-                    onClick={() => onDownload && onDownload(qrCode, "png")}
-                    variant="text"
-                    size="sm"
-                    aria-label="Download"
-                    startIcon={<RiDownload2Line className="text-lg" />}
-                  >
-                    <span className="sr-only">Download</span>
-                  </Button>
+                  {onDownload && (
+                    <DownloadDropdown
+                      qrCode={qrCode}
+                      onDownload={handleDownload}
+                    />
+                  )}
 
                   {onEdit && (
                     <Button

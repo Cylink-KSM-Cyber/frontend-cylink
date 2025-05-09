@@ -11,8 +11,8 @@ services:
     build:
       context: ./docker/webserver
     ports:
-      - "${APP_PORT_HTTP}:80"
-      - "${APP_PORT_HTTPS}:443"
+      - "${DOCKER_PORT_HTTP}:80"
+      - "${DOCKER_PORT_HTTPS}:443"
     networks:
       - app
     depends_on:
@@ -22,4 +22,4 @@ services:
 networks:
   app:
     driver: bridge
-    name: ${DOCKERHUB_APP_ID}.app.prod
+    name: ${DOCKERHUB_APP_ID}.app

@@ -397,7 +397,7 @@ export interface EditUrlFormData {
 }
 
 export interface EditUrlFormResponse {
-  staus: number;
+  status: number;
   message: string;
   data: {
     id: number;

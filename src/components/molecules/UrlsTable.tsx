@@ -3,6 +3,7 @@ import { Url } from "@/interfaces/url";
 import StatusBadge from "@/components/atoms/StatusBadge";
 import ButtonIcon from "@/components/atoms/ButtonIcon";
 import Button from "@/components/atoms/Button";
+import { formatShortUrl } from "@/utils/urlFormatter";
 
 // Icon imports
 import {
@@ -253,7 +254,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <a
-                      href={`https://${url.short_url}`}
+                      href={formatShortUrl(url.short_url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-black hover:text-[#607D8B] transition-colors flex items-center"
