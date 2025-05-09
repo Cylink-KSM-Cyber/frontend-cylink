@@ -1,6 +1,7 @@
 import { get, del, put } from "./api";
 import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
 import { UrlAnalyticsResponse } from "@/interfaces/urlAnalytics";
+import logger from "@/utils/logger";
 
 /**
  * URL Service
@@ -75,7 +76,6 @@ const buildQueryParams = (filter: Partial<UrlFilter>): string => {
   params.append("sortOrder", sortOrderValue);
 
   // Add optional parameters if present
-  console.log("Search value:", filter.search);
   if (filter.search) params.append("search", filter.search);
   if (filter.status && filter.status !== "all")
     params.append("status", filter.status);
@@ -93,12 +93,12 @@ const buildQueryParams = (filter: Partial<UrlFilter>): string => {
 export const fetchUrls = async (
   filter: Partial<UrlFilter> = {}
 ): Promise<UrlApiResponse> => {
-  console.log("Original filter:", filter);
+  logger.debug("Original filter for URL fetch", { filter });
   const queryParams = buildQueryParams(filter);
-  console.log("Query params:", queryParams);
+  logger.debug("Query params for URL fetch", { queryParams });
   const queryString = queryParams ? `?${queryParams}` : "";
   const endpoint = `/api/v1/urls${queryString}`;
-  console.log("Full endpoint:", endpoint);
+  logger.debug("Full endpoint for URL fetch", { endpoint });
 
   const response = await get<UrlApiResponse>(endpoint);
 
@@ -116,7 +116,7 @@ export const fetchUrls = async (
  * @returns Promise with the API response
  */
 export const deleteUrlById = async (id: number): Promise<DeleteUrlResponse> => {
-  console.log(`Deleting URL with ID: ${id}`);
+  logger.info("Deleting URL", { id });
   const endpoint = `/api/v1/urls/${id}`;
   return del<DeleteUrlResponse>(endpoint);
 };
@@ -128,11 +128,10 @@ export const deleteUrlById = async (id: number): Promise<DeleteUrlResponse> => {
  * @returns Promise with API response
  */
 export const updateUrlStatusById = async (id: number, isActive: boolean) => {
-  console.log(
-    `Updating status for URL with ID: ${id} to ${
-      isActive ? "active" : "inactive"
-    }`
-  );
+  logger.info("Updating URL status", {
+    id,
+    status: isActive ? "active" : "inactive",
+  });
   const endpoint = `/api/v1/urls/${id}/status`;
   return put(endpoint, { is_active: isActive });
 };
@@ -149,7 +148,7 @@ export const fetchUrlAnalytics = async (
     const endpoint = `/api/v1/urls/${id}/analytics`;
     return await get<UrlAnalyticsResponse>(endpoint);
   } catch (error) {
-    console.error("Failed to fetch URL analytics:", error);
+    logger.error("Failed to fetch URL analytics", { id, error });
     throw error;
   }
 };

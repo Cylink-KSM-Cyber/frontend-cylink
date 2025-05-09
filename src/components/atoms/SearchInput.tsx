@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import logger from "@/utils/logger";
 
 /**
  * Prop types for SearchInput component
@@ -47,16 +48,17 @@ const SearchInput: React.FC<SearchInputProps> = ({
   useEffect(() => {
     if (initialValue !== inputValue) {
       setInputValue(initialValue);
-      // Only update last search value if it's an explicit update from parent
-      lastSearchValueRef.current = initialValue;
+      logger.debug("SearchInput initialValue changed", { initialValue });
     }
   }, [initialValue]);
 
   // Clear debounce timer on unmount
   useEffect(() => {
+    logger.debug("SearchInput component mounted");
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
+        logger.debug("SearchInput component unmounted and timer cleared");
       }
     };
   }, []);
@@ -78,6 +80,9 @@ const SearchInput: React.FC<SearchInputProps> = ({
       if (newValue !== lastSearchValueRef.current) {
         lastSearchValueRef.current = newValue;
         onSearch(newValue);
+        logger.debug("SearchInput debounce triggered search", {
+          value: newValue,
+        });
       }
     }, debounceMs);
   };
@@ -96,6 +101,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
     if (lastSearchValueRef.current !== "") {
       lastSearchValueRef.current = "";
       onSearch("");
+      logger.userAction("SearchInput clear button clicked");
     }
   };
 
@@ -107,11 +113,29 @@ const SearchInput: React.FC<SearchInputProps> = ({
     if (inputValue !== lastSearchValueRef.current) {
       lastSearchValueRef.current = inputValue;
       onSearch(inputValue);
+      logger.userAction("SearchInput form submitted", { value: inputValue });
     }
   };
 
+  // CSS to hide browser's native clear button on search inputs
+  const searchInputStyles = `
+    /* Hide clear button in Chrome, Safari */
+    input[type="search"]::-webkit-search-cancel-button {
+      -webkit-appearance: none;
+      display: none;
+    }
+    
+    /* Hide clear button in Edge */
+    input[type="search"]::-ms-clear {
+      display: none;
+    }
+  `;
+
   return (
     <form className={`relative ${className}`} onSubmit={handleSubmit}>
+      {/* Add style tag to hide native clear button */}
+      <style>{searchInputStyles}</style>
+
       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
         <svg
           className="w-4 h-4 text-[#607D8B]"
@@ -131,7 +155,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
       </div>
 
       <input
-        type="search"
+        type="text"
         className="block w-full p-2 pl-10 pr-8 text-sm border border-[#E0E0E0] rounded-lg bg-white focus:ring-2 focus:ring-black focus:border-black transition-colors"
         placeholder={placeholder}
         value={inputValue}
@@ -145,6 +169,9 @@ const SearchInput: React.FC<SearchInputProps> = ({
             if (inputValue !== lastSearchValueRef.current) {
               lastSearchValueRef.current = inputValue;
               onSearch(inputValue);
+              logger.userAction("SearchInput enter key pressed", {
+                value: inputValue,
+              });
             }
           }
         }}
