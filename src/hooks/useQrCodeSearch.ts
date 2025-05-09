@@ -58,17 +58,12 @@ export const useQrCodeSearch = (
           // Only clear search and refresh when coming from an active search state
           setIsSearchActive(false);
           updateFilter({ search: undefined, page: 1 });
-
-      if (currentSearchTerm !== "") {
-        // Set active search flag when searching
-        setIsSearchActive(true);
-        updateFilter({ search: currentSearchTerm, page: 1 });
-      } else if (isSearchActive) {
-        // Only clear search and refresh when coming from an active search state
-        setIsSearchActive(false);
-        updateFilter({ search: undefined, page: 1 });
-        // Force refresh to get all QR codes
-        refreshQrCodes();
+          // Force refresh to get all QR codes
+          refreshQrCodes();
+        }
+      } finally {
+        // Clear processing flag when done
+        isProcessingRef.current = false;
       }
     }, 500);
 
