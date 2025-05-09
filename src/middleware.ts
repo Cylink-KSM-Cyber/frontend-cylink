@@ -1,5 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import {
+  isShortUrlPath,
+  getOriginalUrlByShortCode,
+} from "@/utils/shortUrlUtils";
 
 /**
  * Middleware function for handling authentication and route protection
@@ -13,26 +17,37 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
   const { pathname } = request.nextUrl;
 
-  // Check if this is a short URL request (looks like a code rather than a known route)
-  // Assume short codes are alphanumeric strings (can adjust pattern based on your app's needs)
-  const shortCodePattern = /^\/([A-Za-z0-9]{5,10})$/;
-  const isShortUrlRequest = shortCodePattern.test(pathname);
+  // Check if this is a short URL request - using utility function for flexible pattern matching
+  // This will support various short code formats, not just alphanumeric 5-10 chars
+  const isShortUrlRequest = isShortUrlPath(pathname);
 
   console.log("Is short URL request:", isShortUrlRequest);
 
   if (isShortUrlRequest) {
-    console.log("Short URL detected, code:", pathname.substring(1));
-
-    // Extract the short code from the pathname
+    // Extract the short code from the pathname (remove leading slash)
     const shortCode = pathname.substring(1);
+    console.log("Short URL detected, code:", shortCode);
 
-    // Redirect to our API route handler for shortcode redirection
-    // This will tell Next.js to use our custom route handler to handle this request
-    // rather than trying to find a matching page
-    console.log(`Redirecting to API route handler for code: ${shortCode}`);
-    return NextResponse.rewrite(
-      new URL(`/api/v1/redirect/${shortCode}`, request.url)
-    );
+    // Make API request to get the original URL - handled by utility function
+    // This is more direct than rewriting to an API route
+    return getOriginalUrlByShortCode(shortCode)
+      .then((originalUrl: string | null) => {
+        if (originalUrl) {
+          console.log(`Redirecting to original URL: ${originalUrl}`);
+          return NextResponse.redirect(originalUrl);
+        }
+
+        // If no original URL found, let the request continue to be handled by Next.js 404
+        console.log(
+          `No original URL found for short code: ${shortCode}, proceeding with request`
+        );
+        return NextResponse.next();
+      })
+      .catch((error: Error) => {
+        console.error(`Error handling short URL ${shortCode}:`, error);
+        // On error, let the request continue to be handled by Next.js
+        return NextResponse.next();
+      });
   }
 
   // Only protect /dashboard routes
