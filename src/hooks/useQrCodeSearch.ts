@@ -23,13 +23,8 @@ export const useQrCodeSearch = (
   useEffect(() => {
     // Only proceed with the search if searchTerm has actually changed
     const timeoutId = setTimeout(() => {
-      // Store the current search value to compare against
+      // Store the current search term to compare against
       const currentSearchTerm = searchTerm.trim();
-
-      console.log("Search effect running with:", {
-        currentSearchTerm,
-        isSearchActive,
-      });
 
       if (currentSearchTerm !== "") {
         // Set active search flag when searching
