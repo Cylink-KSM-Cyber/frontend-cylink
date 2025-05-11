@@ -101,7 +101,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
     if (lastSearchValueRef.current !== "") {
       lastSearchValueRef.current = "";
       onSearch("");
-      logger.userAction("SearchInput clear button clicked");
+      logger.info("SearchInput clear button clicked");
     }
   };
 
@@ -113,7 +113,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
     if (inputValue !== lastSearchValueRef.current) {
       lastSearchValueRef.current = inputValue;
       onSearch(inputValue);
-      logger.userAction("SearchInput form submitted", { value: inputValue });
+      logger.info("SearchInput form submitted", { value: inputValue });
     }
   };
 
@@ -169,7 +169,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
             if (inputValue !== lastSearchValueRef.current) {
               lastSearchValueRef.current = inputValue;
               onSearch(inputValue);
-              logger.userAction("SearchInput enter key pressed", {
+              logger.info("SearchInput enter key pressed", {
                 value: inputValue,
               });
             }
