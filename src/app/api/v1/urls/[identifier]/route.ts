@@ -19,12 +19,9 @@ export async function GET(
 ) {
   const { identifier } = params;
 
-  console.log(`[Local API] Fetching URL for identifier: ${identifier}`);
-
   // Check if we have this URL in our test data
   if (identifier in TEST_URLS) {
     const originalUrl = TEST_URLS[identifier];
-    console.log(`[Local API] Found original URL: ${originalUrl}`);
 
     // Return response matching the expected format
     return NextResponse.json({
@@ -53,14 +50,7 @@ export async function GET(
  * API route to record a click on a URL
  * This is a development stub when the real API isn't available
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { identifier: string } }
-) {
-  const { identifier } = params;
-
-  console.log(`[Local API] Recording click for identifier: ${identifier}`);
-
+export async function POST() {
   // Always return success for development
   return NextResponse.json({
     status: 200,
