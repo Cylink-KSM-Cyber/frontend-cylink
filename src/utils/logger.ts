@@ -3,104 +3,168 @@
  * This logger provides structured logging and respects environment settings
  */
 
-// Determine if we're in production
-const isProduction = process.env.NODE_ENV === "production";
+/**
+ * Logger utility for the application
+ * @description Provides structured logging with different log levels
+ */
 
-// Log levels
-type LogLevel = "debug" | "info" | "warn" | "error";
+/**
+ * Log level enum - controls verbosity
+ */
+export enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+}
 
-// Base logger function
+/**
+ * Current log level - can be set based on environment
+ */
+let currentLogLevel: LogLevel =
+  process.env.NODE_ENV === "development" ? LogLevel.DEBUG : LogLevel.INFO;
+
+/**
+ * Get the current log level
+ * @returns The current log level
+ */
+export const getLogLevel = (): LogLevel => currentLogLevel;
+
+/**
+ * Set the log level
+ * @param level The log level to set
+ */
+export const setLogLevel = (level: LogLevel): void => {
+  currentLogLevel = level;
+};
+
+/**
+ * Format log data for output
+ * @param data The data to format
+ * @returns Formatted data string
+ */
+const formatData = (data?: unknown): string => {
+  if (!data) return "";
+  try {
+    return typeof data === "object"
+      ? JSON.stringify(data, null, 2)
+      : String(data);
+  } catch (error) {
+    return `[Unformattable data: ${String(error)}]`;
+  }
+};
+
+/**
+ * Generic logger function that formats and outputs log messages
+ * @param level The log level
+ * @param module The module name
+ * @param message The log message
+ * @param data Additional data to log
+ */
 const log = (
   level: LogLevel,
+  module: string,
   message: string,
-  data?: Record<string, unknown>
-) => {
-  // Skip debug logs in production
-  if (isProduction && level === "debug") {
-    return;
-  }
+  data?: unknown
+): void => {
+  // Skip logging if the current log level is higher than this message's level
+  if (level < currentLogLevel) return;
 
+  // Create timestamp in ISO format
   const timestamp = new Date().toISOString();
-  const metadata = data ? { timestamp, ...data } : { timestamp };
 
+  // Format log prefix with timestamp and level
+  const prefix = `[${timestamp}] [${LogLevel[level]}] [${module}]`;
+
+  // Format the message
+  const formattedMsg = `${prefix} ${message}`;
+
+  // Format the data if present
+  const formattedData = data ? formatData(data) : "";
+
+  // Choose console method based on level
   switch (level) {
-    case "debug":
-      // Only log in development
-      if (!isProduction) {
-        console.debug(
-          `[${timestamp}] [DEBUG] ${message}`,
-          data ? metadata : ""
-        );
-      }
+    case LogLevel.DEBUG:
+      console.debug(formattedMsg, formattedData);
       break;
-    case "info":
-      console.info(`[${timestamp}] [INFO] ${message}`, data ? metadata : "");
+    case LogLevel.INFO:
+      console.info(formattedMsg, formattedData);
       break;
-    case "warn":
-      console.warn(`[${timestamp}] [WARN] ${message}`, data ? metadata : "");
+    case LogLevel.WARN:
+      console.warn(formattedMsg, formattedData);
       break;
-    case "error":
-      console.error(`[${timestamp}] [ERROR] ${message}`, data ? metadata : "");
+    case LogLevel.ERROR:
+      console.error(formattedMsg, formattedData);
       break;
   }
 };
 
 /**
- * Logger utility for consistent logging
+ * Debug level logger
+ * @param message The log message
+ * @param data Additional data to log
+ */
+const debug = (message: string, data?: unknown): void => {
+  log(LogLevel.DEBUG, "App", message, data);
+};
+
+/**
+ * Info level logger
+ * @param message The log message
+ * @param data Additional data to log
+ */
+const info = (message: string, data?: unknown): void => {
+  log(LogLevel.INFO, "App", message, data);
+};
+
+/**
+ * Warning level logger
+ * @param message The log message
+ * @param data Additional data to log
+ */
+const warn = (message: string, data?: unknown): void => {
+  log(LogLevel.WARN, "App", message, data);
+};
+
+/**
+ * Error level logger
+ * @param message The log message
+ * @param data Additional data to log
+ */
+const error = (message: string, data?: unknown): void => {
+  log(LogLevel.ERROR, "App", message, data);
+};
+
+/**
+ * URL Shortener specific logger
+ * @description Specialized logger for URL shortening operations
+ */
+const urlShortener = {
+  debug: (message: string, data?: unknown): void => {
+    log(LogLevel.DEBUG, "URLShortener", message, data);
+  },
+  info: (message: string, data?: unknown): void => {
+    log(LogLevel.INFO, "URLShortener", message, data);
+  },
+  warn: (message: string, data?: unknown): void => {
+    log(LogLevel.WARN, "URLShortener", message, data);
+  },
+  error: (message: string, data?: unknown): void => {
+    log(LogLevel.ERROR, "URLShortener", message, data);
+  },
+};
+
+/**
+ * Logger interface
  */
 const logger = {
-  /**
-   * Debug level logging - not shown in production
-   */
-  debug: (message: string, data?: Record<string, unknown>) =>
-    log("debug", message, data),
-
-  /**
-   * Info level logging
-   */
-  info: (message: string, data?: Record<string, unknown>) =>
-    log("info", message, data),
-
-  /**
-   * Warning level logging
-   */
-  warn: (message: string, data?: Record<string, unknown>) =>
-    log("warn", message, data),
-
-  /**
-   * Error level logging
-   */
-  error: (message: string, data?: Record<string, unknown>) =>
-    log("error", message, data),
-
-  /**
-   * User action logging (always logged, even in production)
-   */
-  userAction: (action: string, data?: Record<string, unknown>) => {
-    log("info", `User Action: ${action}`, { type: "user_action", ...data });
-  },
-
-  /**
-   * Application event logging (always logged, even in production)
-   */
-  appEvent: (event: string, data?: Record<string, unknown>) => {
-    log("info", `App Event: ${event}`, { type: "app_event", ...data });
-  },
-
-  /**
-   * Performance metrics logging
-   */
-  performance: (
-    operation: string,
-    durationMs: number,
-    data?: Record<string, unknown>
-  ) => {
-    log("info", `Performance: ${operation} completed in ${durationMs}ms`, {
-      type: "performance",
-      durationMs,
-      ...data,
-    });
-  },
+  debug,
+  info,
+  warn,
+  error,
+  urlShortener,
+  setLogLevel,
+  getLogLevel,
 };
 
 export default logger;
