@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { get } from "@/services/api";
+import { get, getPublic } from "@/services/api";
+import { AxiosError } from "axios";
+import logger from "@/utils/logger";
 
 /**
  * Response interface for short URL lookup
@@ -17,11 +19,43 @@ interface ShortUrlResponse {
 
 /**
  * Hook for resolving short URLs to their original URLs
- * Uses the correct API endpoint structure: /api/v1/urls/{identifier}
+ * Uses public endpoint first, then falls back to authenticated endpoint if necessary
  */
 export const useShortUrl = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+
+  /**
+   * Extract original URL from API response
+   * @param response The API response object
+   * @returns The original URL or null if not found
+   */
+  const extractOriginalUrl = (response: ShortUrlResponse): string | null => {
+    let originalUrl: string | null = null;
+
+    if (response && typeof response === "object") {
+      // Direct response contains original_url
+      if (
+        "original_url" in response &&
+        typeof response.original_url === "string"
+      ) {
+        originalUrl = response.original_url;
+      }
+      // Response has data property with original_url
+      else if (
+        "data" in response &&
+        response.data &&
+        typeof response.data === "object"
+      ) {
+        const data = response.data;
+        if ("original_url" in data && typeof data.original_url === "string") {
+          originalUrl = data.original_url;
+        }
+      }
+    }
+
+    return originalUrl;
+  };
 
   /**
    * Fetch the original URL for a short code using the correct API endpoint
@@ -33,53 +67,93 @@ export const useShortUrl = () => {
     setError(null);
 
     try {
-      console.log(`Fetching original URL for short code: ${shortCode}`);
+      logger.urlShortener.info(
+        `Client fetching URL for short code: ${shortCode}`
+      );
 
-      // Create API URL with the correct endpoint structure
+      // Try the public endpoint first (no authentication required)
+      try {
+        const publicApiUrl = `/api/v1/public/urls/${shortCode}`;
+        logger.urlShortener.debug(
+          `Trying public API endpoint: ${publicApiUrl}`
+        );
+
+        // Use getPublic to ensure no authentication headers are sent
+        const publicResponse = await getPublic<ShortUrlResponse>(publicApiUrl);
+
+        const originalUrl = extractOriginalUrl(publicResponse);
+        if (originalUrl) {
+          logger.urlShortener.info(
+            `Found URL from public endpoint: ${shortCode}`
+          );
+
+          // Record the click asynchronously
+          recordUrlClick(shortCode).catch((err) => {
+            logger.urlShortener.warn(
+              `Failed to record click for ${shortCode}`,
+              err
+            );
+          });
+
+          return originalUrl;
+        }
+      } catch (publicError) {
+        // Check if the error is a 404 (URL not found)
+        const is404Error =
+          // Check if it's an Axios error with status 404
+          (publicError instanceof Error &&
+            publicError instanceof AxiosError &&
+            publicError.response?.status === 404) ||
+          // Or check message content for other error types
+          (publicError instanceof Error && publicError.message.includes("404"));
+
+        if (is404Error) {
+          // If it's a 404, don't try the authenticated endpoint
+          logger.urlShortener.info(`Short URL not found: ${shortCode}`);
+          return null;
+        }
+
+        logger.urlShortener.warn(
+          `Public endpoint error for ${shortCode}, falling back to authenticated endpoint`,
+          publicError
+        );
+      }
+
+      // Fall back to authenticated endpoint only for non-404 errors
       const apiUrl = `/api/v1/urls/${shortCode}`;
-      console.log(`API URL: ${apiUrl}`);
+      logger.urlShortener.debug(`Trying authenticated endpoint: ${apiUrl}`);
 
       // Make the API request
       const response = await get<ShortUrlResponse>(apiUrl);
-      console.log(`API Response:`, response);
 
-      // Extract the original URL from various possible response structures
-      let originalUrl: string | null = null;
-
-      if (response && typeof response === "object") {
-        // Direct response contains original_url
-        if (
-          "original_url" in response &&
-          typeof response.original_url === "string"
-        ) {
-          originalUrl = response.original_url;
-        }
-        // Response has data property with original_url
-        else if (
-          "data" in response &&
-          response.data &&
-          typeof response.data === "object"
-        ) {
-          const data = response.data;
-          if ("original_url" in data && typeof data.original_url === "string") {
-            originalUrl = data.original_url;
-          }
-        }
-      }
+      // Extract the original URL from the response
+      const originalUrl = extractOriginalUrl(response);
 
       if (originalUrl) {
+        logger.urlShortener.info(
+          `Found URL from authenticated endpoint: ${shortCode}`
+        );
+
         // Attempt to record the click asynchronously
         recordUrlClick(shortCode).catch((err) => {
-          console.error(`Failed to record click for ${shortCode}:`, err);
+          logger.urlShortener.warn(
+            `Failed to record click for ${shortCode}`,
+            err
+          );
         });
 
         return originalUrl;
       }
 
-      console.warn(`No original URL found for short code: ${shortCode}`);
+      logger.urlShortener.info(
+        `No original URL found for short code: ${shortCode}`
+      );
       return null;
     } catch (error) {
-      console.error(`Error fetching original URL for ${shortCode}:`, error);
+      logger.urlShortener.error(
+        `Error fetching URL for short code: ${shortCode}`,
+        error
+      );
       setError(error instanceof Error ? error : new Error(String(error)));
       return null;
     } finally {
@@ -95,9 +169,12 @@ export const useShortUrl = () => {
     try {
       const endpoint = `/api/v1/urls/click/${shortCode}`;
       await get(endpoint);
-      console.log(`Successfully recorded click for ${shortCode}`);
+      logger.urlShortener.debug(`Click recorded for ${shortCode}`);
     } catch (error) {
-      console.error(`Failed to record click for ${shortCode}:`, error);
+      logger.urlShortener.warn(
+        `Failed to record click for ${shortCode}`,
+        error
+      );
       // Don't throw - we don't want to block the main redirect flow
     }
   };
