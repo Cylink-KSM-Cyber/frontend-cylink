@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { isShortUrlPath } from "@/utils/shortUrlUtils";
+import logger from "@/utils/logger";
 
 /**
  * API response interface for short URL lookup
@@ -46,6 +47,9 @@ async function serverSideApiGet<T>(url: string, token?: string): Promise<T> {
     if (!response.ok) {
       // Try making the request without authentication as fallback
       if (response.status === 401 && token) {
+        logger.urlShortener.warn(
+          `Authentication failed, retrying without token: ${url}`
+        );
         return serverSideApiGet<T>(url);
       }
 
@@ -55,7 +59,45 @@ async function serverSideApiGet<T>(url: string, token?: string): Promise<T> {
     const data = await response.json();
     return data as T;
   } catch (error) {
-    console.error(`[ShortURL] API request failed: ${url}`, error);
+    logger.urlShortener.error(`API request failed: ${url}`, error);
+    throw error;
+  }
+}
+
+/**
+ * Direct API call for server-side context without authentication
+ * This is specifically for public endpoints that should not include auth headers
+ * @param url The full URL to call
+ */
+async function serverSideApiGetPublic<T>(url: string): Promise<T> {
+  const baseUrl =
+    process.env.NEXT_PUBLIC_BASE_API_URL || "https://dev.api.cylink.id";
+  const fullUrl = `${baseUrl}${url}`;
+
+  // Prepare headers without auth token
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  try {
+    logger.urlShortener.debug(`Making public API request: ${url}`);
+    // Make a direct fetch call without auth header
+    const response = await fetch(fullUrl, {
+      method: "GET",
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Public API request failed with status ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+    logger.urlShortener.debug(`Public API response received`);
+    return data as T;
+  } catch (error) {
+    logger.urlShortener.error(`Public API request failed: ${url}`, error);
     throw error;
   }
 }
@@ -73,38 +115,80 @@ async function getOriginalUrlByIdentifier(
   try {
     // Try with public URL endpoint first (no authentication)
     try {
-      // This endpoint might be public in production
+      // This is the public endpoint that doesn't require authentication
       const publicApiUrl = `/api/v1/public/urls/${shortCode}`;
-      const response = await serverSideApiGet<ShortUrlResponse>(publicApiUrl);
+      logger.urlShortener.info(
+        `Resolving short URL: ${shortCode} (public endpoint)`
+      );
+
+      // Use the public API get function without auth headers
+      const response = await serverSideApiGetPublic<ShortUrlResponse>(
+        publicApiUrl
+      );
 
       // Process response
       const originalUrl = extractOriginalUrl(response);
       if (originalUrl) {
+        logger.urlShortener.info(
+          `Short URL resolved: ${shortCode} → ${originalUrl.substring(0, 50)}${
+            originalUrl.length > 50 ? "..." : ""
+          }`
+        );
+
+        // Attempt to record the click asynchronously
+        recordUrlClick(shortCode, token).catch(() => {
+          // Don't throw - we don't want to block the main redirect flow
+          logger.urlShortener.warn(`Failed to record click: ${shortCode}`);
+        });
+
         return originalUrl;
       }
-    } catch {
-      // Public endpoint failed, trying authenticated endpoint
+    } catch (error) {
+      // Check if the error is a 404 (not found)
+      const is404Error =
+        error instanceof Error && error.message.includes("404");
+
+      if (is404Error) {
+        // If it's a 404, the URL simply doesn't exist, so don't try other endpoints
+        logger.urlShortener.info(`Short URL not found: ${shortCode}`);
+        return null;
+      }
+
+      // For other errors (network issues, etc.), log and try authenticated endpoint if token exists
+      logger.urlShortener.warn(
+        `Public endpoint error for ${shortCode}, trying authenticated endpoint`,
+        error
+      );
     }
 
-    // Fall back to authenticated endpoint
-    const apiUrl = `/api/v1/urls/${shortCode}`;
-    const response = await serverSideApiGet<ShortUrlResponse>(apiUrl, token);
+    // Only proceed with authenticated endpoint if we have a token
+    if (token) {
+      logger.urlShortener.debug(`Trying authenticated endpoint: ${shortCode}`);
+      const apiUrl = `/api/v1/urls/${shortCode}`;
+      const response = await serverSideApiGet<ShortUrlResponse>(apiUrl, token);
 
-    // Extract the original URL from the response
-    const originalUrl = extractOriginalUrl(response);
+      // Extract the original URL from the response
+      const originalUrl = extractOriginalUrl(response);
 
-    if (originalUrl) {
-      // Attempt to record the click asynchronously
-      recordUrlClick(shortCode, token).catch(() => {
-        // Don't throw - we don't want to block the main redirect flow
-      });
+      if (originalUrl) {
+        logger.urlShortener.info(`Short URL resolved via auth: ${shortCode}`);
+        // Attempt to record the click asynchronously
+        recordUrlClick(shortCode, token).catch(() => {
+          // Don't throw - we don't want to block the main redirect flow
+          logger.urlShortener.warn(`Failed to record click: ${shortCode}`);
+        });
 
-      return originalUrl;
+        return originalUrl;
+      }
+    } else {
+      logger.urlShortener.debug(
+        `No authentication token available for ${shortCode}`
+      );
     }
 
     return null;
   } catch (error) {
-    console.error(`[ShortURL] Resolution failed: ${shortCode}`, error);
+    logger.urlShortener.error(`URL resolution failed: ${shortCode}`, error);
     return null;
   }
 }
@@ -151,8 +235,10 @@ async function recordUrlClick(
   try {
     const endpoint = `/api/v1/urls/click/${shortCode}`;
     await serverSideApiGet(endpoint, token);
+    logger.urlShortener.debug(`Click recorded: ${shortCode}`);
   } catch {
     // Don't throw - we don't want to block the main redirect flow
+    logger.urlShortener.warn(`Failed to record click: ${shortCode}`);
   }
 }
 
@@ -184,6 +270,9 @@ export function middleware(request: NextRequest) {
     // Check for known URLs first (development/testing fallback)
     if (shortCode in KNOWN_URLS) {
       const originalUrl = KNOWN_URLS[shortCode];
+      logger.urlShortener.info(
+        `Redirecting to known URL: ${shortCode} → ${originalUrl}`
+      );
       return NextResponse.redirect(originalUrl);
     }
 
@@ -193,9 +282,11 @@ export function middleware(request: NextRequest) {
         if (originalUrl) {
           return NextResponse.redirect(originalUrl);
         }
+        logger.urlShortener.info(`No redirect found for: ${shortCode}`);
         return NextResponse.next();
       })
       .catch(() => {
+        logger.urlShortener.error(`Redirect processing failed: ${shortCode}`);
         return NextResponse.next();
       });
   }
@@ -203,6 +294,9 @@ export function middleware(request: NextRequest) {
   // Handle protected routes
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/profile")) {
     if (!accessToken) {
+      logger.info(
+        `Redirecting unauthenticated user to login from: ${pathname}`
+      );
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
