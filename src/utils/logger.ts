@@ -155,6 +155,15 @@ const urlShortener = {
 };
 
 /**
+ * User action logger
+ * @param action Description of the user action
+ * @param data Additional data about the action
+ */
+const userAction = (action: string, data?: unknown): void => {
+  log(LogLevel.INFO, "UserAction", action, data);
+};
+
+/**
  * Logger interface
  */
 const logger = {
@@ -163,6 +172,7 @@ const logger = {
   warn,
   error,
   urlShortener,
+  userAction,
   setLogLevel,
   getLogLevel,
 };
