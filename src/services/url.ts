@@ -1,4 +1,4 @@
-import { get, del, put } from "./api";
+import { get, del, put, getPublic } from "./api";
 import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
 import { UrlAnalyticsResponse } from "@/interfaces/urlAnalytics";
 import logger from "@/utils/logger";
@@ -255,6 +255,68 @@ export const fetchUrlByIdentifier = async (
     throw new Error(`URL not found for identifier: ${identifier}`);
   } catch (error) {
     console.error(`Failed to fetch URL with identifier ${identifier}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch a URL by its short code without authentication
+ * @param shortCode - The short code of the URL
+ * @returns Promise with URL data
+ */
+export const fetchPublicUrlByShortCode = async (
+  shortCode: string
+): Promise<Url> => {
+  try {
+    logger.urlShortener.info(
+      `Fetching public URL with short code: ${shortCode}`
+    );
+    const endpoint = `/api/v1/public/urls/${shortCode}`;
+
+    // Use getPublic to ensure no authentication headers are sent
+    const response = await getPublic<{
+      status: number;
+      message: string;
+      data: Url;
+    }>(endpoint);
+
+    logger.urlShortener.debug(`Received response for short code: ${shortCode}`);
+
+    // Check response structure
+    if (response && response.data) {
+      logger.urlShortener.info(`URL data retrieved for ${shortCode}`);
+      return response.data;
+    } else if (
+      response &&
+      typeof response === "object" &&
+      "original_url" in response
+    ) {
+      // Handle case where the response itself is the URL object
+      logger.urlShortener.debug(`Response contains URL data directly`);
+
+      // Create a properly structured URL object
+      const originalUrl = String(response.original_url);
+      const urlObject: Url = {
+        id: 0,
+        original_url: originalUrl,
+        short_code: shortCode,
+        short_url: `https://cylink.id/${shortCode}`,
+        clicks: 0,
+        is_active: true,
+        user_id: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      return urlObject;
+    }
+
+    throw new Error(`Public URL not found for code: ${shortCode}`);
+  } catch (error) {
+    logger.urlShortener.error(
+      `Failed to fetch public URL: ${shortCode}`,
+      error
+    );
     throw error;
   }
 };
