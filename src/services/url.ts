@@ -213,3 +213,48 @@ export const recordUrlClick = async (shortCode: string): Promise<void> => {
     // Don't throw error - we don't want to interrupt the user flow if this fails
   }
 };
+
+/**
+ * Fetch a URL by its identifier
+ * @param identifier - The identifier (short code) of the URL
+ * @returns Promise with URL data
+ */
+export const fetchUrlByIdentifier = async (
+  identifier: string
+): Promise<Url> => {
+  try {
+    console.log(`Fetching URL with identifier: ${identifier}`);
+    const endpoint = `/api/v1/urls/${identifier}`;
+
+    // Log endpoint to understand API request
+    console.log(`Fetching from endpoint: ${endpoint}`);
+
+    const response = await get<{ status: number; message: string; data: Url }>(
+      endpoint
+    );
+
+    console.log(`Response for URL with identifier ${identifier}:`, response);
+
+    // Check response structure - different APIs might return data differently
+    if (response && response.data) {
+      console.log(`URL data retrieved for ${identifier}:`, response.data);
+      return response.data;
+    } else if (
+      response &&
+      typeof response === "object" &&
+      "original_url" in response
+    ) {
+      // Handle case where the response itself is the URL object
+      console.log(
+        `URL data is directly in response for ${identifier}:`,
+        response
+      );
+      return response as unknown as Url;
+    }
+
+    throw new Error(`URL not found for identifier: ${identifier}`);
+  } catch (error) {
+    console.error(`Failed to fetch URL with identifier ${identifier}:`, error);
+    throw error;
+  }
+};
