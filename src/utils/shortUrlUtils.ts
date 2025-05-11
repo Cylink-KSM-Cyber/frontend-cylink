@@ -18,10 +18,39 @@ const KNOWN_ROUTES = [
   "images",
   "assets",
   "static",
+  "logo",
   // Common files
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
+];
+
+// File extensions to exclude (these are likely static files, not short URLs)
+const FILE_EXTENSIONS = [
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "svg",
+  "webp",
+  "ico",
+  "css",
+  "js",
+  "json",
+  "map",
+  "ttf",
+  "woff",
+  "woff2",
+  "html",
+  "htm",
+  "xml",
+  "pdf",
+  "doc",
+  "docx",
+  "xls",
+  "xlsx",
+  "ppt",
+  "pptx",
 ];
 
 /**
@@ -37,23 +66,51 @@ export function isShortUrlPath(pathname: string): boolean {
   // Remove leading slash for easier processing
   const path = pathname.startsWith("/") ? pathname.substring(1) : pathname;
 
-  // Empty path is not a short URL
-  if (!path) return false;
+  // Empty path is not a short URL (root path)
+  if (!path) {
+    console.log("isShortUrlPath: Empty path detected, not a short URL");
+    return false;
+  }
+
+  // Log the path being checked
+  console.log(`isShortUrlPath: Checking if '${path}' is a short URL path`);
 
   // Check if it's one of our known routes or nested routes
   for (const route of KNOWN_ROUTES) {
     if (path === route || path.startsWith(`${route}/`)) {
+      console.log(
+        `isShortUrlPath: '${path}' matches known route '${route}', not a short URL`
+      );
       return false;
     }
   }
 
-  // Check for file extensions (likely not a short URL if it has a file extension)
-  if (/\.\w{2,4}$/.test(path)) {
+  // Check if it has a file extension - first with simple dot check
+  if (path.includes(".")) {
+    // Extract the extension
+    const extension = path.split(".").pop()?.toLowerCase();
+
+    // If it has a known file extension, it's not a short URL
+    if (extension && FILE_EXTENSIONS.includes(extension)) {
+      console.log(
+        `isShortUrlPath: '${path}' has file extension '${extension}', not a short URL`
+      );
+      return false;
+    }
+  }
+
+  // If it has more than one slash, it's likely a nested route, not a short URL
+  if (path.includes("/")) {
+    console.log(
+      `isShortUrlPath: '${path}' contains slashes, likely a nested route, not a short URL`
+    );
     return false;
   }
 
   // If it passes all exclusions, it's likely a short URL path
-  // This approach considers any unrecognized path as a potential short URL
+  console.log(
+    `isShortUrlPath: '${path}' is not excluded, treating as a short URL`
+  );
   return true;
 }
 
@@ -84,8 +141,8 @@ export async function getOriginalUrlByShortCode(
   try {
     console.log(`Fetching original URL for short code: ${shortCode}`);
 
-    // Create API URL for fetching the original URL
-    const apiUrl = `/api/v1/urls/by-code/${shortCode}`;
+    // Create API URL for fetching the original URL using the correct endpoint
+    const apiUrl = `/api/v1/urls/${shortCode}`;
     console.log(`API URL: ${apiUrl}`);
 
     // Make the API request
