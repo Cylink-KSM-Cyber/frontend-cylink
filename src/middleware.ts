@@ -27,8 +27,6 @@ async function serverSideApiGet<T>(url: string, token?: string): Promise<T> {
     process.env.NEXT_PUBLIC_BASE_API_URL || "https://dev.api.cylink.id";
   const fullUrl = `${baseUrl}${url}`;
 
-  console.log(`Making server-side GET request to: ${fullUrl}`);
-
   // Prepare headers - include auth token if available
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -36,9 +34,6 @@ async function serverSideApiGet<T>(url: string, token?: string): Promise<T> {
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
-    console.log("Including authorization token in request");
-  } else {
-    console.log("No authorization token available for request");
   }
 
   try {
@@ -49,11 +44,8 @@ async function serverSideApiGet<T>(url: string, token?: string): Promise<T> {
     });
 
     if (!response.ok) {
-      console.error(`API Error: ${response.status} ${response.statusText}`);
-
       // Try making the request without authentication as fallback
       if (response.status === 401 && token) {
-        console.log("Trying public API endpoint without authentication");
         return serverSideApiGet<T>(url);
       }
 
@@ -61,10 +53,9 @@ async function serverSideApiGet<T>(url: string, token?: string): Promise<T> {
     }
 
     const data = await response.json();
-    console.log(`API Response data:`, data);
     return data as T;
   } catch (error) {
-    console.error(`Server-side GET request failed:`, error);
+    console.error(`[ShortURL] API request failed: ${url}`, error);
     throw error;
   }
 }
@@ -80,15 +71,8 @@ async function getOriginalUrlByIdentifier(
   token?: string
 ): Promise<string | null> {
   try {
-    console.log(`Fetching original URL for short code: ${shortCode}`);
-
-    // Create API URL with the correct endpoint structure
-    const apiUrl = `/api/v1/urls/${shortCode}`;
-    console.log(`API URL: ${apiUrl}`);
-
     // Try with public URL endpoint first (no authentication)
     try {
-      console.log("Attempting to fetch URL with public endpoint");
       // This endpoint might be public in production
       const publicApiUrl = `/api/v1/public/urls/${shortCode}`;
       const response = await serverSideApiGet<ShortUrlResponse>(publicApiUrl);
@@ -98,14 +82,12 @@ async function getOriginalUrlByIdentifier(
       if (originalUrl) {
         return originalUrl;
       }
-    } catch (error) {
-      console.log(
-        "Public endpoint failed, trying authenticated endpoint:",
-        error
-      );
+    } catch {
+      // Public endpoint failed, trying authenticated endpoint
     }
 
     // Fall back to authenticated endpoint
+    const apiUrl = `/api/v1/urls/${shortCode}`;
     const response = await serverSideApiGet<ShortUrlResponse>(apiUrl, token);
 
     // Extract the original URL from the response
@@ -113,17 +95,16 @@ async function getOriginalUrlByIdentifier(
 
     if (originalUrl) {
       // Attempt to record the click asynchronously
-      recordUrlClick(shortCode, token).catch((err) => {
-        console.error(`Failed to record click for ${shortCode}:`, err);
+      recordUrlClick(shortCode, token).catch(() => {
+        // Don't throw - we don't want to block the main redirect flow
       });
 
       return originalUrl;
     }
 
-    console.warn(`No original URL found for short code: ${shortCode}`);
     return null;
   } catch (error) {
-    console.error(`Error fetching original URL for ${shortCode}:`, error);
+    console.error(`[ShortURL] Resolution failed: ${shortCode}`, error);
     return null;
   }
 }
@@ -170,9 +151,7 @@ async function recordUrlClick(
   try {
     const endpoint = `/api/v1/urls/click/${shortCode}`;
     await serverSideApiGet(endpoint, token);
-    console.log(`Successfully recorded click for ${shortCode}`);
-  } catch (error) {
-    console.error(`Failed to record click for ${shortCode}:`, error);
+  } catch {
     // Don't throw - we don't want to block the main redirect flow
   }
 }
@@ -194,64 +173,36 @@ const KNOWN_URLS: Record<string, string> = {
  * Also handles short URL redirects
  */
 export function middleware(request: NextRequest) {
-  // Enhanced logging - show full URL and details
-  console.log("==================== MIDDLEWARE EXECUTING ====================");
-  console.log(`Full URL: ${request.url}`);
-  console.log(`Method: ${request.method}`);
-  console.log(`Pathname: ${request.nextUrl.pathname}`);
-  console.log(`Search params: ${request.nextUrl.search}`);
-  console.log(
-    `Headers: ${JSON.stringify(
-      Object.fromEntries(request.headers.entries()),
-      null,
-      2
-    )}`
-  );
-
   const accessToken = request.cookies.get("accessToken")?.value;
   const { pathname } = request.nextUrl;
 
-  // Debug: Print out the result of the path check
-  const pathCheckResult = isShortUrlPath(pathname);
-  console.log(`Is ${pathname} a short URL path? ${pathCheckResult}`);
-
   // Check if this is a short URL request
-  if (pathCheckResult) {
+  if (isShortUrlPath(pathname)) {
     // Extract the short code from the pathname (remove leading slash)
     const shortCode = pathname.substring(1);
-    console.log(`Short URL detected, code: ${shortCode}`);
 
     // Check for known URLs first (development/testing fallback)
     if (shortCode in KNOWN_URLS) {
       const originalUrl = KNOWN_URLS[shortCode];
-      console.log(`[KNOWN URL] Redirecting to: ${originalUrl}`);
       return NextResponse.redirect(originalUrl);
     }
 
-    // Make API request to get the original URL using the new endpoint structure
+    // Make API request to get the original URL
     return getOriginalUrlByIdentifier(shortCode, accessToken)
       .then((originalUrl: string | null) => {
         if (originalUrl) {
-          console.log(`[SUCCESS] Redirecting to original URL: ${originalUrl}`);
           return NextResponse.redirect(originalUrl);
         }
-
-        console.log(
-          `[NOT FOUND] No original URL found for short code: ${shortCode}`
-        );
         return NextResponse.next();
       })
-      .catch((error: Error) => {
-        console.error(`[ERROR] Error handling short URL ${shortCode}:`, error);
+      .catch(() => {
         return NextResponse.next();
       });
   }
 
   // Handle protected routes
   if (pathname.startsWith("/dashboard") || pathname.startsWith("/profile")) {
-    console.log(`Protected route detected: ${pathname}`);
     if (!accessToken) {
-      console.log(`Access denied: No token found for ${pathname}`);
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
