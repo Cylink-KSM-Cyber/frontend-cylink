@@ -1,6 +1,7 @@
-import { get, del, put } from "./api";
+import { get, del, put, getPublic } from "./api";
 import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
 import { UrlAnalyticsResponse } from "@/interfaces/urlAnalytics";
+import logger from "@/utils/logger";
 
 /**
  * URL Service
@@ -75,7 +76,6 @@ const buildQueryParams = (filter: Partial<UrlFilter>): string => {
   params.append("sortOrder", sortOrderValue);
 
   // Add optional parameters if present
-  console.log("Search value:", filter.search);
   if (filter.search) params.append("search", filter.search);
   if (filter.status && filter.status !== "all")
     params.append("status", filter.status);
@@ -93,12 +93,12 @@ const buildQueryParams = (filter: Partial<UrlFilter>): string => {
 export const fetchUrls = async (
   filter: Partial<UrlFilter> = {}
 ): Promise<UrlApiResponse> => {
-  console.log("Original filter:", filter);
+  logger.debug("Original filter for URL fetch", { filter });
   const queryParams = buildQueryParams(filter);
-  console.log("Query params:", queryParams);
+  logger.debug("Query params for URL fetch", { queryParams });
   const queryString = queryParams ? `?${queryParams}` : "";
   const endpoint = `/api/v1/urls${queryString}`;
-  console.log("Full endpoint:", endpoint);
+  logger.debug("Full endpoint for URL fetch", { endpoint });
 
   const response = await get<UrlApiResponse>(endpoint);
 
@@ -116,7 +116,7 @@ export const fetchUrls = async (
  * @returns Promise with the API response
  */
 export const deleteUrlById = async (id: number): Promise<DeleteUrlResponse> => {
-  console.log(`Deleting URL with ID: ${id}`);
+  logger.info("Deleting URL", { id });
   const endpoint = `/api/v1/urls/${id}`;
   return del<DeleteUrlResponse>(endpoint);
 };
@@ -128,11 +128,10 @@ export const deleteUrlById = async (id: number): Promise<DeleteUrlResponse> => {
  * @returns Promise with API response
  */
 export const updateUrlStatusById = async (id: number, isActive: boolean) => {
-  console.log(
-    `Updating status for URL with ID: ${id} to ${
-      isActive ? "active" : "inactive"
-    }`
-  );
+  logger.info("Updating URL status", {
+    id,
+    status: isActive ? "active" : "inactive",
+  });
   const endpoint = `/api/v1/urls/${id}/status`;
   return put(endpoint, { is_active: isActive });
 };
@@ -149,7 +148,7 @@ export const fetchUrlAnalytics = async (
     const endpoint = `/api/v1/urls/${id}/analytics`;
     return await get<UrlAnalyticsResponse>(endpoint);
   } catch (error) {
-    console.error("Failed to fetch URL analytics:", error);
+    logger.error("Failed to fetch URL analytics", { id, error });
     throw error;
   }
 };
@@ -212,5 +211,112 @@ export const recordUrlClick = async (shortCode: string): Promise<void> => {
       error
     );
     // Don't throw error - we don't want to interrupt the user flow if this fails
+  }
+};
+
+/**
+ * Fetch a URL by its identifier
+ * @param identifier - The identifier (short code) of the URL
+ * @returns Promise with URL data
+ */
+export const fetchUrlByIdentifier = async (
+  identifier: string
+): Promise<Url> => {
+  try {
+    console.log(`Fetching URL with identifier: ${identifier}`);
+    const endpoint = `/api/v1/urls/${identifier}`;
+
+    // Log endpoint to understand API request
+    console.log(`Fetching from endpoint: ${endpoint}`);
+
+    const response = await get<{ status: number; message: string; data: Url }>(
+      endpoint
+    );
+
+    console.log(`Response for URL with identifier ${identifier}:`, response);
+
+    // Check response structure - different APIs might return data differently
+    if (response && response.data) {
+      console.log(`URL data retrieved for ${identifier}:`, response.data);
+      return response.data;
+    } else if (
+      response &&
+      typeof response === "object" &&
+      "original_url" in response
+    ) {
+      // Handle case where the response itself is the URL object
+      console.log(
+        `URL data is directly in response for ${identifier}:`,
+        response
+      );
+      return response as unknown as Url;
+    }
+
+    throw new Error(`URL not found for identifier: ${identifier}`);
+  } catch (error) {
+    console.error(`Failed to fetch URL with identifier ${identifier}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetch a URL by its short code without authentication
+ * @param shortCode - The short code of the URL
+ * @returns Promise with URL data
+ */
+export const fetchPublicUrlByShortCode = async (
+  shortCode: string
+): Promise<Url> => {
+  try {
+    logger.urlShortener.info(
+      `Fetching public URL with short code: ${shortCode}`
+    );
+    const endpoint = `/api/v1/public/urls/${shortCode}`;
+
+    // Use getPublic to ensure no authentication headers are sent
+    const response = await getPublic<{
+      status: number;
+      message: string;
+      data: Url;
+    }>(endpoint);
+
+    logger.urlShortener.debug(`Received response for short code: ${shortCode}`);
+
+    // Check response structure
+    if (response && response.data) {
+      logger.urlShortener.info(`URL data retrieved for ${shortCode}`);
+      return response.data;
+    } else if (
+      response &&
+      typeof response === "object" &&
+      "original_url" in response
+    ) {
+      // Handle case where the response itself is the URL object
+      logger.urlShortener.debug(`Response contains URL data directly`);
+
+      // Create a properly structured URL object
+      const originalUrl = String(response.original_url);
+      const urlObject: Url = {
+        id: 0,
+        original_url: originalUrl,
+        short_code: shortCode,
+        short_url: `https://cylink.id/${shortCode}`,
+        clicks: 0,
+        is_active: true,
+        user_id: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      return urlObject;
+    }
+
+    throw new Error(`Public URL not found for code: ${shortCode}`);
+  } catch (error) {
+    logger.urlShortener.error(
+      `Failed to fetch public URL: ${shortCode}`,
+      error
+    );
+    throw error;
   }
 };

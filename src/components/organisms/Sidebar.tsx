@@ -18,6 +18,8 @@ import {
 } from "react-icons/ri";
 import { NavItem, UserProfileProps } from "@/interfaces/sidebar";
 import { useSidebar } from "@/contexts/SidebarContext";
+import LogoutConfirmationModal from "@/components/molecules/LogoutConfirmationModal";
+import useLogoutConfirmation from "@/hooks/useLogoutConfirmation";
 
 /**
  * Theme constants for consistent styling across the sidebar
@@ -202,6 +204,10 @@ const Sidebar: React.FC<SidebarProps> = ({
     setActiveItemId,
   } = useSidebar();
 
+  // Use logout confirmation hook
+  const { isModalOpen, isLoggingOut, openModal, closeModal, handleLogout } =
+    useLogoutConfirmation();
+
   // Navigation items
   const navItems: NavItem[] = [
     {
@@ -251,10 +257,16 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleNavItemClick = (id: string) => {
     setActiveItemId(id);
 
-    // Handle logout
+    // Handle logout with confirmation
     if (id === "logout") {
-      onLogout();
+      openModal();
     }
+  };
+
+  // Set up custom logout handler
+  const handleConfirmLogout = async () => {
+    await handleLogout();
+    onLogout();
   };
 
   return (
@@ -374,6 +386,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           <RiMenuUnfoldLine size={24} />
         )}
       </button>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutConfirmationModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onConfirm={handleConfirmLogout}
+        isLoading={isLoggingOut}
+      />
     </>
   );
 };

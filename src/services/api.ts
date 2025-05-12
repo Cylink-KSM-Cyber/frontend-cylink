@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
 import Cookies from "js-cookie";
+import logger from "@/utils/logger";
 
 /**
  * Base API configuration
@@ -29,11 +30,9 @@ export const getToken = (): string | null => {
 
   try {
     const token = Cookies.get("accessToken");
-    console.log(token);
-
     return token ?? null;
   } catch (error) {
-    console.error("Error retrieving token from Cookies:", error);
+    logger.error("Error retrieving token from cookies", error);
     return null;
   }
 };
@@ -74,20 +73,19 @@ api.interceptors.response.use(
   (response: AxiosResponse) => {
     try {
       // Log successful responses for debugging
-      console.log(
-        `API Response [${response.config.method?.toUpperCase()}] ${
+      logger.debug(
+        `API Response: ${response.config.method?.toUpperCase()} ${
           response.config.url
-        }:`,
+        }`,
         {
           status: response.status,
           statusText: response.statusText,
-          hasData: !!response.data,
         }
       );
 
       return response;
     } catch (error) {
-      console.error("Response interceptor error:", error);
+      logger.error("Response interceptor error", error);
       return response; // Still return the response
     }
   },
@@ -95,14 +93,13 @@ api.interceptors.response.use(
     try {
       // Handle common error cases
       if (error.response) {
-        console.error(
-          `API Error [${error.config?.method?.toUpperCase()}] ${
+        logger.error(
+          `API Error: ${error.config?.method?.toUpperCase()} ${
             error.config?.url
-          }:`,
+          }`,
           {
             status: error.response.status,
             statusText: error.response.statusText,
-            data: error.response.data,
           }
         );
 
@@ -112,20 +109,27 @@ api.interceptors.response.use(
             try {
               Cookies.remove("accessToken");
               Cookies.remove("refreshToken");
+              logger.info("Removed tokens due to 401 response");
             } catch (storageError) {
-              console.error("Error removing tokens:", storageError);
+              logger.error("Error removing tokens", storageError);
             }
           }
         }
       } else if (error.request) {
         // The request was made but no response was received
-        console.error("No response received:", error.request);
+        logger.error("No response received from API", {
+          url: error.config?.url,
+          method: error.config?.method,
+        });
       } else {
         // Something happened in setting up the request
-        console.error("Error setting up request:", error.message);
+        logger.error("Error setting up request", {
+          message: error.message,
+          url: error.config?.url,
+        });
       }
     } catch (interceptorError) {
-      console.error("Error in response error interceptor:", interceptorError);
+      logger.error("Error in response error interceptor", interceptorError);
     }
 
     return Promise.reject(error);
@@ -144,13 +148,11 @@ export const get = async <T>(
   config?: AxiosRequestConfig
 ): Promise<T> => {
   try {
-    console.log(`Making GET request to ${url}`);
+    logger.debug(`GET request: ${url}`);
     const response = await api.get<T>(url, config);
-    console.log(`GET ${url} response status:`, response.status);
-    console.log(`GET ${url} response data:`, response.data);
     return response.data;
   } catch (error) {
-    console.error(`GET ${url} failed:`, error);
+    logger.error(`GET request failed: ${url}`, error);
     throw error;
   }
 };
@@ -215,6 +217,38 @@ export const del = async <T>(
     return response.data;
   } catch (error) {
     console.error(`DELETE ${url} failed:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Generic GET request without authentication header
+ * @description Makes a GET request to the specified endpoint without auth header
+ * @param url - API endpoint
+ * @param config - Axios request configuration
+ * @returns Promise with the response data
+ */
+export const getPublic = async <T>(
+  url: string,
+  config?: AxiosRequestConfig
+): Promise<T> => {
+  try {
+    logger.debug(`Public GET request: ${url}`);
+
+    // Create a custom configuration without auth token
+    const publicConfig: AxiosRequestConfig = {
+      ...config,
+      headers: {
+        ...(config?.headers || {}),
+        "Content-Type": "application/json",
+        // Explicitly do not include Authorization header
+      },
+    };
+
+    const response = await api.get<T>(url, publicConfig);
+    return response.data;
+  } catch (error) {
+    logger.error(`Public GET request failed: ${url}`, error);
     throw error;
   }
 };

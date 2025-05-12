@@ -29,7 +29,7 @@ export const useQrCodeSearch = (
   useEffect(() => {
     // Only proceed with the search if searchTerm has actually changed
     const timeoutId = setTimeout(() => {
-      // Store the current search value to compare against
+      // Store the current search term to compare against
       const currentSearchTerm = searchTerm.trim();
       const prevSearchTerm = prevSearchTermRef.current;
 
@@ -58,7 +58,6 @@ export const useQrCodeSearch = (
           // Only clear search and refresh when coming from an active search state
           setIsSearchActive(false);
           updateFilter({ search: undefined, page: 1 });
-
           // Force refresh to get all QR codes
           refreshQrCodes();
         }
