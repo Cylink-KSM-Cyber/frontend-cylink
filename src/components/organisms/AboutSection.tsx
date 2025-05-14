@@ -57,32 +57,60 @@ const AboutSection: React.FC<AboutSectionProps> = ({
       {/* Contrasting dark background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-black">
         {/* Background texture using CSS */}
-        <div className="noise-texture absolute inset-0 opacity-[0.03]">
-          <div className="h-full w-full bg-[radial-gradient(#ffffff_1px,transparent_1px)] bg-[length:20px_20px]"></div>
+        <div className="noise-texture absolute inset-0 opacity-[0.02]">
+          <div className="h-full w-full bg-[radial-gradient(#ffffff_0.5px,transparent_0.5px)] bg-[length:30px_30px]"></div>
         </div>
 
-        {/* Japanese-inspired geometric patterns */}
-        <div className="grid-pattern absolute inset-0 opacity-[0.02]">
+        {/* Japanese-inspired subtle pattern */}
+        <div className="absolute inset-0 opacity-[0.01]">
           <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern
-                id="grid"
+                id="asanoha"
                 x="0"
                 y="0"
-                width="40"
-                height="40"
+                width="80"
+                height="80"
                 patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
               >
-                <rect
-                  width="40"
-                  height="40"
+                {/* Subtle Asanoha (Hemp Leaf) pattern - traditional Japanese design */}
+                <circle cx="40" cy="40" r="0.5" fill="white" opacity="0.3" />
+                <circle cx="0" cy="0" r="0.5" fill="white" opacity="0.3" />
+                <circle cx="0" cy="80" r="0.5" fill="white" opacity="0.3" />
+                <circle cx="80" cy="0" r="0.5" fill="white" opacity="0.3" />
+                <circle cx="80" cy="80" r="0.5" fill="white" opacity="0.3" />
+                <path
+                  d="M40,0 L40,40 L0,40 Z"
                   fill="none"
                   stroke="white"
-                  strokeWidth="0.5"
+                  strokeWidth="0.2"
+                  opacity="0.15"
+                />
+                <path
+                  d="M40,0 L40,40 L80,40 Z"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.2"
+                  opacity="0.15"
+                />
+                <path
+                  d="M40,80 L40,40 L0,40 Z"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.2"
+                  opacity="0.15"
+                />
+                <path
+                  d="M40,80 L40,40 L80,40 Z"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="0.2"
+                  opacity="0.15"
                 />
               </pattern>
             </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
+            <rect width="100%" height="100%" fill="url(#asanoha)" />
           </svg>
         </div>
       </div>
@@ -118,19 +146,17 @@ const AboutSection: React.FC<AboutSectionProps> = ({
       {/* Bottom transition element */}
       <div className="absolute left-0 right-0 bottom-0 h-20 bg-gradient-to-t from-white/5 to-transparent pointer-events-none"></div>
 
-      {/* Decorative corner elements */}
-      <div className="absolute top-0 left-0 w-20 h-20 pointer-events-none opacity-10">
+      {/* Decorative corner elements - more subtle */}
+      <div className="absolute top-0 left-0 w-20 h-20 pointer-events-none opacity-5">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 24L24 0" stroke="white" strokeWidth="0.5" />
-          <path d="M0 12L12 0" stroke="white" strokeWidth="0.5" />
-          <path d="M12 24L24 12" stroke="white" strokeWidth="0.5" />
+          <path d="M0 24L24 0" stroke="white" strokeWidth="0.3" />
+          <path d="M0 12L12 0" stroke="white" strokeWidth="0.3" />
         </svg>
       </div>
-      <div className="absolute bottom-0 right-0 w-20 h-20 pointer-events-none opacity-10">
+      <div className="absolute bottom-0 right-0 w-20 h-20 pointer-events-none opacity-5">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0 0L24 24" stroke="white" strokeWidth="0.5" />
-          <path d="M0 12L12 24" stroke="white" strokeWidth="0.5" />
-          <path d="M12 0L24 12" stroke="white" strokeWidth="0.5" />
+          <path d="M0 0L24 24" stroke="white" strokeWidth="0.3" />
+          <path d="M12 0L24 12" stroke="white" strokeWidth="0.3" />
         </svg>
       </div>
     </section>
