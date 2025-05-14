@@ -68,25 +68,25 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({
   return (
     <section
       ref={sectionRef}
-      className={`relative py-20 overflow-hidden ${className}`}
+      className={`relative py-24 overflow-hidden ${className}`}
     >
-      {/* Background elements */}
+      {/* Enhanced Background elements */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Subtle gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-white via-gray-50 to-white"></div>
 
-        {/* Decorative elements */}
+        {/* Enhanced decorative elements */}
         <motion.div
           style={{ y: y1 }}
-          className="absolute top-20 right-[15%] w-64 h-64 bg-gradient-to-r from-gray-300/10 to-gray-100/5 rounded-full blur-3xl"
+          className="absolute top-20 right-[15%] w-72 h-72 bg-gradient-to-r from-gray-300/20 to-gray-100/10 rounded-full blur-3xl"
         />
         <motion.div
           style={{ y: y2 }}
-          className="absolute bottom-20 left-[10%] w-72 h-72 bg-gradient-to-l from-gray-300/10 to-gray-100/5 rounded-full blur-3xl"
+          className="absolute bottom-20 left-[10%] w-80 h-80 bg-gradient-to-l from-gray-300/20 to-gray-100/10 rounded-full blur-3xl"
         />
 
-        {/* Japanese-inspired line pattern */}
-        <div className="absolute inset-0 opacity-[0.03]">
+        {/* Enhanced Japanese-inspired line pattern */}
+        <div className="absolute inset-0 opacity-[0.05] grid-pattern">
           <svg
             width="100%"
             height="100%"
@@ -107,7 +107,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({
                 x2="10"
                 y2="10"
                 stroke="black"
-                strokeWidth="0.1"
+                strokeWidth="0.2"
               />
               <line
                 x1="0"
@@ -115,12 +115,16 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({
                 x2="10"
                 y2="10"
                 stroke="black"
-                strokeWidth="0.1"
+                strokeWidth="0.2"
               />
             </pattern>
             <rect width="100%" height="100%" fill="url(#grid-pattern)" />
           </svg>
         </div>
+
+        {/* Additional background elements for depth */}
+        <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full border border-gray-300/30 opacity-30"></div>
+        <div className="absolute bottom-1/3 right-1/3 w-24 h-24 rounded-full border border-gray-300/30 opacity-30"></div>
       </div>
 
       {/* Visual connection to previous section */}
@@ -128,30 +132,34 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({
 
       {/* Content container */}
       <div className="container mx-auto px-6 relative z-10">
-        {/* Section title */}
-        <SectionTitle title={title} className="text-center mb-16" />
+        {/* Enhanced Section title */}
+        <SectionTitle title={title} className="text-center mb-20" />
 
-        {/* Features grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {/* Features grid with improved spacing */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-6xl mx-auto">
           {features.map((feature, index) => (
-            <FeatureCard
+            <div
               key={index}
-              title={feature.title}
-              description={feature.description}
-              icon={feature.icon}
-              animationDelay={feature.delay}
-              className="h-full"
-            />
+              className="glassmorphism feature-card-hover rounded-xl p-1"
+            >
+              <FeatureCard
+                title={feature.title}
+                description={feature.description}
+                icon={feature.icon}
+                animationDelay={feature.delay}
+                className="h-full"
+              />
+            </div>
           ))}
         </div>
       </div>
 
-      {/* Bottom transition element */}
+      {/* Enhanced Bottom transition element */}
       <motion.div
         style={{ opacity }}
         className="absolute left-1/2 bottom-6 transform -translate-x-1/2 z-10"
       >
-        <div className="w-px h-16 bg-gradient-to-b from-transparent via-gray-300/50 to-transparent"></div>
+        <div className="w-[2px] h-20 bg-gradient-to-b from-transparent via-gray-400/50 to-transparent pulse-animation"></div>
       </motion.div>
     </section>
   );

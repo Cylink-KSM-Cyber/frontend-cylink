@@ -47,7 +47,7 @@ const FeatureIcon: React.FC<FeatureIconProps> = ({
     },
     hover: animateOnHover
       ? {
-          scale: 1.1,
+          scale: 1.15,
           rotate: 0,
           transition: {
             duration: 0.3,
@@ -65,9 +65,9 @@ const FeatureIcon: React.FC<FeatureIconProps> = ({
       whileHover="hover"
       viewport={{ once: true, margin: "-50px" }}
     >
-      {/* Background circle with blur effect */}
+      {/* Enhanced background glow effect */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-tr from-gray-200/30 to-white/50 backdrop-blur-sm rounded-full"
+        className="absolute inset-0 bg-gradient-to-br from-gray-200/80 to-white/90 backdrop-blur-lg rounded-full shadow-md"
         variants={{
           initial: { scale: 0.6, opacity: 0 },
           animate: {
@@ -82,7 +82,8 @@ const FeatureIcon: React.FC<FeatureIconProps> = ({
           hover: animateOnHover
             ? {
                 scale: 1.15,
-                opacity: 0.8,
+                opacity: 1,
+                boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
                 transition: {
                   duration: 0.4,
                   ease: "easeInOut",
@@ -92,19 +93,46 @@ const FeatureIcon: React.FC<FeatureIconProps> = ({
         }}
       />
 
-      {/* Icon component */}
+      {/* Subtle inner ring */}
+      <motion.div
+        className="absolute inset-[15%] border border-gray-400/20 rounded-full"
+        variants={{
+          initial: { scale: 0.7, opacity: 0 },
+          animate: {
+            scale: 1,
+            opacity: 0.7,
+            transition: {
+              duration: 0.5,
+              ease: "easeOut",
+              delay: 0.2,
+            },
+          },
+          hover: animateOnHover
+            ? {
+                scale: 0.9,
+                opacity: 0.9,
+                transition: {
+                  duration: 0.4,
+                  ease: "easeInOut",
+                },
+              }
+            : {},
+        }}
+      />
+
+      {/* Icon component with stronger presence */}
       <motion.div className="relative z-10" variants={iconVariants}>
-        <Icon size={size} className="text-gray-900" />
+        <Icon size={size} className="text-gray-800" />
       </motion.div>
 
-      {/* Decorative ring */}
+      {/* Enhanced outer decorative ring */}
       <motion.div
-        className="absolute inset-0 border border-gray-300/20 rounded-full"
+        className="absolute inset-[-5%] border-2 border-gray-300/30 rounded-full"
         variants={{
           initial: { scale: 1.2, opacity: 0 },
           animate: {
             scale: 1,
-            opacity: animateOnView ? 1 : 0,
+            opacity: animateOnView ? 0.8 : 0,
             transition: {
               duration: 0.5,
               ease: "easeOut",
@@ -114,10 +142,31 @@ const FeatureIcon: React.FC<FeatureIconProps> = ({
           hover: animateOnHover
             ? {
                 scale: 1.3,
-                opacity: 0,
+                opacity: 0.3,
                 transition: {
                   duration: 0.5,
                   ease: "easeInOut",
+                },
+              }
+            : {},
+        }}
+      />
+
+      {/* Pulse effect on hover */}
+      <motion.div
+        className="absolute inset-0 rounded-full bg-white/0"
+        variants={{
+          initial: { scale: 1, opacity: 0 },
+          animate: { scale: 1, opacity: 0 },
+          hover: animateOnHover
+            ? {
+                scale: [1, 1.2, 1],
+                opacity: [0, 0.3, 0],
+                transition: {
+                  duration: 1.5,
+                  ease: "easeInOut",
+                  repeat: Infinity,
+                  repeatType: "loop",
                 },
               }
             : {},
