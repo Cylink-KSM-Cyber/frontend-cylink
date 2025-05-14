@@ -5,6 +5,7 @@ import HeroSection from "@/components/organisms/HeroSection";
 import FeaturesSection from "@/components/organisms/FeaturesSection";
 import AboutSection from "@/components/organisms/AboutSection";
 import HowItWorksSection from "@/components/organisms/HowItWorksSection";
+import KSMCyberSecuritySection from "@/components/organisms/KSMCyberSecuritySection";
 
 /**
  * HomeTemplate component props interface
@@ -35,6 +36,8 @@ const HomeTemplate: React.FC<HomeTemplateProps> = ({ className = "" }) => {
       <AboutSection />
 
       <HowItWorksSection />
+
+      <KSMCyberSecuritySection />
 
       {/* Additional sections can be added here */}
     </div>
