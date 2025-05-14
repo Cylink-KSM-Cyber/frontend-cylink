@@ -55,31 +55,31 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           transition={{ duration: 0.6 }}
           className="w-full md:w-1/2 mb-12 md:mb-0 md:pr-8"
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6 min-h-[1.2em]">
             <DecryptedText
               text={headline}
               animateOn="view"
               sequential={true}
               revealDirection="start"
-              speed={40}
-              maxIterations={15}
+              speed={130}
+              maxIterations={30}
               className="text-black"
               encryptedClassName="text-gray-400"
-              parentClassName="block"
+              parentClassName="inline-block"
             />
           </h1>
 
-          <h2 className="text-xl md:text-2xl text-gray-700 mb-8 max-w-xl">
+          <h2 className="text-xl md:text-2xl text-gray-700 mb-8 max-w-xl min-h-[2.4em]">
             <DecryptedText
               text={subheadline}
               animateOn="view"
               sequential={true}
               revealDirection="start"
-              speed={30}
-              maxIterations={12}
+              speed={20}
+              maxIterations={8}
               className="text-gray-700"
               encryptedClassName="text-gray-400"
-              parentClassName="block"
+              parentClassName="inline-block"
             />
           </h2>
 
