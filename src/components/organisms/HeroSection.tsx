@@ -21,13 +21,11 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   className = "",
 }) => {
   return (
-    <section
-      className={`relative min-h-screen bg-white overflow-hidden ${className}`}
-    >
-      {/* Texture Background */}
-      <div className="absolute inset-0 z-0">
+    <section className={`relative min-h-screen overflow-hidden ${className}`}>
+      {/* Enhanced Background with Gradient and Pattern */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-white to-gray-50">
         <svg
-          className="w-full h-full text-black opacity-[0.02]"
+          className="w-full h-full text-black opacity-[0.015]"
           xmlns="http://www.w3.org/2000/svg"
           width="100%"
           height="100%"
@@ -35,27 +33,36 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           <defs>
             <pattern
               id="dotted-pattern"
-              width="16"
-              height="16"
+              width="20"
+              height="20"
               patternUnits="userSpaceOnUse"
+              patternTransform="rotate(5)"
             >
               <circle cx="2" cy="2" r="1" fill="currentColor" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dotted-pattern)" />
         </svg>
+
+        {/* Subtle diagonal lines for added depth */}
+        <div
+          className="absolute inset-0 opacity-[0.02]"
+          style={{
+            backgroundImage: `repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 1px, transparent 12px)`,
+          }}
+        />
       </div>
 
       {/* Content Container */}
-      <div className="container mx-auto px-6 py-12 md:py-24 flex flex-col md:flex-row items-center justify-between relative z-10">
+      <div className="container mx-auto px-6 py-16 md:py-28 flex flex-col md:flex-row items-center justify-between relative z-10">
         {/* Text Content */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full md:w-1/2 mb-12 md:mb-0 md:pr-8"
+          className="w-full md:w-1/2 mb-16 md:mb-0 md:pr-12"
         >
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-black mb-6 min-h-[1.2em]">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black mb-8 min-h-[1.2em] tracking-tight">
             <DecryptedText
               text={headline}
               animateOn="view"
@@ -69,7 +76,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             />
           </h1>
 
-          <h2 className="text-xl md:text-2xl text-gray-700 mb-8 max-w-xl min-h-[2.4em]">
+          <h2 className="text-xl md:text-2xl text-gray-700 mb-10 max-w-xl min-h-[2.4em] leading-relaxed">
             <DecryptedText
               text={subheadline}
               animateOn="view"
@@ -101,21 +108,19 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               className="object-contain"
               priority
             />
-          </div>
 
-          {/* Decorative Elements */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.5 }}
-            className="absolute -z-10 -bottom-10 -right-10 w-64 h-64 border border-gray-200 rounded-full"
-          />
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
-            className="absolute -z-10 top-10 -left-10 w-40 h-40 border border-gray-300 rounded-full"
-          />
+            {/* Single subtle decorative element */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.5 }}
+              className="absolute -z-10 -bottom-16 -right-16 w-72 h-72 border border-gray-200 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%)",
+              }}
+            />
+          </div>
         </motion.div>
       </div>
     </section>
