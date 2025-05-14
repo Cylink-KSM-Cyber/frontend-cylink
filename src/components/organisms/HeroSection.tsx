@@ -80,7 +80,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       {/* Enhanced Background with Gradient and Pattern */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-white to-gray-50">
         <svg
-          className="w-full h-full text-black opacity-[0.015]"
+          className="w-full h-full text-black opacity-[0.025]"
           xmlns="http://www.w3.org/2000/svg"
           width="100%"
           height="100%"
@@ -93,14 +93,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               patternUnits="userSpaceOnUse"
               patternTransform="rotate(5)"
             >
-              <circle cx="2" cy="2" r="1" fill="currentColor" />
+              <circle cx="2" cy="2" r="1.5" fill="currentColor" />
             </pattern>
           </defs>
           <rect width="100%" height="100%" fill="url(#dotted-pattern)" />
         </svg>
 
         {/* Japanese-inspired geometric lines for depth */}
-        <div className="absolute inset-0 opacity-[0.02]">
+        <div className="absolute inset-0 opacity-[0.035]">
           <svg
             width="100%"
             height="100%"
@@ -113,7 +113,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               x2="1000"
               y2="1000"
               stroke="black"
-              strokeWidth="0.5"
+              strokeWidth="0.8"
             />
             <line
               x1="1000"
@@ -121,7 +121,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               x2="0"
               y2="1000"
               stroke="black"
-              strokeWidth="0.5"
+              strokeWidth="0.8"
             />
             <line
               x1="500"
@@ -129,7 +129,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               x2="500"
               y2="1000"
               stroke="black"
-              strokeWidth="0.5"
+              strokeWidth="0.8"
             />
             <line
               x1="0"
@@ -137,33 +137,37 @@ const HeroSection: React.FC<HeroSectionProps> = ({
               x2="1000"
               y2="500"
               stroke="black"
-              strokeWidth="0.5"
+              strokeWidth="0.8"
             />
           </svg>
         </div>
+
+        {/* Additional Japanese-inspired patterns */}
+        <div className="hero-pattern-grid"></div>
+        <div className="hero-pattern-diagonal"></div>
       </div>
 
       {/* Decorative Japanese-inspired elements */}
       <motion.div
         style={{ y: springY1, x: decorX1 }}
-        className="absolute right-[10%] top-[15%] w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 to-white opacity-40 z-0"
+        className="absolute right-[10%] top-[15%] w-16 h-16 rounded-full bg-gradient-to-r from-gray-300 to-white opacity-60 z-0 shadow-lg"
       />
       <motion.div
         style={{ y: springY2, x: decorX2 }}
-        className="absolute left-[20%] bottom-[20%] w-24 h-24 rounded-full bg-gradient-to-l from-gray-100 to-white opacity-30 z-0"
+        className="absolute left-[20%] bottom-[20%] w-24 h-24 rounded-full bg-gradient-to-l from-gray-200 to-white opacity-50 z-0 shadow-md"
       />
       <motion.div
         style={{ y: springY3 }}
-        className="absolute right-[30%] top-[40%] w-8 h-8 rounded-full bg-gradient-to-br from-gray-300 to-white opacity-25 z-0"
+        className="absolute right-[30%] top-[40%] w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 to-white opacity-40 z-0 shadow-sm"
       />
 
       {/* Subtle line elements */}
       <motion.div
-        className="absolute right-[20%] top-[20%] w-[150px] h-[1px] bg-gradient-to-r from-transparent via-gray-400 to-transparent opacity-20"
+        className="absolute right-[20%] top-[20%] w-[150px] h-[1px] bg-gradient-to-r from-transparent via-gray-600 to-transparent opacity-30"
         style={{ rotate: 45, y: springY1 }}
       />
       <motion.div
-        className="absolute left-[15%] top-[30%] w-[100px] h-[1px] bg-gradient-to-r from-transparent via-gray-400 to-transparent opacity-20"
+        className="absolute left-[15%] top-[30%] w-[100px] h-[1px] bg-gradient-to-r from-transparent via-gray-600 to-transparent opacity-30"
         style={{ rotate: -30, y: springY2 }}
       />
 
@@ -177,21 +181,21 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         {/* Decorative elements around model */}
         <motion.div
           style={{ y: springY1, x: decorX1 }}
-          className="absolute right-[-10%] top-[10%] w-32 h-32 rounded-full bg-gradient-to-tr from-transparent to-gray-50 border border-gray-100 opacity-70 z-0 mobile-hidden"
+          className="absolute right-[-10%] top-[10%] w-32 h-32 rounded-full bg-gradient-to-tr from-transparent to-gray-200 border border-gray-400 opacity-80 z-0 mobile-hidden shadow-xl"
         />
         <motion.div
           style={{ y: springY2, x: decorX2 }}
-          className="absolute left-[5%] top-[50%] w-20 h-20 rounded-full bg-gradient-to-br from-transparent to-gray-100 opacity-60 z-0 mobile-hidden"
+          className="absolute left-[5%] top-[50%] w-20 h-20 rounded-full bg-gradient-to-br from-transparent to-gray-300 opacity-70 z-0 mobile-hidden shadow-lg"
         />
 
         {/* Fine line pattern inspired by Japanese design */}
         <motion.div
           style={{ y: springY3 }}
-          className="absolute -left-5 top-1/3 h-[200px] w-[1px] bg-gradient-to-b from-transparent via-gray-300 to-transparent mobile-hidden"
+          className="absolute -left-5 top-1/3 h-[200px] w-[2px] bg-gradient-to-b from-transparent via-gray-500 to-transparent opacity-40 mobile-hidden"
         />
         <motion.div
           style={{ y: springY2 }}
-          className="absolute -left-10 top-1/4 h-[150px] w-[1px] bg-gradient-to-b from-transparent via-gray-200 to-transparent mobile-hidden"
+          className="absolute -left-10 top-1/4 h-[150px] w-[2px] bg-gradient-to-b from-transparent via-gray-400 to-transparent opacity-40 mobile-hidden"
         />
 
         <div className="relative w-full h-full">
@@ -281,14 +285,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
       {/* Mobile-specific accent elements */}
       <div className="mobile-accent">
-        <div className="absolute bottom-[10%] left-[5%] w-12 h-12 rounded-full bg-gradient-to-tr from-transparent to-gray-100 opacity-50 float-animation" />
-        <div className="absolute top-[15%] right-[10%] w-8 h-8 rounded-full bg-gradient-to-br from-transparent to-gray-200 opacity-50 pulse-animation" />
+        <div className="absolute bottom-[10%] left-[5%] w-12 h-12 rounded-full bg-gradient-to-tr from-transparent to-gray-400 opacity-60 float-animation shadow-md" />
+        <div className="absolute top-[15%] right-[10%] w-8 h-8 rounded-full bg-gradient-to-br from-transparent to-gray-500 opacity-60 pulse-animation shadow-sm" />
         <div
-          className="absolute top-[40%] left-[10%] w-6 h-6 rounded-full bg-gradient-to-tl from-transparent to-gray-100 opacity-40 pulse-animation"
+          className="absolute top-[40%] left-[10%] w-6 h-6 rounded-full bg-gradient-to-tl from-transparent to-gray-400 opacity-50 pulse-animation shadow-sm"
           style={{ animationDelay: "1s" }}
         />
         <div
-          className="absolute bottom-[30%] right-[5%] w-10 h-10 rounded-full bg-gradient-to-br from-transparent to-gray-200 opacity-30 float-animation"
+          className="absolute bottom-[30%] right-[5%] w-10 h-10 rounded-full bg-gradient-to-br from-transparent to-gray-500 opacity-50 float-animation shadow-md"
           style={{ animationDelay: "0.5s" }}
         />
       </div>
@@ -306,14 +310,15 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            className="drop-shadow-md"
           >
             <path
               d="M12 5V19M12 19L5 12M12 19L19 12"
               stroke="black"
-              strokeWidth="1.5"
+              strokeWidth="1.8"
               strokeLinecap="round"
               strokeLinejoin="round"
-              opacity="0.3"
+              opacity="0.5"
             />
           </svg>
         </motion.div>
