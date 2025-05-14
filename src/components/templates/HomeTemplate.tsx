@@ -21,9 +21,9 @@ const HomeTemplate: React.FC<HomeTemplateProps> = ({ className = "" }) => {
   return (
     <div className={`min-h-screen bg-white ${className}`}>
       <HeroSection
-        headline="Transform Your Online Presence"
-        subheadline="Create, manage, and track powerful short links with advanced analytics and QR code support"
-        ctaText="Get Started"
+        headline="Elevate Your Digital Presence with Cylink"
+        subheadline="Create powerful branded links, gain valuable insights, and streamline your online marketing with our all-in-one platform"
+        ctaText="Use Cylink Now"
         ctaUrl="/login"
       />
       {/* Additional sections can be added here */}
