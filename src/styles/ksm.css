@@ -1,0 +1,152 @@
+/* KSM Cyber Security Section Custom Styles */
+
+/* Network nodes background pattern */
+.network-pattern {
+  background-image: radial-gradient(
+      rgba(99, 102, 241, 0.05) 1px,
+      transparent 1px
+    ),
+    radial-gradient(rgba(20, 184, 166, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px, 30px 30px;
+  background-position: 0 0, 20px 20px;
+  animation: fade-in 1.5s ease-out forwards;
+}
+
+/* Node highlights that pulse */
+.node-highlight {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: rgba(79, 70, 229, 0.5);
+  box-shadow: 0 0 15px 2px rgba(79, 70, 229, 0.3);
+  filter: blur(1px);
+}
+
+.node-highlight.purple {
+  background-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 15px 2px rgba(139, 92, 246, 0.3);
+}
+
+.node-highlight.teal {
+  background-color: rgba(20, 184, 166, 0.5);
+  box-shadow: 0 0 15px 2px rgba(20, 184, 166, 0.3);
+}
+
+/* Mission card hover effects */
+.mission-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.mission-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px -5px rgba(107, 70, 193, 0.1);
+}
+
+/* Glow effect for cards and elements */
+.glow-effect {
+  position: relative;
+}
+
+.glow-effect::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 40px 10px rgba(79, 70, 229, 0.1);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.glow-effect:hover::after {
+  opacity: 1;
+}
+
+/* Glassmorphism styles */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+/* Connection lines between mission cards */
+.connection-line {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(139, 92, 246, 0.3),
+    transparent
+  );
+}
+
+/* Animated counter overflow fix */
+.statistic-value {
+  height: 2.5rem;
+  line-height: 2.5rem;
+  overflow: hidden;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes pulseNode {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
+@keyframes flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Utility classes */
+.animate-pulse-slow {
+  animation: pulseNode 4s infinite ease-in-out;
+}
+
+.animate-pulse-medium {
+  animation: pulseNode 3s infinite ease-in-out;
+}
+
+.animate-pulse-fast {
+  animation: pulseNode 2s infinite ease-in-out;
+}
+
+.animate-gradient-flow {
+  background-size: 200% auto;
+  animation: flow 3s linear infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .network-pattern {
+    background-size: 30px 30px, 20px 20px;
+  }
+}

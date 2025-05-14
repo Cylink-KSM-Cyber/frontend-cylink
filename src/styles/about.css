@@ -1,0 +1,144 @@
+/* About Section Custom Styles */
+
+/* Enhanced contrast for dark section */
+.about-section {
+  position: relative;
+  background-color: #121212;
+  color: #ffffff;
+}
+
+/* Noise texture overlay */
+.noise-texture {
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAACXBIWXMAAAsTAAALEwEAmpwYAAAFEmlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDIgNzkuMTYwOTI0LCAyMDE3LzA3LzEzLTAxOjA2OjM5ICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgKFdpbmRvd3MpIiB4bXA6Q3JlYXRlRGF0ZT0iMjAyMC0wNC0xNVQxNTo1Nzo1NC0wNDowMCIgeG1wOk1vZGlmeURhdGU9IjIwMjAtMDQtMTVUMTY6MDc6NDItMDQ6MDAiIHhtcDpNZXRhZGF0YURhdGU9IjIwMjAtMDQtMTVUMTY6MDc6NDItMDQ6MDAiIGRjOmZvcm1hdD0iaW1hZ2UvcG5nIiBwaG90b3Nob3A6Q29sb3JNb2RlPSIzIiBwaG90b3Nob3A6SUNDUHJvZmlsZT0ic1JHQiBJRUM2MTk2Ni0yLjEiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6ODU3NzUyYWUtZTFiMy0yMDQ2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");
+  background-repeat: repeat;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+/* Grid pattern overlay */
+.grid-pattern {
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.2;
+}
+
+/* Highlight items */
+.highlight-item {
+  position: relative;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.highlight-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
+}
+
+.highlight-item:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent);
+  transition: height 0.3s ease;
+}
+
+.highlight-item:hover:before {
+  height: 100%;
+}
+
+/* Animated decorative elements */
+.circle-accent {
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  position: absolute;
+  opacity: 0.2;
+  transition: all 0.5s ease;
+}
+
+.circle-accent.large {
+  width: 200px;
+  height: 200px;
+}
+
+.circle-accent.medium {
+  width: 100px;
+  height: 100px;
+}
+
+.circle-accent.small {
+  width: 50px;
+  height: 50px;
+}
+
+/* Line accent */
+.line-accent {
+  position: absolute;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  height: 1px;
+  width: 100px;
+  opacity: 0.5;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+  .about-section {
+    padding: 60px 0;
+  }
+
+  .highlight-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Animation classes */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
