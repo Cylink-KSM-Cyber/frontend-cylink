@@ -21,7 +21,9 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   className = "",
 }) => {
   return (
-    <section className={`relative min-h-screen overflow-hidden ${className}`}>
+    <section
+      className={`h-screen flex items-center overflow-hidden ${className}`}
+    >
       {/* Enhanced Background with Gradient and Pattern */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-white to-gray-50">
         <svg
@@ -53,15 +55,37 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         />
       </div>
 
-      {/* Content Container */}
-      <div className="container mx-auto px-6 py-16 md:py-28 relative">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+      {/* Model positioned at the bottom */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.7 }}
+        className="absolute right-0 bottom-0 w-[45%] h-[90%] md:h-[95%] z-0"
+      >
+        <div className="relative w-full h-full">
+          <Image
+            src="/images/model.png"
+            alt="Model"
+            fill
+            className="object-contain object-bottom"
+            priority
+            sizes="(max-width: 768px) 100vw, 45vw"
+          />
+
+          {/* Left decorative frame */}
+          <div className="absolute h-64 w-64 border-t border-l border-gray-200 top-[30%] -left-5 rounded-tl-3xl opacity-50"></div>
+        </div>
+      </motion.div>
+
+      {/* Content Container - aligned with model's eye level */}
+      <div className="container mx-auto px-6 relative z-10 md:mt-0">
+        <div className="flex flex-col items-start w-full">
           {/* Text Content */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="w-full md:w-[55%] mb-16 md:mb-0 z-10"
+            className="w-full md:w-[55%] md:mt-[15vh]"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black mb-8 min-h-[1.2em] tracking-tight">
               <DecryptedText
@@ -92,25 +116,6 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             </h2>
 
             <HeroCallToAction text={ctaText} url={ctaUrl} />
-          </motion.div>
-
-          {/* Image Container */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3, duration: 0.7 }}
-            className="w-full md:w-[50%] relative z-0 md:-mr-[5%]"
-          >
-            <div className="relative h-[60vh] md:h-[70vh]">
-              <Image
-                src="/images/model.png"
-                alt="Model"
-                fill
-                className="object-contain md:object-right"
-                priority
-                sizes="(max-width: 768px) 100vw, 45vw"
-              />
-            </div>
           </motion.div>
         </div>
       </div>
