@@ -55,37 +55,34 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         />
       </div>
 
-      {/* Model positioned at the bottom */}
+      {/* Model positioned at the bottom right */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.7 }}
-        className="absolute right-0 bottom-0 w-[45%] h-[90%] md:h-[95%] z-0"
+        className="absolute right-[0%] bottom-0 w-[50%] h-[95%] z-0"
       >
         <div className="relative w-full h-full">
           <Image
             src="/images/model.png"
             alt="Model"
             fill
-            className="object-contain object-bottom"
+            className="object-contain object-bottom object-right"
             priority
-            sizes="(max-width: 768px) 100vw, 45vw"
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
-
-          {/* Left decorative frame */}
-          <div className="absolute h-64 w-64 border-t border-l border-gray-200 top-[30%] -left-5 rounded-tl-3xl opacity-50"></div>
         </div>
       </motion.div>
 
       {/* Content Container - aligned with model's eye level */}
-      <div className="container mx-auto px-6 relative z-10 md:mt-0">
+      <div className="container mx-auto px-6 relative z-10">
         <div className="flex flex-col items-start w-full">
-          {/* Text Content */}
+          {/* Text Content - adjusted to eye level */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
-            className="w-full md:w-[55%] md:mt-[15vh]"
+            className="w-full md:w-[50%] md:mt-[-5vh]"
           >
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black mb-8 min-h-[1.2em] tracking-tight">
               <DecryptedText
