@@ -59,13 +59,28 @@ const CallToActionSection: React.FC<CallToActionSectionProps> = ({
 
   const y1 = useTransform(scrollYProgress, [0, 1], [0, -50]);
   const y2 = useTransform(scrollYProgress, [0, 1], [0, -30]);
+  const y3 = useTransform(scrollYProgress, [0, 1], [0, -20]);
 
-  // Origami-inspired decoration points
+  // Origami-inspired decoration points - expanded list with more elements
   const origamiPoints = [
-    { x: "5%", y: "15%", delay: 0, rotate: 15 },
-    { x: "92%", y: "25%", delay: 0.2, rotate: -20 },
-    { x: "70%", y: "85%", delay: 0.3, rotate: 30 },
-    { x: "20%", y: "75%", delay: 0.1, rotate: -15 },
+    // Original points
+    { x: "5%", y: "15%", delay: 0, rotate: 15, size: "w-12 h-12" },
+    { x: "92%", y: "25%", delay: 0.2, rotate: -20, size: "w-12 h-12" },
+    { x: "70%", y: "85%", delay: 0.3, rotate: 30, size: "w-12 h-12" },
+    { x: "20%", y: "75%", delay: 0.1, rotate: -15, size: "w-12 h-12" },
+    // Additional elements
+    { x: "35%", y: "10%", delay: 0.5, rotate: 10, size: "w-8 h-8" },
+    { x: "78%", y: "40%", delay: 0.7, rotate: -25, size: "w-10 h-10" },
+    { x: "15%", y: "40%", delay: 0.9, rotate: 20, size: "w-6 h-6" },
+    { x: "60%", y: "95%", delay: 1.1, rotate: -10, size: "w-8 h-8" },
+    { x: "90%", y: "65%", delay: 1.3, rotate: 5, size: "w-5 h-5" },
+    { x: "45%", y: "70%", delay: 1.5, rotate: -15, size: "w-7 h-7" },
+    // Small elements for detail
+    { x: "25%", y: "5%", delay: 0.6, rotate: 0, size: "w-4 h-4" },
+    { x: "65%", y: "20%", delay: 0.8, rotate: 45, size: "w-3 h-3" },
+    { x: "8%", y: "60%", delay: 1.0, rotate: -30, size: "w-4 h-4" },
+    { x: "50%", y: "50%", delay: 1.2, rotate: 15, size: "w-3 h-3" },
+    { x: "85%", y: "80%", delay: 1.4, rotate: -5, size: "w-4 h-4" },
   ];
 
   return (
@@ -109,15 +124,17 @@ const CallToActionSection: React.FC<CallToActionSectionProps> = ({
           className="absolute -bottom-40 left-[30%] w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-teal-50 to-blue-50 opacity-60 blur-3xl"
         />
 
-        {/* Origami-inspired decorative elements */}
+        {/* Origami-inspired decorative elements with individual animations */}
         {origamiPoints.map((point, index) => (
           <motion.div
             key={index}
-            className="absolute w-12 h-12 opacity-[0.07] origami-animate"
+            className={`absolute ${point.size} opacity-[0.07] origami-animate-${
+              (index % 4) + 1
+            }`}
             style={{
               left: point.x,
               top: point.y,
-              y: index % 2 ? y1 : y2,
+              y: index % 3 === 0 ? y1 : index % 3 === 1 ? y2 : y3,
             }}
             initial={{ opacity: 0, rotate: 0 }}
             whileInView={{ opacity: 0.07, rotate: point.rotate }}
