@@ -2,6 +2,7 @@
 
 import React from "react";
 import HeroSection from "@/components/organisms/HeroSection";
+import FeaturesSection from "@/components/organisms/FeaturesSection";
 
 /**
  * HomeTemplate component props interface
@@ -26,6 +27,9 @@ const HomeTemplate: React.FC<HomeTemplateProps> = ({ className = "" }) => {
         ctaText="Use Cylink Now"
         ctaUrl="/login"
       />
+
+      <FeaturesSection />
+
       {/* Additional sections can be added here */}
     </div>
   );
