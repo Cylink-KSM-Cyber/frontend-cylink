@@ -164,18 +164,20 @@ const KSMCyberSecuritySection: React.FC<KSMCyberSecuritySectionProps> = ({
             </motion.h2>
 
             {/* Statistics cards - administrators and members */}
-            <div className="flex flex-wrap justify-center gap-8 my-10">
+            <div className="flex flex-wrap justify-center gap-8 my-12">
               <StatisticCard
                 value={37}
                 label="Active Administrators"
                 iconPath={ICONS.administrators}
                 delay={0.2}
+                className="mx-4"
               />
               <StatisticCard
                 value={60}
                 label="Active Members"
                 iconPath={ICONS.members}
                 delay={0.4}
+                className="mx-4"
               />
             </div>
 
