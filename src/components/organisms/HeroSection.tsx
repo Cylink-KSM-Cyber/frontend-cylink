@@ -54,74 +54,65 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       </div>
 
       {/* Content Container */}
-      <div className="container mx-auto px-6 py-16 md:py-28 flex flex-col md:flex-row items-center justify-between relative z-10">
-        {/* Text Content */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          className="w-full md:w-1/2 mb-16 md:mb-0 md:pr-12"
-        >
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black mb-8 min-h-[1.2em] tracking-tight">
-            <DecryptedText
-              text={headline}
-              animateOn="view"
-              sequential={true}
-              revealDirection="start"
-              speed={130}
-              maxIterations={30}
-              className="text-black"
-              encryptedClassName="text-gray-400"
-              parentClassName="inline-block"
-            />
-          </h1>
+      <div className="container mx-auto px-6 py-16 md:py-28 relative">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+          {/* Text Content */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6 }}
+            className="w-full md:w-[55%] mb-16 md:mb-0 z-10"
+          >
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-black mb-8 min-h-[1.2em] tracking-tight">
+              <DecryptedText
+                text={headline}
+                animateOn="view"
+                sequential={true}
+                revealDirection="start"
+                speed={130}
+                maxIterations={30}
+                className="text-black"
+                encryptedClassName="text-gray-400"
+                parentClassName="inline-block"
+              />
+            </h1>
 
-          <h2 className="text-xl md:text-2xl text-gray-700 mb-10 max-w-xl min-h-[2.4em] leading-relaxed">
-            <DecryptedText
-              text={subheadline}
-              animateOn="view"
-              sequential={true}
-              revealDirection="start"
-              speed={20}
-              maxIterations={8}
-              className="text-gray-700"
-              encryptedClassName="text-gray-400"
-              parentClassName="inline-block"
-            />
-          </h2>
+            <h2 className="text-xl md:text-2xl text-gray-700 mb-10 max-w-xl min-h-[2.4em] leading-relaxed">
+              <DecryptedText
+                text={subheadline}
+                animateOn="view"
+                sequential={true}
+                revealDirection="start"
+                speed={20}
+                maxIterations={8}
+                className="text-gray-700"
+                encryptedClassName="text-gray-400"
+                parentClassName="inline-block"
+              />
+            </h2>
 
-          <HeroCallToAction text={ctaText} url={ctaUrl} />
-        </motion.div>
+            <HeroCallToAction text={ctaText} url={ctaUrl} />
+          </motion.div>
 
-        {/* Image Container */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.7 }}
-          className="w-full md:w-1/2 relative"
-        >
-          <div className="relative h-[50vh] md:h-[70vh] w-full">
-            <Image
-              src="/images/model.png"
-              alt="Model"
-              fill
-              className="object-contain"
-              priority
-            />
-
-            {/* Single subtle decorative element */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
-              className="absolute -z-10 -bottom-16 -right-16 w-72 h-72 border border-gray-200 rounded-full"
-              style={{
-                background:
-                  "radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%)",
-              }}
-            />
-          </div>
-        </motion.div>
+          {/* Image Container */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.7 }}
+            className="w-full md:w-[50%] relative z-0 md:-mr-[5%]"
+          >
+            <div className="relative h-[60vh] md:h-[70vh]">
+              <Image
+                src="/images/model.png"
+                alt="Model"
+                fill
+                className="object-contain md:object-right"
+                priority
+                sizes="(max-width: 768px) 100vw, 45vw"
+              />
+            </div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
