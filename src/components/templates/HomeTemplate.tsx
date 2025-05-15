@@ -8,6 +8,7 @@ import HowItWorksSection from "@/components/organisms/HowItWorksSection";
 import KSMCyberSecuritySection from "@/components/organisms/KSMCyberSecuritySection";
 import CallToActionSection from "@/components/organisms/CallToActionSection";
 import FooterSection from "@/components/organisms/FooterSection";
+import Navbar from "@/components/molecules/Navbar";
 
 /**
  * HomeTemplate component props interface
@@ -26,6 +27,8 @@ interface HomeTemplateProps {
 const HomeTemplate: React.FC<HomeTemplateProps> = ({ className = "" }) => {
   return (
     <div className={`min-h-screen bg-white ${className}`}>
+      <Navbar />
+
       <HeroSection
         headline="Elevate Your Digital Presence with Cylink"
         subheadline="Create powerful branded links, gain valuable insights, and streamline your online marketing with our all-in-one platform"

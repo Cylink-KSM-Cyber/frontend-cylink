@@ -42,8 +42,10 @@ const FooterSection: React.FC<FooterSectionProps> = ({ className = "" }) => {
               valuable insights.
             </p>
             <div className="space-y-2 mt-6">
-              <p className="text-white opacity-80">Email: contact@cylink.app</p>
-              <p className="text-white opacity-80">Phone: +1 (555) 123-4567</p>
+              <p className="text-white opacity-80">
+                Email: cybersecurity@upnvj.ac.id
+              </p>
+              <p className="text-white opacity-80">Phone: +62 878-8798-5688</p>
             </div>
             <div className="flex justify-center md:justify-start mt-6">
               <FooterSocialLinks />

@@ -34,22 +34,12 @@ const FooterSocialLinks: React.FC<FooterSocialLinksProps> = ({
   return (
     <div className={`flex space-x-4 ${className}`}>
       <SocialIcon
-        href="https://twitter.com/cylinkapp"
-        ariaLabel="Follow us on Twitter"
-        path={SOCIAL_ICONS.twitter}
-      />
-      <SocialIcon
-        href="https://instagram.com/cylinkapp"
+        href="https://instagram.com/cyberupnvj"
         ariaLabel="Follow us on Instagram"
         path={SOCIAL_ICONS.instagram}
       />
       <SocialIcon
-        href="https://linkedin.com/company/cylinkapp"
-        ariaLabel="Follow us on LinkedIn"
-        path={SOCIAL_ICONS.linkedin}
-      />
-      <SocialIcon
-        href="https://github.com/cylinkapp"
+        href="https://github.com/Cylink-KSM-Cyber"
         ariaLabel="Follow us on GitHub"
         path={SOCIAL_ICONS.github}
       />
