@@ -4,81 +4,53 @@ import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-
-/**
- * Logo properties interface
- * @interface LogoProps
- */
-interface LogoProps {
-  /** Logo size variant */
-  size?: "sm" | "md" | "lg";
-  /** Whether to include link to homepage */
-  withLink?: boolean;
-  /** Whether to show text with logo */
-  showText?: boolean;
-  /** Custom className */
-  className?: string;
-}
+import { LogoProps } from "@/interfaces/navbar";
 
 /**
  * Logo component
- * @description Displays the CyLink logo with optional link to homepage
- * @param props - Logo properties
- * @returns Logo component
+ * @description A component that displays the CyLink logo with animation effects
  */
 const Logo: React.FC<LogoProps> = ({
+  className = "",
   size = "md",
   withLink = true,
-  showText = true,
-  className = "",
+  showText = false,
 }) => {
-  // Logo image dimensions based on size
-  const dimensions = {
-    sm: { width: 24, height: 24 },
-    md: { width: 32, height: 32 },
-    lg: { width: 48, height: 48 },
-  };
-
-  // Text size classes
-  const textSizeClasses = {
-    sm: "text-xl",
-    md: "text-2xl",
-    lg: "text-4xl",
-  };
+  // Determine size classes
+  const sizeClasses =
+    {
+      sm: "w-24 h-8",
+      md: "w-32 h-10",
+      lg: "w-40 h-12",
+    }[size] || "w-32 h-10";
 
   const logoContent = (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`flex items-center font-bold ${className}`}
+      className={`relative ${sizeClasses}`}
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring", stiffness: 400, damping: 10 }}
     >
       <Image
         src="/logo/logo-cylink.png"
-        alt="CyLink Logo"
-        width={dimensions[size].width}
-        height={dimensions[size].height}
-        className="mr-2"
+        alt="CyLink"
+        fill
+        sizes="(max-width: 768px) 128px, 128px"
+        className="object-contain"
         priority
       />
-
-      {showText && (
-        <div className={textSizeClasses[size]}>
-          <span>Cy</span>
-          <span className="text-black">Link</span>
-        </div>
-      )}
+      {showText && <span className="sr-only">CyLink</span>}
     </motion.div>
   );
 
   if (withLink) {
     return (
-      <Link href="/" className="focus:outline-none">
+      <Link href="/" className={`block ${className}`}>
         {logoContent}
       </Link>
     );
   }
 
-  return logoContent;
+  return <div className={`block ${className}`}>{logoContent}</div>;
 };
 
 export default Logo;

@@ -1,0 +1,147 @@
+/* How It Works Section Custom Styles */
+
+/* Active step highlighting */
+.step-active {
+  position: relative;
+  z-index: 10;
+}
+
+.step-active::before {
+  content: "";
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  width: 4px;
+  height: 60%;
+  background: linear-gradient(to bottom, rgba(59, 130, 246, 0.3), transparent);
+  transform: translateY(-50%);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+
+/* Hexagon animation utilities */
+.animate-float-slow {
+  animation: float 10s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate 20s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse 8s ease-in-out infinite;
+}
+
+/* Custom glowing effect for hexagons */
+.hexagon-glow {
+  position: relative;
+}
+
+.hexagon-glow::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2), transparent 70%);
+  border-radius: 30%;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hexagon-glow:hover::after {
+  opacity: 1;
+}
+
+/* Circuit board pattern animation */
+.circuit-animate path {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: draw 10s linear forwards infinite;
+}
+
+.circuit-animate circle {
+  animation: pulse 4s ease-in-out infinite;
+}
+
+/* Timeline connector animation */
+.timeline-connector {
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-connector::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(59, 130, 246, 0.2),
+    transparent
+  );
+  animation: flow 3s linear infinite;
+}
+
+/* Animation keyframes */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes flow {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .step-active::before {
+    left: 50%;
+    top: -10px;
+    width: 60%;
+    height: 4px;
+    background: linear-gradient(to right, rgba(59, 130, 246, 0.3), transparent);
+    transform: translateX(-50%);
+  }
+}

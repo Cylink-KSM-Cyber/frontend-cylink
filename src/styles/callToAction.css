@@ -1,0 +1,233 @@
+/* Call-to-Action section custom styles */
+
+/* Origami-inspired animation */
+@keyframes fold {
+  0% {
+    transform: scale(0.95) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.05) rotate(5deg);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.5;
+  }
+}
+
+/* Primary origami animation that runs continuously */
+.origami-animate {
+  animation: fold 10s ease-in-out infinite;
+}
+
+/* Additional micro-animations for origami elements */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+  75% {
+    transform: translateY(8px) rotate(-3deg);
+  }
+}
+
+@keyframes pulse-rotate {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.07;
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 0.11;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 0.04;
+    transform: translateX(-2px);
+  }
+  50% {
+    opacity: 0.12;
+    transform: translateX(2px);
+  }
+  100% {
+    opacity: 0.04;
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(5px, -2px) rotate(2deg);
+  }
+  50% {
+    transform: translate(0, 5px) rotate(0deg);
+  }
+  75% {
+    transform: translate(-5px, -3px) rotate(-3deg);
+  }
+}
+
+/* Apply different animations to each origami with different timing for more organic movement */
+.origami-animate-1 {
+  animation: float 12s ease-in-out infinite;
+}
+
+.origami-animate-2 {
+  animation: pulse-rotate 15s ease-in-out infinite;
+}
+
+.origami-animate-3 {
+  animation: shimmer 10s ease-in-out infinite;
+}
+
+.origami-animate-4 {
+  animation: drift 18s ease-in-out infinite;
+}
+
+/* Combine animations with delay for small triangles to create more dynamic effects */
+.origami-animate-1 svg {
+  transform-origin: center;
+  animation: rotate 20s linear infinite;
+}
+
+.origami-animate-2 svg {
+  transform-origin: center;
+  animation: rotate 25s linear infinite reverse;
+}
+
+.origami-animate-3 svg {
+  transform-origin: center;
+  animation: pulse 13s ease-in-out infinite;
+}
+
+.origami-animate-4 svg {
+  transform-origin: center;
+  animation: pulse 16s ease-in-out infinite reverse;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Shine effect animation */
+@keyframes shine {
+  0% {
+    transform: translateX(-100%) skewX(-15deg);
+  }
+  100% {
+    transform: translateX(100%) skewX(-15deg);
+  }
+}
+
+.shine-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shine-effect::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translateX(-100%) skewX(-15deg);
+  transition: all 0.5s ease;
+}
+
+.shine-effect:hover::after {
+  transform: translateX(100%) skewX(-15deg);
+  transition: all 0.7s ease;
+}
+
+/* Enhanced button hover effects */
+.cta-button {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.cta-button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(100%);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.cta-button:hover::before {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Grid background pattern */
+.grid-pattern {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Japanese-inspired accent line */
+.accent-line {
+  position: relative;
+}
+
+.accent-line::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 20px;
+  width: 1px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), transparent);
+  transform: translateX(-50%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .cta-buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .accent-line::before {
+    height: 15px;
+  }
+}
