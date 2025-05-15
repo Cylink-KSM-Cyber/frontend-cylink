@@ -35,6 +35,7 @@ const FooterSection: React.FC<FooterSectionProps> = ({ className = "" }) => {
           <FooterColumn
             title="Cylink"
             className="mb-12 md:mb-0 text-center md:text-left"
+            defaultOpen={true}
           >
             <p className="mb-4 text-white opacity-80">
               Elevate your digital presence with powerful branded links and
@@ -50,7 +51,11 @@ const FooterSection: React.FC<FooterSectionProps> = ({ className = "" }) => {
           </FooterColumn>
 
           {/* Legal Links */}
-          <FooterColumn title="Legal" className="mb-0 text-center md:text-left">
+          <FooterColumn
+            title="Legal"
+            className="mb-0 text-center md:text-left"
+            defaultOpen={true}
+          >
             <div className="space-y-3 flex flex-col items-center md:items-start">
               <div>
                 <FooterLink href="/terms" className="footer-link-hover">

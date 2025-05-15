@@ -14,6 +14,8 @@ interface FooterColumnProps {
   className?: string;
   /** Whether the column is collapsible on mobile */
   collapsible?: boolean;
+  /** Whether the column is open by default on mobile */
+  defaultOpen?: boolean;
 }
 
 /**
@@ -27,8 +29,9 @@ const FooterColumn: React.FC<FooterColumnProps> = ({
   children,
   className = "",
   collapsible = true,
+  defaultOpen = true,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   const toggleOpen = () => {
     if (collapsible) {
