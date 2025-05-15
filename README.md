@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Cylink - URL Shortener & QR Code Generator
 
-## Getting Started
+A modern web application for URL shortening and QR code generation with analytics and management features.
 
-First, run the development server:
+## Technologies Used
+
+- **Frontend Framework**: Next.js 15.3.0
+- **UI Library**: React 19.0.0
+- **State Management**: React Context API
+- **Form Handling**: React Hook Form with Zod validation
+- **HTTP Client**: Axios
+- **Data Visualization**: Visx for analytics charts
+- **Authentication**: JWT-based with Cookie storage
+- **QR Code**: QRCode.js and react-qr-code
+- **Styling**: TailwindCSS
+- **TypeScript**: 5.x
+
+## Quick Start
+
+1. Clone the repository from the internal Git server
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up environment variables (refer to `.env.example` or internal documentation)
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Development Commands
 
 ```bash
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm run start
+
+# Run linting
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Key Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **URL Shortening**: Create and manage shortened URLs
+- **QR Code Generation**: Generate customizable QR codes for URLs
+- **Analytics Dashboard**: Track URL performance with click metrics
+- **User Authentication**: Secure login system
+- **URL Management**: Activate/deactivate URLs, delete URLs
+- **QR Code Customization**: Colors, logo inclusion, and style options
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deployment
 
-## Learn More
+Refer to the internal deployment documentation for detailed instructions on deploying to development, staging, and production environments.
 
-To learn more about Next.js, take a look at the following resources:
+Basic deployment can be done using Docker Compose:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Development
+docker-compose up -d
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Staging
+docker-compose -f docker-compose.staging.yml up -d
 
-## Deploy on Vercel
+# Production
+docker-compose -f docker-compose.prod.yml up -d
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Documentation
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For more detailed information, please refer to:
+
+- [Internal API Documentation](link-to-internal-docs)
+- [Deployment Guide](link-to-internal-deployment-guide)
+- [Architecture Overview](link-to-architecture-docs)
+
+## Contact
+
+For questions and support, please contact the development team through internal channels.
