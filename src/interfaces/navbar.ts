@@ -28,6 +28,12 @@ export interface NavbarDecorationsProps {
 export interface LogoProps {
   /** CSS class name to apply to the component */
   className?: string;
+  /** Size of the logo: sm, md, lg */
+  size?: string;
+  /** Whether to render the logo as a link */
+  withLink?: boolean;
+  /** Whether to show the text alongside the logo */
+  showText?: boolean;
 }
 
 /**
