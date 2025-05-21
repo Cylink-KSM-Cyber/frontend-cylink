@@ -17,6 +17,9 @@ import {
   RiLink,
 } from "react-icons/ri";
 
+import { MdInfoOutline } from "react-icons/md";
+
+
 /**
  * Prop types for UrlsTable component
  */
@@ -298,6 +301,12 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-1">
+                    <ButtonIcon
+                      icon={<MdInfoOutline />}
+                      onClick={() => onGenerateQr?.(url)}
+                      tooltip="View Detail"
+                      ariaLabel="View Detail Link"
+                    />
                     <ButtonIcon
                       icon={copiedId === url.id ? "✓" : <RiFileCopyLine />}
                       onClick={() => handleCopyClick(url)}
