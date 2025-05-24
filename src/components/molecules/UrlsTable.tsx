@@ -1,9 +1,12 @@
+'use client'
+
 import React, { useState } from "react";
 import { Url } from "@/interfaces/url";
 import StatusBadge from "@/components/atoms/StatusBadge";
 import ButtonIcon from "@/components/atoms/ButtonIcon";
 import Button from "@/components/atoms/Button";
 import { formatShortUrl } from "@/utils/urlFormatter";
+import { useRouter } from "next/navigation";
 
 // Icon imports
 import {
@@ -16,6 +19,9 @@ import {
   RiArrowDownSLine,
   RiLink,
 } from "react-icons/ri";
+
+import { MdInfoOutline } from "react-icons/md";
+
 
 /**
  * Prop types for UrlsTable component
@@ -80,6 +86,8 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   className = "",
 }) => {
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const router = useRouter();
+
 
   // Handle sort click
   const handleSortClick = (column: string) => {
@@ -298,6 +306,12 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-1">
+                    <ButtonIcon
+                      icon={<MdInfoOutline />}
+                      onClick={() => router.push(`urls/${url.id}`)}
+                      tooltip="View Detail"
+                      ariaLabel="View Detail Link"
+                    />
                     <ButtonIcon
                       icon={copiedId === url.id ? "✓" : <RiFileCopyLine />}
                       onClick={() => handleCopyClick(url)}
