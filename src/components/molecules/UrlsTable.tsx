@@ -1,9 +1,12 @@
+'use client'
+
 import React, { useState } from "react";
 import { Url } from "@/interfaces/url";
 import StatusBadge from "@/components/atoms/StatusBadge";
 import ButtonIcon from "@/components/atoms/ButtonIcon";
 import Button from "@/components/atoms/Button";
 import { formatShortUrl } from "@/utils/urlFormatter";
+import { useRouter } from "next/navigation";
 
 // Icon imports
 import {
@@ -83,6 +86,8 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   className = "",
 }) => {
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const router = useRouter();
+
 
   // Handle sort click
   const handleSortClick = (column: string) => {
@@ -303,7 +308,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                   <div className="flex justify-end space-x-1">
                     <ButtonIcon
                       icon={<MdInfoOutline />}
-                      onClick={() => onGenerateQr?.(url)}
+                      onClick={() => router.push(`urls/${url.id}`)}
                       tooltip="View Detail"
                       ariaLabel="View Detail Link"
                     />
