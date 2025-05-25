@@ -52,7 +52,7 @@ const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
           <RiFilter2Line className="w-5 h-5" />
         </div>
         <select
-          value={filters.status || "all"}
+          value={filters.status ?? "all"}
           onChange={handleStatusChange}
           className="bg-white border border-gray-200 rounded-lg pl-10 pr-8 py-2 text-sm shadow-sm hover:border-blue-400 focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 cursor-pointer transition-all duration-200 appearance-none"
         >
@@ -90,7 +90,7 @@ const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
           <RiListCheck2 className="w-5 h-5" />
         </div>
         <select
-          value={filters.limit || 10}
+          value={filters.limit ?? 10}
           onChange={handleLimitChange}
           className="bg-white border border-gray-200 rounded-lg pl-10 pr-8 py-2 text-sm shadow-sm hover:border-purple-400 focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50 cursor-pointer transition-all duration-200 appearance-none"
         >
