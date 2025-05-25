@@ -17,14 +17,28 @@ import {
 } from "react-icons/ri";
 
 /**
- * Custom hook for handling dashboard analytics data
+ * Custom hook for handling dashboard analytics data for a specific URL
  * Aggregates data from multiple API endpoints into a unified dashboard data structure
  *
+ * @param urlId - The ID of the URL to get analytics for
  * @returns Dashboard analytics data and controls
  */
-export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyticsData => {
+export const useUrlDetailDashboardAnalytics = (
+  urlId?: number
+): DashboardAnalyticsData => {
   // State for time period selection
   const [timePeriod, setTimePeriod] = useState<TimePeriod>("30");
+
+  // Fetch URL-specific analytics
+  const {
+    analyticsData: urlAnalytics,
+    isLoading: isUrlAnalyticsLoading,
+    error: urlAnalyticsError,
+    refetch: refetchUrlAnalytics,
+  } = useUrlAnalytics({
+    urlId,
+    enableLazyLoading: false,
+  });
 
   // Call existing hooks with the selected time period
   const {
@@ -70,54 +84,85 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
     sortOrder: "desc",
   });
 
-  // Fetch analytics for top performing URL if available
-  const UrlId = urlId || undefined;
-
-  // Gunakan hook useUrlAnalytics yang sudah disederhanakan
-  const {
-    analyticsData: UrlAnalytics,
-    isLoading: isUrlAnalyticsLoading,
-    error: UrlAnalyticsError,
-  } = useUrlAnalytics({
-    urlId: UrlId,
-  });
-
-  // Process top URL analytics data to create the comparison data manually
+  // Process URL analytics data to create the comparison data
   const processedUrlAnalytics = useMemo(() => {
-    if (!UrlAnalytics || !UrlId) {
+    if (!urlAnalytics || !urlId) {
       return undefined;
     }
 
-    // Hitung perubahan performa secara manual
-    // Karena kita tidak mendapatkan data perbandingan langsung dari API,
-    // buat perbandingan dengan presentase default 10%
-    const clicksComparison = {
-      current: UrlAnalytics.total_clicks,
-      previous: Math.round(UrlAnalytics.total_clicks / 1.1), // Asumsi perubahan sebesar 10%
-      change: Math.round(UrlAnalytics.total_clicks * 0.1),
-      changePercentage: 10.0, // Default 10% peningkatan
-      periodDays: 7, // Default 7 hari
-    };
+    // Use actual analytics data if available, with transformation for compatibility
+    const clicksComparison = urlAnalytics.historical_analysis?.summary
+      ?.comparison?.total_clicks
+      ? {
+          current: Number(
+            urlAnalytics.historical_analysis.summary.comparison.total_clicks
+              .current
+          ),
+          previous: Number(
+            urlAnalytics.historical_analysis.summary.comparison.total_clicks
+              .previous
+          ),
+          change: Number(
+            urlAnalytics.historical_analysis.summary.comparison.total_clicks
+              .change
+          ),
+          changePercentage: Number(
+            urlAnalytics.historical_analysis.summary.comparison.total_clicks
+              .change_percentage
+          ),
+          periodDays:
+            urlAnalytics.historical_analysis.summary.comparison.period_days,
+        }
+      : {
+          current: urlAnalytics.total_clicks,
+          previous: Math.round(urlAnalytics.total_clicks / 1.1), // Fallback if no comparison data
+          change: Math.round(urlAnalytics.total_clicks * 0.1),
+          changePercentage: 10.0, // Default 10% increase
+          periodDays: 7, // Default 7 days
+        };
 
     return {
-      urlId: UrlId,
-      shortCode: UrlAnalytics.short_code,
-      totalClicks: UrlAnalytics.total_clicks,
-      uniqueVisitors: UrlAnalytics.unique_visitors,
+      urlId: urlId,
+      shortCode: urlAnalytics.short_code,
+      totalClicks: urlAnalytics.total_clicks,
+      uniqueVisitors: urlAnalytics.unique_visitors,
       clicksComparison,
       isLoading: isUrlAnalyticsLoading,
-      isError: !!UrlAnalyticsError,
-      error: UrlAnalyticsError,
+      isError: !!urlAnalyticsError,
+      error: urlAnalyticsError,
+      browserStats: urlAnalytics.browser_stats,
+      deviceStats: urlAnalytics.device_stats,
+      countryStats: urlAnalytics.country_stats,
+      topReferrers: urlAnalytics.top_referrers,
     };
-  }, [
-    UrlAnalytics,
-    UrlId,
-    isUrlAnalyticsLoading,
-    UrlAnalyticsError,
-  ]);
+  }, [urlAnalytics, urlId, isUrlAnalyticsLoading, urlAnalyticsError]);
 
   // Update the topPerformer KPI data with enhanced analytics
   const topPerformerKpi = useMemo(() => {
+    // If we have a specific URL, use its data
+    if (urlId && processedUrlAnalytics) {
+      const trendValue =
+        processedUrlAnalytics?.clicksComparison?.changePercentage ?? 0;
+      const trendLabel = processedUrlAnalytics?.clicksComparison
+        ? `${trendValue >= 0 ? "+" : ""}${trendValue.toFixed(
+            1
+          )}% vs previous period`
+        : "total clicks";
+
+      return {
+        title: "URL Performance",
+        value: processedUrlAnalytics.shortCode || "N/A",
+        trend:
+          Number(processedUrlAnalytics?.clicksComparison?.change) ||
+          processedUrlAnalytics.totalClicks,
+        trendLabel,
+        icon: RiLineChartLine,
+        isLoading: isUrlAnalyticsLoading,
+        isError: !!urlAnalyticsError,
+      };
+    }
+
+    // Otherwise, use the top URL from the list
     const trendValue =
       processedUrlAnalytics?.clicksComparison?.changePercentage ?? 0;
     const trendLabel = processedUrlAnalytics?.clicksComparison
@@ -128,22 +173,23 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
 
     return {
       title: "Top Performing URL",
-      value: topUrls.length > 0 ? topUrls[0].short_code || "N/A" : "N/A",
+      value: topUrls.length > 0 ? topUrls[0].short_url || "N/A" : "N/A",
       trend:
         processedUrlAnalytics?.clicksComparison?.change ??
         (topUrls.length > 0 ? topUrls[0].clicks : 0),
       trendLabel,
       icon: RiLineChartLine,
       isLoading: isTopUrlsLoading || isUrlAnalyticsLoading,
-      isError: !!topUrlsError || !!UrlAnalyticsError,
+      isError: !!topUrlsError || !!urlAnalyticsError,
     };
   }, [
+    urlId,
     topUrls,
     isTopUrlsLoading,
     topUrlsError,
     processedUrlAnalytics,
     isUrlAnalyticsLoading,
-    UrlAnalyticsError,
+    urlAnalyticsError,
   ]);
 
   // Mocked recent activity for now (would be replaced with an API endpoint)
@@ -157,8 +203,18 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
     isError: false,
   });
 
-  // Generate time series data from the API response
+  // Generate time series data from the API response - use URL specific if available
   const generateTimeSeriesData = useCallback(() => {
+    // If we have URL specific analytics, use its time series data
+    if (urlAnalytics?.historical_analysis?.time_series?.data) {
+      return urlAnalytics.historical_analysis.time_series.data.map((item) => ({
+        date: item.date,
+        value: item.clicks,
+        label: `${item.clicks} clicks`,
+      }));
+    }
+
+    // Otherwise, use the overall time series data
     if (!totalClicksData?.time_series?.data) {
       return [];
     }
@@ -168,7 +224,7 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
       value: item.clicks,
       label: `${item.clicks} clicks`,
     }));
-  }, [totalClicksData]);
+  }, [totalClicksData, urlAnalytics]);
 
   // Generate CTR breakdown data from API response
   const generateCtrBreakdown = useCallback(() => {
@@ -256,10 +312,14 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
 
   // Function to refresh all data
   const refreshData = useCallback(async () => {
-    // This would typically call refresh methods on individual hooks
-    // For now we'll just return a resolved promise
+    // Refresh URL analytics if available
+    if (refetchUrlAnalytics) {
+      await refetchUrlAnalytics();
+    }
+
+    // Return resolved promise for other refreshes
     return Promise.resolve();
-  }, []);
+  }, [refetchUrlAnalytics]);
 
   return {
     kpiData: {
@@ -274,8 +334,11 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
         periodDetails: undefined,
       },
       totalClicks: {
-        title: "Total Clicks",
-        value: totalClicksData?.summary?.total_clicks || 0,
+        title: urlId ? "URL Clicks" : "Total Clicks",
+        value:
+          urlId && urlAnalytics
+            ? urlAnalytics.total_clicks
+            : totalClicksData?.summary?.total_clicks || 0,
         trend:
           totalClicksData?.summary?.comparison?.total_clicks
             ?.change_percentage || 0,
@@ -283,8 +346,8 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
           ? `vs previous ${totalClicksData.summary.comparison.period_days} days`
           : "vs previous period",
         icon: RiBarChartLine,
-        isLoading: isClicksLoading,
-        isError: !!clicksError,
+        isLoading: isClicksLoading || (urlId ? isUrlAnalyticsLoading : false),
+        isError: !!clicksError || (urlId ? !!urlAnalyticsError : false),
         periodDetails: totalClicksData?.summary?.comparison
           ? {
               current: totalClicksData.summary.comparison.total_clicks.current,
@@ -297,19 +360,31 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
           : undefined,
       },
       averageCtr: {
-        title: "Average CTR",
-        value: ctrStats?.data?.overall
-          ? `${parseFloat(ctrStats.data.overall.ctr).toFixed(2)}%`
-          : "0%",
-        trend: ctrStats?.data?.comparison
-          ? ctrStats.data.comparison.metrics?.ctr?.change_percentage || 0
-          : 0,
-        trendLabel: ctrStats?.data?.comparison?.period_days
-          ? `vs previous ${ctrStats.data.comparison.period_days} days`
-          : "vs previous period",
+        title: urlId ? "URL CTR" : "Average CTR",
+        value:
+          urlId && urlAnalytics?.ctr_statistics?.overall
+            ? `${parseFloat(urlAnalytics.ctr_statistics.overall.ctr).toFixed(
+                2
+              )}%`
+            : ctrStats?.data?.overall
+            ? `${parseFloat(ctrStats.data.overall.ctr).toFixed(2)}%`
+            : "0%",
+        trend:
+          urlId && urlAnalytics?.ctr_statistics?.comparison
+            ? urlAnalytics.ctr_statistics.comparison.metrics?.ctr
+                ?.change_percentage || 0
+            : ctrStats?.data?.comparison
+            ? ctrStats.data.comparison.metrics?.ctr?.change_percentage || 0
+            : 0,
+        trendLabel:
+          urlId && urlAnalytics?.ctr_statistics?.comparison?.period_days
+            ? `vs previous ${urlAnalytics.ctr_statistics.comparison.period_days} days`
+            : ctrStats?.data?.comparison?.period_days
+            ? `vs previous ${ctrStats.data.comparison.period_days} days`
+            : "vs previous period",
         icon: RiPercentLine,
-        isLoading: isCtrLoading,
-        isError: !!ctrError,
+        isLoading: isCtrLoading || (urlId ? isUrlAnalyticsLoading : false),
+        isError: !!ctrError || (urlId ? !!urlAnalyticsError : false),
         periodDetails: ctrStats?.data?.comparison
           ? {
               current: parseFloat(ctrStats.data.overall.ctr),
@@ -327,20 +402,21 @@ export const useUrlDetailDashboardAnalytics = (urlId?: number): DashboardAnalyti
     urlPerformance: {
       timeSeriesData: generateTimeSeriesData(),
       topPerformingUrls: topUrls,
-      isLoading: isClicksLoading || isTopUrlsLoading,
-      isError: !!clicksError || !!topUrlsError,
-      error: clicksError || topUrlsError || null,
+      isLoading: isClicksLoading || isTopUrlsLoading || isUrlAnalyticsLoading,
+      isError: !!clicksError || !!topUrlsError || !!urlAnalyticsError,
+      error: clicksError || topUrlsError || urlAnalyticsError || null,
     },
     ctrBreakdown: {
       sourceData: generateCtrBreakdown(),
-      isLoading: isCtrLoading,
-      isError: !!ctrError,
-      error: ctrError || null,
+      isLoading: isCtrLoading || isUrlAnalyticsLoading,
+      isError: !!ctrError || !!urlAnalyticsError,
+      error: ctrError || urlAnalyticsError || null,
     },
     recentActivity,
     timePeriod,
     refresh: refreshData,
     setTimePeriod,
     topPerformerAnalytics: processedUrlAnalytics,
+    urlAnalytics: urlAnalytics || undefined,
   };
 };
