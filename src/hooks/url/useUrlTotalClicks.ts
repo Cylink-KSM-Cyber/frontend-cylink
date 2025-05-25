@@ -188,7 +188,7 @@ export const useUrlTotalClicks = (
           return;
         }
 
-        if (response && response.data) {
+        if (response?.data) {
           // Transform time series data for the chart
           const chartData = transformTimeSeriesData(
             response.data.time_series.data
