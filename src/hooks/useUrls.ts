@@ -43,7 +43,7 @@ export const useUrls = (
       const response = await fetchUrls(filter);
       console.log("URL API response:", response);
 
-      if (response && response.data) {
+      if (response?.data) {
         console.log("URLs from API:", response.data);
         console.log("URLs count:", response.data.length);
 
