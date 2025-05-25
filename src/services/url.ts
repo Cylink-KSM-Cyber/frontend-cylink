@@ -179,7 +179,7 @@ export const fetchUrlByShortCode = async (shortCode: string): Promise<Url> => {
     console.log(`Response for URL with code ${shortCode}:`, response);
 
     // Check response structure - different APIs might return data differently
-    if (response && response.data) {
+    if (response?.data) {
       console.log(`URL data retrieved for ${shortCode}:`, response.data);
       return response.data;
     } else if (
@@ -242,7 +242,7 @@ export const fetchUrlByIdentifier = async (
     console.log(`Response for URL with identifier ${identifier}:`, response);
 
     // Check response structure - different APIs might return data differently
-    if (response && response.data) {
+    if (response?.data) {
       console.log(`URL data retrieved for ${identifier}:`, response.data);
       return response.data;
     } else if (
@@ -289,7 +289,7 @@ export const fetchPublicUrlByShortCode = async (
     logger.urlShortener.debug(`Received response for short code: ${shortCode}`);
 
     // Check response structure
-    if (response && response.data) {
+    if (response?.data) {
       logger.urlShortener.info(`URL data retrieved for ${shortCode}`);
       return response.data;
     } else if (
