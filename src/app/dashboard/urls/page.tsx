@@ -34,7 +34,7 @@ export default function UrlsPage() {
 
   // Get tab from URL query params
   const searchParams = useSearchParams();
-  const tabParam = searchParams?.get("tab") || null;
+  const tabParam = searchParams?.get("tab") ?? null;
 
   // Initialize search state
   const [searchQuery, setSearchQuery] = useState("");
