@@ -102,7 +102,7 @@ export const useUrls = (
         ...prevFilter,
         ...updatedNewFilter,
         // Reset to page 1 if any filter other than page changes
-        page: updatedNewFilter.page !== undefined ? updatedNewFilter.page : 1,
+        page: updatedNewFilter.page ?? 1,
       };
       console.log("Updated filter:", updatedFilter);
       return updatedFilter;
