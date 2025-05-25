@@ -62,10 +62,7 @@ const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
           <option value="active" className="text-green-600 py-1">
             Active
           </option>
-          <option value="expired" className="text-red-600 py-1">
-            Expired
-          </option>
-          <option value="inactive" className="text-gray-600 py-1">
+          <option value="inactive" className="text-red-600 py-1">
             Inactive
           </option>
         </select>

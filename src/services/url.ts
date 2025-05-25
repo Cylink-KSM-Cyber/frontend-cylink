@@ -60,7 +60,13 @@ const buildQueryParams = (filter: Partial<UrlFilter>): string => {
   params.append("limit", String(filter.limit ?? 10));
 
   // Make sure sortBy is set to a valid value
-  const validSortByValues = ["created_at", "clicks", "title"];
+  const validSortByValues = [
+    "created_at",
+    "clicks",
+    "title",
+    "expiry_date",
+    "status",
+  ];
   const sortByValue =
     filter.sortBy && validSortByValues.includes(filter.sortBy)
       ? filter.sortBy

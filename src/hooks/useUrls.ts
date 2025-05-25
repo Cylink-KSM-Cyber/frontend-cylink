@@ -88,7 +88,9 @@ export const useUrls = (
     if (
       "sortBy" in updatedNewFilter &&
       updatedNewFilter.sortBy &&
-      !["created_at", "clicks", "title"].includes(updatedNewFilter.sortBy)
+      !["created_at", "clicks", "title", "expiry_date"].includes(
+        updatedNewFilter.sortBy
+      )
     ) {
       // Reset to default value if invalid
       updatedNewFilter.sortBy = "created_at";

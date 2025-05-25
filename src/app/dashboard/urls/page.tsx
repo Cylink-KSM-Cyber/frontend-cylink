@@ -61,7 +61,7 @@ export default function UrlsPage() {
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
-    sortBy: "created_at" as "created_at" | "clicks" | "title",
+    sortBy: "created_at" as "created_at" | "clicks" | "title" | "expiry_date",
     sortOrder: "desc" as "asc" | "desc",
   });
 
@@ -121,7 +121,8 @@ export default function UrlsPage() {
 
   // Handle URL sort changes
   const handleUrlSortChange = (column: string, direction: "asc" | "desc") => {
-    const sortBy = column as "created_at" | "clicks" | "title";
+    const sortBy = column as "created_at" | "clicks" | "title" | "expiry_date";
+
     setUrlSort({ sortBy, sortOrder: direction });
     updateFilter({ sortBy, sortOrder: direction });
   };

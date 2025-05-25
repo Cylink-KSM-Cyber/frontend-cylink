@@ -221,6 +221,13 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSortClick("expiry_date")}
+              >
+                Expired {getSortIndicator("expiry_date")}
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("clicks")}
               >
                 Clicks {getSortIndicator("clicks")}
@@ -266,6 +273,11 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-[#333333]">
                     {formatDate(url.created_at)}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-[#333333]">
+                    {formatDate(url.expiry_date)}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
