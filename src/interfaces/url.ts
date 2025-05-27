@@ -131,8 +131,8 @@ export interface DashboardStats {
  */
 export interface UrlFilter {
   search?: string;
-  status?: "active" | "expired" | "inactive" | "all" | string | undefined;
-  sortBy?: "created_at" | "clicks" | "title";
+  status?: "active" | "expired" | "inactive" | "all" | undefined;
+  sortBy?: "created_at" | "clicks" | "title" | "expiry_date";
   sortOrder?: "asc" | "desc";
   page: number;
   limit: number;
