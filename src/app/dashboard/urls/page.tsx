@@ -55,7 +55,7 @@ export default function UrlsPage() {
   const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
 
   const [urlFilters, setUrlFilters] = useState({
-    status: "all" as string,
+    status: "all" as "all" | "active" | "expired" | "inactive",
     limit: 10 as number,
   });
 
@@ -107,7 +107,12 @@ export default function UrlsPage() {
     setUrlFilters((prev) => ({ ...prev, [filterType]: value }));
 
     if (filterType === "status") {
-      updateFilter({ status: value !== "all" ? (value as string) : undefined });
+      updateFilter({
+        status:
+          value !== "all"
+            ? (value as "active" | "expired" | "inactive")
+            : undefined,
+      });
     } else if (filterType === "limit") {
       updateFilter({ limit: value as number });
     }
