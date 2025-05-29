@@ -69,6 +69,17 @@ export const useAdvancedUrlAnalytics = ({
       return;
     }
 
+    // Don't fetch if custom comparison is selected but dates are missing
+    if (
+      currentParams.comparison === "custom" &&
+      (!currentParams.start_date || !currentParams.end_date)
+    ) {
+      console.log(
+        "Skipping fetch: Custom range selected but main dates are missing"
+      );
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -82,18 +93,30 @@ export const useAdvancedUrlAnalytics = ({
         params.append("end_date", currentParams.end_date);
       if (currentParams.group_by)
         params.append("group_by", currentParams.group_by);
-      if (currentParams.comparison)
+
+      // Only send comparison=custom if custom comparison dates are provided
+      if (
+        currentParams.comparison === "custom" &&
+        currentParams.custom_comparison_start &&
+        currentParams.custom_comparison_end
+      ) {
         params.append("comparison", currentParams.comparison);
-      if (currentParams.custom_comparison_start)
         params.append(
           "custom_comparison_start",
           currentParams.custom_comparison_start
         );
-      if (currentParams.custom_comparison_end)
         params.append(
           "custom_comparison_end",
           currentParams.custom_comparison_end
         );
+      } else if (
+        currentParams.comparison &&
+        currentParams.comparison !== "custom"
+      ) {
+        // Send comparison for preset periods (7, 14, 30, 90)
+        params.append("comparison", currentParams.comparison);
+      }
+
       if (currentParams.page)
         params.append("page", currentParams.page.toString());
       if (currentParams.limit)
