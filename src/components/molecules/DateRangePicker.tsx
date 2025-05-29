@@ -96,19 +96,31 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
    */
   const handleCustomRange = useCallback(() => {
     onComparisonChange("custom");
-    setIsOpen(false);
-  }, [onComparisonChange]);
+    // Don't close dropdown, let user select dates first
+    // If no dates are set, provide default 30-day range
+    if (!startDate || !endDate) {
+      const end = getTodayISO();
+      const start = getDaysAgoISO(30);
+      onDateChange(start, end);
+    }
+  }, [onComparisonChange, onDateChange, startDate, endDate]);
 
   /**
    * Get display text for current selection
    */
   const getDisplayText = (): string => {
     if (startDate && endDate) {
+      if (comparison === "custom") {
+        return `${formatDate(startDate)} - ${formatDate(endDate)} (Custom)`;
+      }
       return `${formatDate(startDate)} - ${formatDate(endDate)}`;
     }
     if (comparison && comparison !== "custom") {
       const option = comparisonOptions.find((opt) => opt.value === comparison);
       return option?.label || "Select period";
+    }
+    if (comparison === "custom") {
+      return "Custom range - Select dates";
     }
     return "Select date range";
   };
@@ -188,9 +200,13 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                     <input
                       type="date"
                       value={startDate || ""}
-                      onChange={(e) =>
-                        onDateChange(e.target.value, endDate || "")
-                      }
+                      onChange={(e) => {
+                        onDateChange(e.target.value, endDate || "");
+                        // Close dropdown if both dates are now selected
+                        if (e.target.value && endDate) {
+                          setIsOpen(false);
+                        }
+                      }}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -201,9 +217,13 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                     <input
                       type="date"
                       value={endDate || ""}
-                      onChange={(e) =>
-                        onDateChange(startDate || "", e.target.value)
-                      }
+                      onChange={(e) => {
+                        onDateChange(startDate || "", e.target.value);
+                        // Close dropdown if both dates are now selected
+                        if (startDate && e.target.value) {
+                          setIsOpen(false);
+                        }
+                      }}
                       className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
