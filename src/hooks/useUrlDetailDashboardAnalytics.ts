@@ -4,6 +4,8 @@ import {
   TimePeriod,
   RecentActivityItem,
 } from "@/interfaces/dashboard";
+import { UrlAnalyticsData } from "@/interfaces/urlAnalytics";
+import { Url } from "@/interfaces/url";
 import { useTotalUrls } from "@/hooks/useTotalUrls";
 import { useTotalClicks } from "@/hooks/useTotalClicks";
 import { useUrls } from "@/hooks/useUrls";
@@ -84,49 +86,180 @@ export const useUrlDetailDashboardAnalytics = (
     sortOrder: "desc",
   });
 
-  // Process URL analytics data to create the comparison data
-  const processedUrlAnalytics = useMemo(() => {
-    if (!urlAnalytics || !urlId) {
-      return undefined;
-    }
+  /**
+   * Process URL analytics comparison data
+   */
+  const processClicksComparison = useCallback(
+    (urlAnalytics: UrlAnalyticsData) => {
+      const comparison =
+        urlAnalytics.historical_analysis?.summary?.comparison?.total_clicks;
 
-    // Use actual analytics data if available, with transformation for compatibility
-    const clicksComparison = urlAnalytics.historical_analysis?.summary
-      ?.comparison?.total_clicks
-      ? {
-          current: Number(
-            urlAnalytics.historical_analysis.summary.comparison.total_clicks
-              .current
-          ),
-          previous: Number(
-            urlAnalytics.historical_analysis.summary.comparison.total_clicks
-              .previous
-          ),
-          change: Number(
-            urlAnalytics.historical_analysis.summary.comparison.total_clicks
-              .change
-          ),
-          changePercentage: Number(
-            urlAnalytics.historical_analysis.summary.comparison.total_clicks
-              .change_percentage
-          ),
+      if (comparison) {
+        return {
+          current: Number(comparison.current),
+          previous: Number(comparison.previous),
+          change: Number(comparison.change),
+          changePercentage: Number(comparison.change_percentage),
           periodDays:
             urlAnalytics.historical_analysis.summary.comparison.period_days,
-        }
-      : {
-          current: urlAnalytics.total_clicks,
-          previous: Math.round(urlAnalytics.total_clicks / 1.1), // Fallback if no comparison data
-          change: Math.round(urlAnalytics.total_clicks * 0.1),
-          changePercentage: 10.0, // Default 10% increase
-          periodDays: 7, // Default 7 days
         };
+      }
+
+      // Fallback if no comparison data
+      return {
+        current: urlAnalytics.total_clicks,
+        previous: Math.round(urlAnalytics.total_clicks / 1.1),
+        change: Math.round(urlAnalytics.total_clicks * 0.1),
+        changePercentage: 10.0,
+        periodDays: 7,
+      };
+    },
+    []
+  );
+
+  /**
+   * Create total URLs KPI data
+   */
+  const createTotalUrlsKpi = useCallback(
+    () => ({
+      title: "Total URLs",
+      value: totalUrls || 0,
+      trend: undefined,
+      trendLabel: undefined,
+      icon: RiLinkM,
+      isLoading: isUrlsLoading,
+      isError: !!urlsError,
+      periodDetails: undefined,
+    }),
+    [totalUrls, isUrlsLoading, urlsError]
+  );
+
+  /**
+   * Create total clicks KPI data
+   */
+  const createTotalClicksKpi = useCallback(() => {
+    const urlClicksValue =
+      urlId && urlAnalytics
+        ? urlAnalytics.total_clicks
+        : totalClicksData?.summary?.total_clicks ?? 0;
+
+    const trendLabel = totalClicksData?.summary?.comparison?.period_days
+      ? `vs previous ${totalClicksData.summary.comparison.period_days} days`
+      : "vs previous period";
+
+    const periodDetails = totalClicksData?.summary?.comparison
+      ? {
+          current: totalClicksData.summary.comparison.total_clicks.current,
+          previous: totalClicksData.summary.comparison.total_clicks.previous,
+          change: totalClicksData.summary.comparison.total_clicks.change,
+          periodDays: totalClicksData.summary.comparison.period_days,
+          dateRange: `${totalClicksData.summary.comparison.previous_period.start_date} - ${totalClicksData.summary.comparison.previous_period.end_date}`,
+        }
+      : undefined;
+
+    return {
+      title: urlId ? "URL Clicks" : "Total Clicks",
+      value: urlClicksValue,
+      trend:
+        totalClicksData?.summary?.comparison?.total_clicks?.change_percentage ??
+        0,
+      trendLabel,
+      icon: RiBarChartLine,
+      isLoading: isClicksLoading || (urlId ? isUrlAnalyticsLoading : false),
+      isError: !!clicksError || (urlId ? !!urlAnalyticsError : false),
+      periodDetails,
+    };
+  }, [
+    urlId,
+    urlAnalytics,
+    totalClicksData,
+    isClicksLoading,
+    isUrlAnalyticsLoading,
+    clicksError,
+    urlAnalyticsError,
+  ]);
+
+  /**
+   * Create average CTR KPI data
+   */
+  const createAverageCtrKpi = useCallback(() => {
+    const fallbackCtrValue = ctrStats?.data?.overall
+      ? `${parseFloat(ctrStats.data.overall.ctr).toFixed(2)}%`
+      : "0%";
+
+    const finalCtrValue =
+      urlId && urlAnalytics?.ctr_statistics?.overall
+        ? `${parseFloat(urlAnalytics.ctr_statistics.overall.ctr).toFixed(2)}%`
+        : fallbackCtrValue;
+
+    const ctrTrendValue =
+      urlId && urlAnalytics?.ctr_statistics?.comparison
+        ? urlAnalytics.ctr_statistics.comparison.metrics?.ctr
+            ?.change_percentage ?? 0
+        : ctrStats?.data?.comparison?.metrics?.ctr?.change_percentage ?? 0;
+
+    const getCtrTrendLabel = () => {
+      if (urlId && urlAnalytics?.ctr_statistics?.comparison?.period_days) {
+        return `vs previous ${urlAnalytics.ctr_statistics.comparison.period_days} days`;
+      }
+      if (ctrStats?.data?.comparison?.period_days) {
+        return `vs previous ${ctrStats.data.comparison.period_days} days`;
+      }
+      return "vs previous period";
+    };
+
+    const periodDetails = ctrStats?.data?.comparison
+      ? {
+          current: parseFloat(ctrStats.data.overall.ctr),
+          previous: parseFloat(ctrStats.data.comparison.metrics.ctr.previous),
+          change: ctrStats.data.comparison.metrics.ctr.change,
+          periodDays: ctrStats.data.comparison.period_days,
+          dateRange: `${ctrStats.data.comparison.previous_period.start_date} - ${ctrStats.data.comparison.previous_period.end_date}`,
+        }
+      : undefined;
+
+    return {
+      title: urlId ? "URL CTR" : "Average CTR",
+      value: finalCtrValue,
+      trend: ctrTrendValue,
+      trendLabel: getCtrTrendLabel(),
+      icon: RiPercentLine,
+      isLoading: isCtrLoading || (urlId ? isUrlAnalyticsLoading : false),
+      isError: !!ctrError || (urlId ? !!urlAnalyticsError : false),
+      periodDetails,
+    };
+  }, [
+    urlId,
+    urlAnalytics,
+    ctrStats,
+    isCtrLoading,
+    isUrlAnalyticsLoading,
+    ctrError,
+    urlAnalyticsError,
+  ]);
+
+  /**
+   * Create KPI data object
+   */
+  const createKpiData = useCallback(
+    () => ({
+      totalUrls: createTotalUrlsKpi(),
+      totalClicks: createTotalClicksKpi(),
+      averageCtr: createAverageCtrKpi(),
+    }),
+    [createTotalUrlsKpi, createTotalClicksKpi, createAverageCtrKpi]
+  );
+
+  // Process URL analytics data to create the comparison data
+  const processedUrlAnalytics = useMemo(() => {
+    if (!urlAnalytics || !urlId) return undefined;
 
     return {
       urlId: urlId,
       shortCode: urlAnalytics.short_code,
       totalClicks: urlAnalytics.total_clicks,
       uniqueVisitors: urlAnalytics.unique_visitors,
-      clicksComparison,
+      clicksComparison: processClicksComparison(urlAnalytics),
       isLoading: isUrlAnalyticsLoading,
       isError: !!urlAnalyticsError,
       error: urlAnalyticsError,
@@ -135,26 +268,37 @@ export const useUrlDetailDashboardAnalytics = (
       countryStats: urlAnalytics.country_stats,
       topReferrers: urlAnalytics.top_referrers,
     };
-  }, [urlAnalytics, urlId, isUrlAnalyticsLoading, urlAnalyticsError]);
+  }, [
+    urlAnalytics,
+    urlId,
+    isUrlAnalyticsLoading,
+    urlAnalyticsError,
+    processClicksComparison,
+  ]);
 
   // Update the topPerformer KPI data with enhanced analytics
   const topPerformerKpi = useMemo(() => {
+    const changePercentage =
+      processedUrlAnalytics?.clicksComparison?.changePercentage ?? 0;
+    const percentageSign = changePercentage >= 0 ? "+" : "";
+    const formattedPercentage = `${percentageSign}${changePercentage.toFixed(
+      1
+    )}% vs previous period`;
+
+    const trendLabel = processedUrlAnalytics?.clicksComparison
+      ? formattedPercentage
+      : "total clicks";
+
     // If we have a specific URL, use its data
     if (urlId && processedUrlAnalytics) {
-      const trendValue =
-        processedUrlAnalytics?.clicksComparison?.changePercentage ?? 0;
-      const trendLabel = processedUrlAnalytics?.clicksComparison
-        ? `${trendValue >= 0 ? "+" : ""}${trendValue.toFixed(
-            1
-          )}% vs previous period`
-        : "total clicks";
+      const urlTrendValue =
+        Number(processedUrlAnalytics?.clicksComparison?.change) ||
+        processedUrlAnalytics.totalClicks;
 
       return {
         title: "URL Performance",
         value: processedUrlAnalytics.shortCode || "N/A",
-        trend:
-          Number(processedUrlAnalytics?.clicksComparison?.change) ||
-          processedUrlAnalytics.totalClicks,
+        trend: urlTrendValue,
         trendLabel,
         icon: RiLineChartLine,
         isLoading: isUrlAnalyticsLoading,
@@ -163,20 +307,16 @@ export const useUrlDetailDashboardAnalytics = (
     }
 
     // Otherwise, use the top URL from the list
-    const trendValue =
-      processedUrlAnalytics?.clicksComparison?.changePercentage ?? 0;
-    const trendLabel = processedUrlAnalytics?.clicksComparison
-      ? `${trendValue >= 0 ? "+" : ""}${trendValue.toFixed(
-          1
-        )}% vs previous period`
-      : "total clicks";
+    const topUrlValue =
+      topUrls.length > 0 ? topUrls[0].short_url || "N/A" : "N/A";
+    const fallbackTrend = topUrls.length > 0 ? topUrls[0].clicks : 0;
+    const listTrendValue =
+      processedUrlAnalytics?.clicksComparison?.change ?? fallbackTrend;
 
     return {
       title: "Top Performing URL",
-      value: topUrls.length > 0 ? topUrls[0].short_url || "N/A" : "N/A",
-      trend:
-        processedUrlAnalytics?.clicksComparison?.change ??
-        (topUrls.length > 0 ? topUrls[0].clicks : 0),
+      value: topUrlValue,
+      trend: listTrendValue,
       trendLabel,
       icon: RiLineChartLine,
       isLoading: isTopUrlsLoading || isUrlAnalyticsLoading,
@@ -254,6 +394,35 @@ export const useUrlDetailDashboardAnalytics = (
       .slice(0, 5);
   }, [ctrStats]);
 
+  /**
+   * Helper function to determine activity type based on index
+   */
+  const getActivityType = (
+    index: number
+  ): "url_created" | "url_clicked" | "qr_generated" => {
+    if (index % 3 === 0) return "url_created";
+    if (index % 3 === 1) return "url_clicked";
+    return "qr_generated";
+  };
+
+  /**
+   * Helper function to generate activity description
+   */
+  const getActivityDescription = (url: Url, index: number): string => {
+    const type = getActivityType(index);
+
+    if (type === "url_created") {
+      return `URL ${url.short_url} was created`;
+    }
+
+    if (type === "url_clicked") {
+      const clickCount = Math.floor(Math.random() * 10) + 1;
+      return `URL ${url.short_url} was clicked ${clickCount} times`;
+    }
+
+    return `QR code was generated for ${url.short_url}`;
+  };
+
   // Mock recent activity data
   useEffect(() => {
     // This would be replaced with an actual API call
@@ -269,21 +438,9 @@ export const useUrlDetailDashboardAnalytics = (
           .slice(0, 5)
           .map((url, index) => ({
             id: index + 1,
-            type:
-              index % 3 === 0
-                ? "url_created"
-                : index % 3 === 1
-                ? "url_clicked"
-                : "qr_generated",
+            type: getActivityType(index),
             timestamp: new Date(Date.now() - index * 3600000).toISOString(),
-            description:
-              index % 3 === 0
-                ? `URL ${url.short_url} was created`
-                : index % 3 === 1
-                ? `URL ${url.short_url} was clicked ${
-                    Math.floor(Math.random() * 10) + 1
-                  } times`
-                : `QR code was generated for ${url.short_url}`,
+            description: getActivityDescription(url, index),
             url: url,
             metadata: {
               clicks: url.clicks,
@@ -323,80 +480,7 @@ export const useUrlDetailDashboardAnalytics = (
 
   return {
     kpiData: {
-      totalUrls: {
-        title: "Total URLs",
-        value: totalUrls || 0,
-        trend: undefined,
-        trendLabel: undefined,
-        icon: RiLinkM,
-        isLoading: isUrlsLoading,
-        isError: !!urlsError,
-        periodDetails: undefined,
-      },
-      totalClicks: {
-        title: urlId ? "URL Clicks" : "Total Clicks",
-        value:
-          urlId && urlAnalytics
-            ? urlAnalytics.total_clicks
-            : totalClicksData?.summary?.total_clicks || 0,
-        trend:
-          totalClicksData?.summary?.comparison?.total_clicks
-            ?.change_percentage || 0,
-        trendLabel: totalClicksData?.summary?.comparison?.period_days
-          ? `vs previous ${totalClicksData.summary.comparison.period_days} days`
-          : "vs previous period",
-        icon: RiBarChartLine,
-        isLoading: isClicksLoading || (urlId ? isUrlAnalyticsLoading : false),
-        isError: !!clicksError || (urlId ? !!urlAnalyticsError : false),
-        periodDetails: totalClicksData?.summary?.comparison
-          ? {
-              current: totalClicksData.summary.comparison.total_clicks.current,
-              previous:
-                totalClicksData.summary.comparison.total_clicks.previous,
-              change: totalClicksData.summary.comparison.total_clicks.change,
-              periodDays: totalClicksData.summary.comparison.period_days,
-              dateRange: `${totalClicksData.summary.comparison.previous_period.start_date} - ${totalClicksData.summary.comparison.previous_period.end_date}`,
-            }
-          : undefined,
-      },
-      averageCtr: {
-        title: urlId ? "URL CTR" : "Average CTR",
-        value:
-          urlId && urlAnalytics?.ctr_statistics?.overall
-            ? `${parseFloat(urlAnalytics.ctr_statistics.overall.ctr).toFixed(
-                2
-              )}%`
-            : ctrStats?.data?.overall
-            ? `${parseFloat(ctrStats.data.overall.ctr).toFixed(2)}%`
-            : "0%",
-        trend:
-          urlId && urlAnalytics?.ctr_statistics?.comparison
-            ? urlAnalytics.ctr_statistics.comparison.metrics?.ctr
-                ?.change_percentage || 0
-            : ctrStats?.data?.comparison
-            ? ctrStats.data.comparison.metrics?.ctr?.change_percentage || 0
-            : 0,
-        trendLabel:
-          urlId && urlAnalytics?.ctr_statistics?.comparison?.period_days
-            ? `vs previous ${urlAnalytics.ctr_statistics.comparison.period_days} days`
-            : ctrStats?.data?.comparison?.period_days
-            ? `vs previous ${ctrStats.data.comparison.period_days} days`
-            : "vs previous period",
-        icon: RiPercentLine,
-        isLoading: isCtrLoading || (urlId ? isUrlAnalyticsLoading : false),
-        isError: !!ctrError || (urlId ? !!urlAnalyticsError : false),
-        periodDetails: ctrStats?.data?.comparison
-          ? {
-              current: parseFloat(ctrStats.data.overall.ctr),
-              previous: parseFloat(
-                ctrStats.data.comparison.metrics.ctr.previous
-              ),
-              change: ctrStats.data.comparison.metrics.ctr.change,
-              periodDays: ctrStats.data.comparison.period_days,
-              dateRange: `${ctrStats.data.comparison.previous_period.start_date} - ${ctrStats.data.comparison.previous_period.end_date}`,
-            }
-          : undefined,
-      },
+      ...createKpiData(),
       topPerformer: topPerformerKpi,
     },
     urlPerformance: {
