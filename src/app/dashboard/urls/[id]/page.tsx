@@ -7,7 +7,7 @@ import LoadingSpinner from "@/components/atoms/LoadingSpinner";
  * @description Displays comprehensive analytics for a specific shortened URL
  */
 interface UrlAnalyticsPageProps {
-  params: Promise<{ id: string }>;
+  readonly params: Promise<{ id: string }>;
 }
 
 export default async function UrlAnalyticsPage({
