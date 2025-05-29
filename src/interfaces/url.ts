@@ -17,7 +17,7 @@ export interface Url {
   user_id: number;
   customDomain?: string;
   tags?: string[];
-  clickTrend?: number; // Percentage change in clicks (e.g., +15%)
+  clickTrend?: number; // Percentage change in clicks (e.g., +15%);
 }
 
 /**
@@ -29,7 +29,7 @@ export interface QrCode {
   urlId: number;
   shortCode?: string;
   shortUrl?: string;
-  imageUrl: string | undefined;
+  imageUrl?: string;
   pngUrl?: string;
   svgUrl?: string;
   createdAt: string;

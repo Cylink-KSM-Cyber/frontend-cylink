@@ -1,9 +1,12 @@
+"use client";
+
 import React, { useState } from "react";
 import { Url } from "@/interfaces/url";
 import StatusBadge from "@/components/atoms/StatusBadge";
 import ButtonIcon from "@/components/atoms/ButtonIcon";
 import Button from "@/components/atoms/Button";
 import { formatShortUrl } from "@/utils/urlFormatter";
+import { useRouter } from "next/navigation";
 
 // Icon imports
 import {
@@ -16,6 +19,11 @@ import {
   RiArrowDownSLine,
   RiLink,
 } from "react-icons/ri";
+
+import { MdInfoOutline } from "react-icons/md";
+
+// Loading skeleton import
+import LoadingIndicator from "@/components/atoms/LoadingIndicator";
 
 /**
  * Prop types for UrlsTable component
@@ -61,6 +69,10 @@ interface UrlsTableProps {
    * Optional CSS classes to apply
    */
   className?: string;
+  /**
+   * Function to call when view detail button is clicked
+   */
+  onViewDetail?: (url: Url) => void;
 }
 
 /**
@@ -78,8 +90,11 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   onEdit,
   onDelete,
   className = "",
+  onViewDetail,
 }) => {
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const router = useRouter();
+  const [loadingDetailId, setLoadingDetailId] = useState<number | null>(null);
 
   // Handle sort click
   const handleSortClick = (column: string) => {
@@ -101,6 +116,20 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
     setTimeout(() => {
       setCopiedId(null);
     }, 2000);
+  };
+
+  // Handle view detail click with loading state
+  const handleViewDetailClick = (url: Url) => {
+    setLoadingDetailId(url.id);
+
+    // If custom handler is provided, use it
+    if (onViewDetail) {
+      onViewDetail(url);
+      return;
+    }
+
+    // Otherwise, navigate to detail page
+    router.push(`/dashboard/urls/${url.id}`);
   };
 
   // Generate the sort indicator for column headers
@@ -318,6 +347,19 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-1">
+                    <ButtonIcon
+                      icon={
+                        loadingDetailId === url.id ? (
+                          <LoadingIndicator size="sm" />
+                        ) : (
+                          <MdInfoOutline />
+                        )
+                      }
+                      onClick={() => handleViewDetailClick(url)}
+                      tooltip="View Detail"
+                      ariaLabel="View Detail Link"
+                      disabled={loadingDetailId === url.id}
+                    />
                     <ButtonIcon
                       icon={copiedId === url.id ? "✓" : <RiFileCopyLine />}
                       onClick={() => handleCopyClick(url)}

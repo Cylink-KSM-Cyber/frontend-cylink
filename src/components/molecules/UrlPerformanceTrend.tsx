@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useMemo } from "react";
 import VisxLineChart from "@/components/atoms/VisxLineChart";
 import { useUrlTotalClicks } from "@/hooks/url/useUrlTotalClicks";
