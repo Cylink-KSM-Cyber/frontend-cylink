@@ -194,10 +194,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                   className="mt-3 space-y-2"
                 >
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label
+                      htmlFor="date-start"
+                      className="block text-xs font-medium text-gray-600 mb-1"
+                    >
                       Start Date
                     </label>
                     <input
+                      id="date-start"
                       type="date"
                       value={startDate ?? ""}
                       onChange={(e) => {
@@ -211,10 +215,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label
+                      htmlFor="date-end"
+                      className="block text-xs font-medium text-gray-600 mb-1"
+                    >
                       End Date
                     </label>
                     <input
+                      id="date-end"
                       type="date"
                       value={endDate ?? ""}
                       onChange={(e) => {
@@ -236,10 +244,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                       </p>
                       <div className="space-y-2">
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">
+                          <label
+                            htmlFor="comparison-start"
+                            className="block text-xs text-gray-500 mb-1"
+                          >
                             Comparison Start
                           </label>
                           <input
+                            id="comparison-start"
                             type="date"
                             value={customComparisonStart ?? ""}
                             onChange={(e) =>
@@ -252,10 +264,14 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">
+                          <label
+                            htmlFor="comparison-end"
+                            className="block text-xs text-gray-500 mb-1"
+                          >
                             Comparison End
                           </label>
                           <input
+                            id="comparison-end"
                             type="date"
                             value={customComparisonEnd ?? ""}
                             onChange={(e) =>
