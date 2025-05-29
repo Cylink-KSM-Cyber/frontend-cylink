@@ -62,12 +62,10 @@ export const useAdvancedUrlAnalytics = ({
   const isMountedRef = useRef<boolean>(true);
 
   /**
-   * Fetch analytics data with current parameters
+   * Validate if we should proceed with the API call
    */
-  const fetchAnalyticsData = useCallback(async () => {
-    if (!urlId || !isMountedRef.current) {
-      return;
-    }
+  const shouldFetch = useCallback((): boolean => {
+    if (!urlId || !isMountedRef.current) return false;
 
     // Don't fetch if custom comparison is selected but dates are missing
     if (
@@ -77,53 +75,70 @@ export const useAdvancedUrlAnalytics = ({
       console.log(
         "Skipping fetch: Custom range selected but main dates are missing"
       );
-      return;
+      return false;
     }
+
+    return true;
+  }, [
+    urlId,
+    currentParams.comparison,
+    currentParams.start_date,
+    currentParams.end_date,
+  ]);
+
+  /**
+   * Build query parameters for API request
+   */
+  const buildQueryParams = useCallback((): string => {
+    const params = new URLSearchParams();
+
+    if (currentParams.start_date)
+      params.append("start_date", currentParams.start_date);
+    if (currentParams.end_date)
+      params.append("end_date", currentParams.end_date);
+    if (currentParams.group_by)
+      params.append("group_by", currentParams.group_by);
+
+    // Handle comparison parameters
+    const isCustomComparison = currentParams.comparison === "custom";
+    const hasCustomDates =
+      currentParams.custom_comparison_start &&
+      currentParams.custom_comparison_end;
+
+    if (isCustomComparison && hasCustomDates) {
+      params.append("comparison", currentParams.comparison!);
+      params.append(
+        "custom_comparison_start",
+        currentParams.custom_comparison_start!
+      );
+      params.append(
+        "custom_comparison_end",
+        currentParams.custom_comparison_end!
+      );
+    } else if (currentParams.comparison && !isCustomComparison) {
+      params.append("comparison", currentParams.comparison);
+    }
+
+    if (currentParams.page)
+      params.append("page", currentParams.page.toString());
+    if (currentParams.limit)
+      params.append("limit", currentParams.limit.toString());
+
+    return params.toString();
+  }, [currentParams]);
+
+  /**
+   * Fetch analytics data with current parameters
+   */
+  const fetchAnalyticsData = useCallback(async () => {
+    if (!shouldFetch()) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // Build query parameters
-      const params = new URLSearchParams();
-
-      if (currentParams.start_date)
-        params.append("start_date", currentParams.start_date);
-      if (currentParams.end_date)
-        params.append("end_date", currentParams.end_date);
-      if (currentParams.group_by)
-        params.append("group_by", currentParams.group_by);
-
-      // Only send comparison=custom if custom comparison dates are provided
-      if (
-        currentParams.comparison === "custom" &&
-        currentParams.custom_comparison_start &&
-        currentParams.custom_comparison_end
-      ) {
-        params.append("comparison", currentParams.comparison);
-        params.append(
-          "custom_comparison_start",
-          currentParams.custom_comparison_start
-        );
-        params.append(
-          "custom_comparison_end",
-          currentParams.custom_comparison_end
-        );
-      } else if (
-        currentParams.comparison &&
-        currentParams.comparison !== "custom"
-      ) {
-        // Send comparison for preset periods (7, 14, 30, 90)
-        params.append("comparison", currentParams.comparison);
-      }
-
-      if (currentParams.page)
-        params.append("page", currentParams.page.toString());
-      if (currentParams.limit)
-        params.append("limit", currentParams.limit.toString());
-
-      const queryString = params.toString();
-      const apiVersion = process.env.NEXT_PUBLIC_API_VERSION || "v1";
+      const queryString = buildQueryParams();
+      const apiVersion = process.env.NEXT_PUBLIC_API_VERSION ?? "v1";
       const endpoint = `/api/${apiVersion}/urls/${urlId}/analytics${
         queryString ? `?${queryString}` : ""
       }`;
@@ -147,7 +162,7 @@ export const useAdvancedUrlAnalytics = ({
         setIsLoading(false);
       }
     }
-  }, [urlId, currentParams]);
+  }, [urlId, shouldFetch, buildQueryParams]);
 
   /**
    * Update analytics parameters and optionally refetch
