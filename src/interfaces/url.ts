@@ -29,7 +29,7 @@ export interface QrCode {
   urlId: number;
   shortCode?: string;
   shortUrl?: string;
-  imageUrl: string | undefined;
+  imageUrl?: string;
   pngUrl?: string;
   svgUrl?: string;
   createdAt: string;
@@ -131,7 +131,7 @@ export interface DashboardStats {
  */
 export interface UrlFilter {
   search?: string;
-  status?: "active" | "expired" | "inactive" | "all" | string | undefined;
+  status?: string;
   sortBy?: "created_at" | "clicks" | "title";
   sortOrder?: "asc" | "desc";
   page: number;
