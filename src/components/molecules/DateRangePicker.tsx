@@ -257,10 +257,10 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
                           </label>
                           <input
                             type="date"
-                            value={customComparisonEnd || ""}
+                            value={customComparisonEnd ?? ""}
                             onChange={(e) =>
                               onCustomComparisonChange(
-                                customComparisonStart || "",
+                                customComparisonStart ?? "",
                                 e.target.value
                               )
                             }
@@ -279,7 +279,12 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
       {/* Overlay to close dropdown */}
       {isOpen && (
-        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
+        <button
+          type="button"
+          className="fixed inset-0 z-40 cursor-default"
+          onClick={() => setIsOpen(false)}
+          aria-label="Close dropdown"
+        />
       )}
     </div>
   );
