@@ -216,7 +216,7 @@ export const UrlAnalyticsDashboard: React.FC<UrlAnalyticsDashboardProps> = ({
             >
               <MetricCard
                 title="Total Clicks"
-                value={analyticsData?.total_clicks || 0}
+                value={analyticsData?.total_clicks ?? 0}
                 previousValue={
                   analyticsData?.historical_analysis?.summary?.comparison
                     ?.total_clicks?.previous
@@ -231,14 +231,14 @@ export const UrlAnalyticsDashboard: React.FC<UrlAnalyticsDashboardProps> = ({
 
               <MetricCard
                 title="Unique Visitors"
-                value={analyticsData?.unique_visitors || 0}
+                value={analyticsData?.unique_visitors ?? 0}
                 icon={<FiUsers />}
                 loading={isLoading}
               />
 
               <MetricCard
                 title="CTR"
-                value={analyticsData?.ctr_statistics?.overall?.ctr || 0}
+                value={analyticsData?.ctr_statistics?.overall?.ctr ?? 0}
                 previousValue={
                   analyticsData?.ctr_statistics?.comparison?.metrics?.ctr
                     ?.previous
@@ -255,7 +255,7 @@ export const UrlAnalyticsDashboard: React.FC<UrlAnalyticsDashboardProps> = ({
               <MetricCard
                 title="Impressions"
                 value={
-                  analyticsData?.ctr_statistics?.overall?.total_impressions || 0
+                  analyticsData?.ctr_statistics?.overall?.total_impressions ?? 0
                 }
                 previousValue={
                   analyticsData?.ctr_statistics?.comparison?.metrics
@@ -353,21 +353,19 @@ export const UrlAnalyticsDashboard: React.FC<UrlAnalyticsDashboardProps> = ({
                           </tr>
                         </thead>
                         <tbody>
-                          {analyticsData.top_referrers.map(
-                            (referrer, index) => (
-                              <tr
-                                key={index}
-                                className="border-b border-gray-100 hover:bg-gray-50"
-                              >
-                                <td className="py-3 px-4 text-gray-900">
-                                  {referrer.referrer}
-                                </td>
-                                <td className="py-3 px-4 text-right text-gray-700 font-medium">
-                                  {referrer.count.toLocaleString()}
-                                </td>
-                              </tr>
-                            )
-                          )}
+                          {analyticsData.top_referrers.map((referrer) => (
+                            <tr
+                              key={referrer.referrer}
+                              className="border-b border-gray-100 hover:bg-gray-50"
+                            >
+                              <td className="py-3 px-4 text-gray-900">
+                                {referrer.referrer}
+                              </td>
+                              <td className="py-3 px-4 text-right text-gray-700 font-medium">
+                                {referrer.count.toLocaleString()}
+                              </td>
+                            </tr>
+                          ))}
                         </tbody>
                       </table>
                     </div>
