@@ -5,7 +5,12 @@ import { KpiCardData } from "@/interfaces/dashboard";
  * KPI Card Component
  * Displays a key performance indicator with trend information
  */
-const KpiCard: React.FC<KpiCardData & { className?: string }> = ({
+const KpiCard: React.FC<
+  KpiCardData & {
+    className?: string;
+    color?: "blue" | "green" | "purple" | "orange" | "red";
+  }
+> = ({
   title,
   value,
   trend,
