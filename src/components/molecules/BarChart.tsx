@@ -122,7 +122,7 @@ const BarChart: React.FC<BarChartProps> = ({
                   y={barY}
                   width={barWidth}
                   height={barHeight}
-                  fill={d.color || colorScale(label)}
+                  fill={d.color ?? colorScale(label)}
                   rx={4}
                 />
                 <text
