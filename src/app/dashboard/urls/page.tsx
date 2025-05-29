@@ -34,7 +34,7 @@ export default function UrlsPage() {
 
   // Get tab from URL query params
   const searchParams = useSearchParams();
-  const tabParam = searchParams?.get("tab") || null;
+  const tabParam = searchParams?.get("tab") ?? null;
 
   // Initialize search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -55,13 +55,13 @@ export default function UrlsPage() {
   const [urlForQrCode, setUrlForQrCode] = useState<Url | null>(null);
 
   const [urlFilters, setUrlFilters] = useState({
-    status: "all" as string,
+    status: "all" as "all" | "active" | "expired" | "inactive",
     limit: 10 as number,
   });
 
   // Initialize URL sort state
   const [urlSort, setUrlSort] = useState({
-    sortBy: "created_at" as "created_at" | "clicks" | "title",
+    sortBy: "created_at" as "created_at" | "clicks" | "title" | "expiry_date",
     sortOrder: "desc" as "asc" | "desc",
   });
 
@@ -107,7 +107,12 @@ export default function UrlsPage() {
     setUrlFilters((prev) => ({ ...prev, [filterType]: value }));
 
     if (filterType === "status") {
-      updateFilter({ status: value !== "all" ? (value as string) : undefined });
+      updateFilter({
+        status:
+          value !== "all"
+            ? (value as "active" | "expired" | "inactive")
+            : undefined,
+      });
     } else if (filterType === "limit") {
       updateFilter({ limit: value as number });
     }
@@ -121,7 +126,8 @@ export default function UrlsPage() {
 
   // Handle URL sort changes
   const handleUrlSortChange = (column: string, direction: "asc" | "desc") => {
-    const sortBy = column as "created_at" | "clicks" | "title";
+    const sortBy = column as "created_at" | "clicks" | "title" | "expiry_date";
+
     setUrlSort({ sortBy, sortOrder: direction });
     updateFilter({ sortBy, sortOrder: direction });
   };

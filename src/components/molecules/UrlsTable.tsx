@@ -158,6 +158,20 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
     return url.length > maxLength ? `${url.substring(0, maxLength)}...` : url;
   };
 
+  // Get trend color based on click trend value
+  const getTrendColor = (clickTrend: number) => {
+    if (clickTrend > 0) return "text-[#009688]";
+    if (clickTrend < 0) return "text-[#D32F2F]";
+    return "text-[#607D8B]";
+  };
+
+  // Get trend arrow based on click trend value
+  const getTrendArrow = (clickTrend: number) => {
+    if (clickTrend > 0) return "↑";
+    if (clickTrend < 0) return "↓";
+    return "→";
+  };
+
   // If loading, show skeleton table
   if (isLoading) {
     return (
@@ -250,6 +264,13 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSortClick("expiry_date")}
+              >
+                Expired {getSortIndicator("expiry_date")}
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("clicks")}
               >
                 Clicks {getSortIndicator("clicks")}
@@ -298,25 +319,24 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-[#333333]">
+                    {url.expiry_date
+                      ? formatDate(url.expiry_date)
+                      : "No expiry"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="text-sm font-medium text-[#333333]">
                       {url.clicks.toLocaleString()}
                     </div>
                     {url.clickTrend !== undefined && (
                       <div
-                        className={`ml-2 text-xs ${
-                          url.clickTrend > 0
-                            ? "text-[#009688]"
-                            : url.clickTrend < 0
-                            ? "text-[#D32F2F]"
-                            : "text-[#607D8B]"
-                        }`}
+                        className={`ml-2 text-xs ${getTrendColor(
+                          url.clickTrend
+                        )}`}
                       >
-                        {url.clickTrend > 0
-                          ? "↑"
-                          : url.clickTrend < 0
-                          ? "↓"
-                          : "→"}{" "}
+                        {getTrendArrow(url.clickTrend)}{" "}
                         {Math.abs(url.clickTrend).toFixed(1)}%
                       </div>
                     )}

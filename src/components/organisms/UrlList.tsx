@@ -28,7 +28,12 @@ const UrlList = () => {
     value: string | number
   ) => {
     if (filterType === "status") {
-      updateFilter({ status: value as string });
+      updateFilter({
+        status:
+          value !== "all"
+            ? (value as "active" | "expired" | "inactive")
+            : undefined,
+      });
     } else if (filterType === "limit") {
       updateFilter({ limit: value as number });
     }
