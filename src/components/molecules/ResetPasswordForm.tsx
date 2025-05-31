@@ -127,19 +127,6 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   };
 
   /**
-   * Get password confirmation helper text
-   */
-  const getPasswordConfirmationHelperText = () => {
-    if (!passwordConfirmation) return undefined;
-    if (passwordMatch === true) {
-      return "Passwords match";
-    } else if (passwordMatch === false) {
-      return "Passwords do not match";
-    }
-    return undefined;
-  };
-
-  /**
    * Form submission handler
    * @param data - Form values
    */
@@ -230,7 +217,6 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
               type="password"
               fullWidth
               error={errors.password_confirmation?.message}
-              helperText={getPasswordConfirmationHelperText()}
               autoComplete="new-password"
               showPasswordToggle
               startIcon={<FiLock className="w-5 h-5" />}
