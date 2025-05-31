@@ -18,12 +18,13 @@ export const metadata: Metadata = {
  * Reset password page client component
  * @description Handles token extraction from URL parameters
  */
-function ResetPasswordPageClient({
+async function ResetPasswordPageClient({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const token = searchParams.token;
+  const params = await searchParams;
+  const token = params.token;
 
   return (
     <div className="reset-password-page">
@@ -40,7 +41,7 @@ function ResetPasswordPageClient({
 export default function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: Promise<{ token?: string }>;
 }) {
   return (
     <Suspense
