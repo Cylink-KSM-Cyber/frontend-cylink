@@ -20,6 +20,90 @@ const useResetPassword = (token?: string) => {
   const [isValidatingToken, setIsValidatingToken] = useState<boolean>(true);
 
   /**
+   * Handle 400 Bad Request errors
+   * @param data - Error response data
+   */
+  const handle400Error = useCallback(
+    (data: {
+      status: number;
+      message: string;
+      error_code?: string;
+      errors?: string[];
+    }) => {
+      if (data?.error_code === "MISSING_TOKEN") {
+        setTokenValidation({
+          isValid: false,
+          isExpired: false,
+          errorCode: "MISSING_TOKEN",
+          message: data.message,
+        });
+      } else if (data?.error_code === "INVALID_TOKEN") {
+        setTokenValidation({
+          isValid: false,
+          isExpired: false,
+          errorCode: "INVALID_TOKEN",
+          message: data.message,
+        });
+      } else if (data?.error_code === "TOKEN_EXPIRED") {
+        setTokenValidation({
+          isValid: false,
+          isExpired: true,
+          errorCode: "TOKEN_EXPIRED",
+          message: data.message,
+        });
+      } else if (data?.error_code === "VALIDATION_ERROR") {
+        const validationErrors = data.errors || [data.message];
+        setError(validationErrors.join(", "));
+      } else {
+        setError(data?.message || "Please check your input and try again.");
+      }
+    },
+    []
+  );
+
+  /**
+   * Handle API error response
+   * @param error - Axios error object
+   */
+  const handleApiError = useCallback(
+    (
+      error: AxiosError<{
+        status: number;
+        message: string;
+        error_code?: string;
+        errors?: string[];
+      }>
+    ) => {
+      if (!error.response) {
+        setError(
+          "Network error. Please check your internet connection and try again."
+        );
+        return;
+      }
+
+      const { status, data } = error.response;
+
+      switch (status) {
+        case 400:
+          handle400Error(data);
+          break;
+        case 429:
+          setError(
+            "Too many password reset attempts. Please try again in 15 minutes."
+          );
+          break;
+        case 500:
+          setError("Internal server error. Please try again later.");
+          break;
+        default:
+          setError("Something went wrong. Please try again.");
+          break;
+      }
+    },
+    [handle400Error]
+  );
+
+  /**
    * Validate reset token
    * @description Validates the reset token from URL parameters
    */
@@ -90,7 +174,6 @@ const useResetPassword = (token?: string) => {
             "Password has been reset successfully. You can now log in with your new password."
         );
       } catch (err) {
-        // Handle different error cases
         const error = err as AxiosError<{
           status: number;
           message: string;
@@ -98,63 +181,12 @@ const useResetPassword = (token?: string) => {
           errors?: string[];
         }>;
 
-        if (error.response) {
-          const { status, data } = error.response;
-
-          switch (status) {
-            case 400:
-              if (data?.error_code === "MISSING_TOKEN") {
-                setTokenValidation({
-                  isValid: false,
-                  isExpired: false,
-                  errorCode: "MISSING_TOKEN",
-                  message: data.message,
-                });
-              } else if (data?.error_code === "INVALID_TOKEN") {
-                setTokenValidation({
-                  isValid: false,
-                  isExpired: false,
-                  errorCode: "INVALID_TOKEN",
-                  message: data.message,
-                });
-              } else if (data?.error_code === "TOKEN_EXPIRED") {
-                setTokenValidation({
-                  isValid: false,
-                  isExpired: true,
-                  errorCode: "TOKEN_EXPIRED",
-                  message: data.message,
-                });
-              } else if (data?.error_code === "VALIDATION_ERROR") {
-                const validationErrors = data.errors || [data.message];
-                setError(validationErrors.join(", "));
-              } else {
-                setError(
-                  data?.message || "Please check your input and try again."
-                );
-              }
-              break;
-            case 429:
-              setError(
-                "Too many password reset attempts. Please try again in 15 minutes."
-              );
-              break;
-            case 500:
-              setError("Internal server error. Please try again later.");
-              break;
-            default:
-              setError("Something went wrong. Please try again.");
-              break;
-          }
-        } else {
-          setError(
-            "Network error. Please check your internet connection and try again."
-          );
-        }
+        handleApiError(error);
       } finally {
         setIsLoading(false);
       }
     },
-    [token]
+    [token, handleApiError]
   );
 
   /**
