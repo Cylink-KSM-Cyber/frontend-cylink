@@ -5,6 +5,8 @@ import {
   LoginResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from "@/interfaces/auth";
 import Cookies from "js-cookie";
 
@@ -175,6 +177,28 @@ const AuthService = {
       return response;
     } catch (error) {
       console.error("Forgot password service error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Reset password with new password
+   * @param resetData - New password and confirmation
+   * @param token - Reset token from email
+   * @returns Promise with reset password response data
+   */
+  resetPassword: async (
+    resetData: ResetPasswordRequest,
+    token: string
+  ): Promise<ResetPasswordResponse> => {
+    try {
+      const response = await post<ResetPasswordResponse>(
+        `/api/v1/auth/reset-password?token=${encodeURIComponent(token)}`,
+        resetData
+      );
+      return response;
+    } catch (error) {
+      console.error("Reset password service error:", error);
       throw error;
     }
   },
