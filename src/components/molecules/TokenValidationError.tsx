@@ -36,7 +36,7 @@ const TokenValidationError: React.FC<TokenValidationErrorProps> = ({
           icon: <FiClock className="w-12 h-12 text-orange-600" />,
           title: "Reset Link Expired",
           message:
-            tokenValidation.message ||
+            tokenValidation.message ??
             "This password reset link has expired. Please request a new one.",
           bgColor: "bg-orange-50",
           borderColor: "border-orange-200",
@@ -47,7 +47,7 @@ const TokenValidationError: React.FC<TokenValidationErrorProps> = ({
           icon: <FiXCircle className="w-12 h-12 text-red-600" />,
           title: "Invalid Reset Link",
           message:
-            tokenValidation.message ||
+            tokenValidation.message ??
             "This password reset link is invalid or malformed. Please request a new one.",
           bgColor: "bg-red-50",
           borderColor: "border-red-200",
@@ -58,7 +58,7 @@ const TokenValidationError: React.FC<TokenValidationErrorProps> = ({
           icon: <FiAlertTriangle className="w-12 h-12 text-yellow-600" />,
           title: "No Reset Token",
           message:
-            tokenValidation.message ||
+            tokenValidation.message ??
             "No reset token was provided. Please check your email for the correct reset link.",
           bgColor: "bg-yellow-50",
           borderColor: "border-yellow-200",
@@ -69,7 +69,7 @@ const TokenValidationError: React.FC<TokenValidationErrorProps> = ({
           icon: <FiAlertTriangle className="w-12 h-12 text-gray-600" />,
           title: "Reset Link Error",
           message:
-            tokenValidation.message ||
+            tokenValidation.message ??
             "There was an error with your reset link. Please try again.",
           bgColor: "bg-gray-50",
           borderColor: "border-gray-200",

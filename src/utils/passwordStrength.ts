@@ -6,6 +6,11 @@ import { PasswordStrength } from "@/interfaces/auth";
  */
 
 /**
+ * Password strength level type
+ */
+export type PasswordStrengthLevel = "weak" | "fair" | "good" | "strong";
+
+/**
  * Analyze password strength
  * @param password - Password to analyze
  * @returns Password strength analysis
@@ -16,14 +21,14 @@ export const analyzePasswordStrength = (password: string): PasswordStrength => {
     hasUppercase: /[A-Z]/.test(password),
     hasLowercase: /[a-z]/.test(password),
     hasNumber: /\d/.test(password),
-    hasSpecialChar: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    hasSpecialChar: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
   };
 
   // Calculate score based on requirements
   const score = Object.values(requirements).filter(Boolean).length;
 
   // Determine strength level
-  let level: "weak" | "fair" | "good" | "strong";
+  let level: PasswordStrengthLevel;
   if (score < 2) {
     level = "weak";
   } else if (score < 3) {
@@ -66,7 +71,7 @@ export const analyzePasswordStrength = (password: string): PasswordStrength => {
  * @returns CSS color class
  */
 export const getPasswordStrengthColor = (
-  level: "weak" | "fair" | "good" | "strong"
+  level: PasswordStrengthLevel
 ): string => {
   switch (level) {
     case "weak":
@@ -88,7 +93,7 @@ export const getPasswordStrengthColor = (
  * @returns CSS background color class
  */
 export const getPasswordStrengthBgColor = (
-  level: "weak" | "fair" | "good" | "strong"
+  level: PasswordStrengthLevel
 ): string => {
   switch (level) {
     case "weak":
@@ -110,7 +115,7 @@ export const getPasswordStrengthBgColor = (
  * @returns Human readable strength text
  */
 export const getPasswordStrengthText = (
-  level: "weak" | "fair" | "good" | "strong"
+  level: PasswordStrengthLevel
 ): string => {
   switch (level) {
     case "weak":
