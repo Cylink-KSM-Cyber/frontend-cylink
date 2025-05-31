@@ -91,3 +91,25 @@ export interface AuthContextType {
   logout: () => void;
   error: string | null;
 }
+
+/**
+ * Interface for forgot password request payload
+ * @description Represents the data structure for forgot password request
+ */
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+/**
+ * Interface for forgot password response data
+ * @description Represents the data returned from forgot password API
+ */
+export interface ForgotPasswordResponseData {
+  message: string;
+}
+
+/**
+ * Type for forgot password response
+ * @description API response for forgot password endpoint
+ */
+export type ForgotPasswordResponse = ApiResponse<ForgotPasswordResponseData>;
