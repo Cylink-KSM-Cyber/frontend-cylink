@@ -3,6 +3,8 @@ import {
   LoginRequest,
   ApiLoginResponse,
   LoginResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
 } from "@/interfaces/auth";
 import Cookies from "js-cookie";
 
@@ -154,6 +156,26 @@ const AuthService = {
     } catch (error) {
       console.error("Error retrieving token from Cookies:", error);
       return null;
+    }
+  },
+
+  /**
+   * Request password reset email
+   * @param email - Email address to send reset link to
+   * @returns Promise with forgot password response data
+   */
+  forgotPassword: async (
+    email: ForgotPasswordRequest
+  ): Promise<ForgotPasswordResponse> => {
+    try {
+      const response = await post<ForgotPasswordResponse>(
+        "/api/v1/auth/forgot-password",
+        email
+      );
+      return response;
+    } catch (error) {
+      console.error("Forgot password service error:", error);
+      throw error;
     }
   },
 };
