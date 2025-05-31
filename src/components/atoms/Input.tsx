@@ -112,10 +112,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className={`absolute left-2 transition-all duration-200 pointer-events-none z-10 ${
+            className={`absolute transition-all duration-200 pointer-events-none z-10 ${
               focused || hasValue
-                ? "text-xs -top-2 bg-white px-1 text-black"
-                : "text-gray-500 top-2 left-3"
+                ? "text-xs -top-2 bg-white px-1 text-black left-2"
+                : `text-gray-500 top-2 ${startIcon ? "left-10" : "left-3"}`
             } ${isError ? "text-red-500" : ""}`}
           >
             {label}
