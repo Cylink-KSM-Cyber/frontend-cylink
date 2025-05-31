@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 async function ResetPasswordPageClient({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  readonly searchParams: Promise<{ token?: string }>;
 }) {
   const params = await searchParams;
   const token = params.token;
@@ -41,7 +41,7 @@ async function ResetPasswordPageClient({
 export default function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ token?: string }>;
+  readonly searchParams: Promise<{ token?: string }>;
 }) {
   return (
     <Suspense
