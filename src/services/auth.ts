@@ -136,7 +136,7 @@ const AuthService = {
 
     try {
       const token = Cookies.get("accessToken");
-      return token === undefined ? null : token;
+      return token ?? null;
     } catch (error) {
       console.error("Error retrieving token from Cookies:", error);
       return null;
@@ -152,7 +152,7 @@ const AuthService = {
 
     try {
       const token = Cookies.get("refreshToken");
-      return token === undefined ? null : token;
+      return token ?? null;
     } catch (error) {
       console.error("Error retrieving token from Cookies:", error);
       return null;
