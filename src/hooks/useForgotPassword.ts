@@ -39,19 +39,17 @@ const useForgotPassword = () => {
     } catch (err) {
       // Handle different error cases
       const error = err as AxiosError;
-      let errorMessage =
-        "An error occurred while processing your request. Please try again later.";
 
       if (error.response) {
         switch (error.response.status) {
           case 400:
-            errorMessage = "Please enter a valid email address.";
+            setError("Please enter a valid email address.");
             break;
           case 429:
-            errorMessage = "Too many requests. Please try again later.";
+            setError("Too many requests. Please try again later.");
             break;
           case 500:
-            errorMessage = "Internal server error. Please try again later.";
+            setError("Internal server error. Please try again later.");
             break;
           default:
             // For security reasons, show success modal even on some errors
@@ -59,14 +57,13 @@ const useForgotPassword = () => {
             setResponseMessage(
               "We've sent a password reset link to your email. Please check your inbox."
             );
-            return;
+            break;
         }
       } else {
-        errorMessage =
-          "Network error. Please check your internet connection and try again.";
+        setError(
+          "Network error. Please check your internet connection and try again."
+        );
       }
-
-      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
