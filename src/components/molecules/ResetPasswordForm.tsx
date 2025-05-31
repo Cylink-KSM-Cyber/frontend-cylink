@@ -12,7 +12,7 @@ import PasswordRequirements from "@/components/atoms/PasswordRequirements";
 import ResetPasswordSuccessModal from "@/components/molecules/ResetPasswordSuccessModal";
 import { analyzePasswordStrength } from "@/utils/passwordStrength";
 import useResetPassword from "@/hooks/useResetPassword";
-import { FiLock } from "react-icons/fi";
+import { FiLock, FiCheck, FiX } from "react-icons/fi";
 
 /**
  * Reset password form schema validation
@@ -70,6 +70,7 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
   const [passwordStrength, setPasswordStrength] = useState(
     analyzePasswordStrength("")
   );
+  const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null);
 
   const {
     isLoading,
@@ -95,13 +96,48 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
     },
   });
 
-  // Watch password field for strength analysis
+  // Watch both password fields for real-time validation
   const password = watch("password");
+  const passwordConfirmation = watch("password_confirmation");
 
   // Update password strength when password changes
   useEffect(() => {
     setPasswordStrength(analyzePasswordStrength(password || ""));
   }, [password]);
+
+  // Update password match status when either field changes
+  useEffect(() => {
+    if (!passwordConfirmation) {
+      setPasswordMatch(null);
+    } else if (password && passwordConfirmation) {
+      setPasswordMatch(password === passwordConfirmation);
+    }
+  }, [password, passwordConfirmation]);
+
+  /**
+   * Get password confirmation icon based on match status
+   */
+  const getPasswordConfirmationIcon = () => {
+    if (passwordMatch === null) return null;
+    if (passwordMatch) {
+      return <FiCheck className="w-5 h-5 text-green-600" />;
+    } else {
+      return <FiX className="w-5 h-5 text-red-600" />;
+    }
+  };
+
+  /**
+   * Get password confirmation helper text
+   */
+  const getPasswordConfirmationHelperText = () => {
+    if (!passwordConfirmation) return undefined;
+    if (passwordMatch === true) {
+      return "Passwords match";
+    } else if (passwordMatch === false) {
+      return "Passwords do not match";
+    }
+    return undefined;
+  };
 
   /**
    * Form submission handler
@@ -187,17 +223,43 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
+            className="space-y-2"
           >
             <Input
               label="Confirm new password"
               type="password"
               fullWidth
               error={errors.password_confirmation?.message}
+              helperText={getPasswordConfirmationHelperText()}
               autoComplete="new-password"
               showPasswordToggle
               startIcon={<FiLock className="w-5 h-5" />}
+              endIcon={getPasswordConfirmationIcon()}
               {...register("password_confirmation")}
             />
+
+            {/* Password match status */}
+            {passwordConfirmation && (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center space-x-2 text-sm"
+              >
+                {passwordMatch === true && (
+                  <div className="flex items-center space-x-2 text-green-600">
+                    <FiCheck className="w-4 h-4" />
+                    <span>Passwords match</span>
+                  </div>
+                )}
+                {passwordMatch === false && (
+                  <div className="flex items-center space-x-2 text-red-600">
+                    <FiX className="w-4 h-4" />
+                    <span>Passwords do not match</span>
+                  </div>
+                )}
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Password requirements */}
@@ -221,7 +283,11 @@ const ResetPasswordForm: React.FC<ResetPasswordFormProps> = ({
             <Button
               type="submit"
               fullWidth
-              disabled={isLoading || passwordStrength.score < 3}
+              disabled={
+                isLoading ||
+                passwordStrength.score < 3 ||
+                passwordMatch !== true
+              }
               loading={isLoading}
               className="mb-4"
             >
