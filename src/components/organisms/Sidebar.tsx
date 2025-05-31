@@ -12,7 +12,6 @@ import {
   RiLogoutBoxRLine,
   RiMenuFoldLine,
   RiMenuUnfoldLine,
-  RiUser3Line,
   RiArrowLeftSLine,
   RiArrowRightSLine,
 } from "react-icons/ri";
@@ -20,6 +19,7 @@ import { NavItem, UserProfileProps } from "@/interfaces/sidebar";
 import { useSidebar } from "@/contexts/SidebarContext";
 import LogoutConfirmationModal from "@/components/molecules/LogoutConfirmationModal";
 import useLogoutConfirmation from "@/hooks/useLogoutConfirmation";
+import Avatar from "@/components/atoms/Avatar";
 
 /**
  * Theme constants for consistent styling across the sidebar
@@ -63,8 +63,8 @@ const UserProfile: React.FC<UserProfileProps> = ({
       }`}
       onClick={onProfileClick}
     >
-      <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200">
-        {avatarUrl ? (
+      {avatarUrl ? (
+        <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200">
           <Image
             src={avatarUrl}
             alt={name}
@@ -72,12 +72,16 @@ const UserProfile: React.FC<UserProfileProps> = ({
             sizes="40px"
             className="object-cover"
           />
-        ) : (
-          <div className="flex items-center justify-center h-full w-full text-gray-500">
-            <RiUser3Line size={20} />
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <Avatar
+          username={name}
+          size={40}
+          isClickable={true}
+          onClick={onProfileClick}
+          ariaLabel={`Profile avatar for ${name}`}
+        />
+      )}
 
       {!isCollapsed && (
         <div className="ml-3 overflow-hidden">
