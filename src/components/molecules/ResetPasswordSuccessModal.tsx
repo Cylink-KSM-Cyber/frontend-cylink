@@ -95,12 +95,6 @@ const ResetPasswordSuccessModal: React.FC<ResetPasswordSuccessModalProps> = ({
                       Go to Login
                     </Button>
                   </Link>
-                  <button
-                    onClick={onClose}
-                    className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                  >
-                    Close
-                  </button>
                 </motion.div>
               </div>
             </motion.div>
