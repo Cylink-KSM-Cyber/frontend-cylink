@@ -12,6 +12,7 @@ export interface LoginRequest {
  * @description Represents user data returned from API
  */
 export interface User {
+  id: number;
   username: string;
   email: string;
   created_at: string;
@@ -87,7 +88,7 @@ export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
+  login: (credentials: LoginRequest, remember?: boolean) => Promise<void>;
   logout: () => void;
   error: string | null;
 }
