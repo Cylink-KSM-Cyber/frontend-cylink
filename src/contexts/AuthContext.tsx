@@ -70,16 +70,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
 
-        // Check if user is authenticated
+        // Check if user is authenticated and load user data
         if (AuthService.isAuthenticated()) {
-          // Here we could fetch the user profile if needed
-          // For now, we'll just set isAuthenticated state
-          // In a real app, you might want to validate the token or fetch user data
-          // For demo purposes, we'll just set isLoading to false
+          const userData = AuthService.getUser();
+          if (userData) {
+            setUser(userData);
+            console.log("User data loaded from storage:", userData);
+          } else {
+            console.log("Token exists but no user data found - keeping tokens");
+            // Keep tokens even if user data is missing
+            // User data might be missing due to storage issues but tokens are still valid
+          }
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
-        AuthService.clearTokens();
+        // Only clear tokens if there's a real error, not just missing user data
       } finally {
         setIsLoading(false);
       }
@@ -149,6 +154,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           remember
         );
         console.log("Tokens saved successfully");
+
+        // Save user data to storage
+        AuthService.saveUser(user);
+        console.log("User data saved successfully:", user);
       } catch (tokenError) {
         console.error("Failed to save tokens:", tokenError);
         throw new Error("Failed to save authentication data");
@@ -228,6 +237,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Clear any existing toasts
     clearAllToasts();
 
+    // Clear tokens and user data from storage
     AuthService.clearTokens();
     setUser(null);
 
