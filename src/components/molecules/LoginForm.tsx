@@ -9,7 +9,7 @@ import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
 import Checkbox from "@/components/atoms/Checkbox";
 import Link from "next/link";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Login form schema validation
@@ -69,10 +69,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
    * @param data - Form values
    */
   const onSubmit = async (data: LoginFormValues) => {
-    await login({
-      email: data.email,
-      password: data.password,
-    });
+    await login(
+      {
+        email: data.email,
+        password: data.password,
+      },
+      data.rememberMe
+    );
     // console.log("ini onSubmit");
 
     // showToast("Login successful", "success");
