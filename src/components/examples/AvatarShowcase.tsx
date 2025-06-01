@@ -53,9 +53,9 @@ const AvatarShowcase: React.FC = () => {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {testCases.map((testCase, index) => (
+            {testCases.map((testCase) => (
               <div
-                key={index}
+                key={`${testCase.username}-${testCase.expected}`}
                 className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <Avatar
