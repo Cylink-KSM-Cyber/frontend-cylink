@@ -48,7 +48,6 @@ interface LoginFormProps {
  */
 const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
   const { login, isLoading } = useAuth();
-  // const { showToast } = useToast();
 
   // Form validation with react-hook-form and zod
   const {
@@ -76,9 +75,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
       },
       data.rememberMe
     );
-    // console.log("ini onSubmit");
-
-    // showToast("Login successful", "success");
   };
 
   return (
