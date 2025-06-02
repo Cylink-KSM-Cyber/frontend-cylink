@@ -7,7 +7,6 @@ import {
   RiDashboardLine,
   RiLinkM,
   RiQrCodeLine,
-  RiLineChartLine,
   RiSettings4Line,
   RiLogoutBoxRLine,
   RiMenuFoldLine,
@@ -232,19 +231,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       path: "/dashboard/qr-codes",
       icon: <RiQrCodeLine />,
     },
-    {
-      id: "analytics",
-      label: "Analytics",
-      path: "/dashboard?tab=analytics",
-      icon: <RiLineChartLine />,
-    },
   ];
 
   const settingsItems: NavItem[] = [
     {
       id: "settings",
       label: "Settings",
-      path: "/settings",
+      path: "/dashboard/settings?under-development=true",
       icon: <RiSettings4Line />,
       isSetting: true,
     },
