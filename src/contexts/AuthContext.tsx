@@ -7,7 +7,12 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { User, LoginRequest, AuthContextType } from "@/interfaces/auth";
+import {
+  User,
+  LoginRequest,
+  RegisterRequest,
+  AuthContextType,
+} from "@/interfaces/auth";
 import AuthService from "@/services/auth";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
@@ -27,6 +32,7 @@ const initialState: AuthContextType = {
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
+  signup: async () => {},
   logout: () => {},
   error: null,
 };
@@ -105,6 +111,105 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setTimeout(() => {
       router.push(path);
     }, delay);
+  };
+
+  /**
+   * Register handler
+   * @description Registers a new user with provided credentials
+   * @param credentials - Registration credentials
+   */
+  const signup = async (credentials: RegisterRequest) => {
+    // Clear any existing toasts
+    clearAllToasts();
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log("Attempting registration with credentials:", {
+        email: credentials.email,
+        username: credentials.username,
+        passwordLength: credentials.password?.length,
+        retype_passwordLength: credentials.retype_password?.length,
+      });
+
+      const response = await AuthService.signup(credentials);
+      console.log("Registration response received:", {
+        status: "success",
+        message: response.message,
+      });
+
+      // Show success toast with longer duration to ensure visibility before navigation
+      showToast(
+        "Registration successful! Please check your email to verify your account.",
+        "success",
+        TOAST_DURATION
+      );
+      console.log("Success toast shown, will navigate after delay");
+
+      // Set isLoading to false before navigation
+      setIsLoading(false);
+
+      // Navigate to login page after a delay to ensure toast is visible
+      navigateWithDelay("/login");
+    } catch (err) {
+      console.error("Registration error details:", err);
+
+      // Handle different error cases
+      let errorMessage =
+        "An error occurred during registration. Please try again later.";
+      const errorType: ToastType = "error";
+
+      if (err instanceof AxiosError) {
+        const error = err as AxiosError;
+
+        if (error.response) {
+          console.log("Error response status:", error.response.status);
+          console.log("Error response data:", error.response.data);
+
+          switch (error.response.status) {
+            case 400:
+              errorMessage =
+                "Invalid registration data. Please check all fields and try again.";
+              break;
+            case 409:
+              errorMessage =
+                "An account with this email already exists. Please try logging in instead.";
+              break;
+            case 422:
+              errorMessage =
+                "Please check that your password meets the requirements and all fields are filled correctly.";
+              break;
+            default:
+              // Try to get error message from response
+              if (error.message) {
+                errorMessage = error.message;
+              }
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.log("No response received from server");
+          errorMessage = "Server did not respond. Please try again later.";
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log("Error setting up request:", error.message);
+          errorMessage =
+            "Failed to connect to the server. Please check your connection.";
+        }
+      } else {
+        // Not an Axios error
+        console.log("Non-Axios error:", err);
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+      }
+
+      setError(errorMessage);
+
+      // Show error toast with longer duration
+      showToast(errorMessage, errorType, 6000);
+      setIsLoading(false);
+    }
   };
 
   /**
@@ -256,6 +361,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isLoading,
         error,
         login,
+        signup,
         logout,
       }}
     >

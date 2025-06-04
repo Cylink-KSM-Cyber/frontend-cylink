@@ -3,6 +3,8 @@ import {
   LoginRequest,
   ApiLoginResponse,
   LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   ResetPasswordRequest,
@@ -16,6 +18,57 @@ import Cookies from "js-cookie";
  * @description Provides methods for authentication-related API calls
  */
 const AuthService = {
+  /**
+   * Register a new user
+   * @param credentials - User registration data containing email, password, and username
+   * @returns Promise with registration response data
+   */
+  signup: async (credentials: RegisterRequest): Promise<RegisterResponse> => {
+    try {
+      console.log("Sending registration request:", {
+        email: credentials.email,
+        username: credentials.username,
+        passwordLength: credentials.password?.length,
+        retype_passwordLength: credentials.retype_password?.length,
+      });
+
+      // Call API with registration data
+      const response = await post<RegisterResponse>("/api/v1/auth/register", {
+        email: credentials.email,
+        password: credentials.password,
+        username: credentials.username,
+        retype_password: credentials.retype_password,
+      });
+
+      console.log("Registration API response:", {
+        status: response.status,
+        message: response.message,
+        hasUser: !!response.data?.user,
+        hasVerificationToken: !!response.data?.verification_token,
+      });
+
+      // Validate response structure
+      if (!response || typeof response !== "object") {
+        console.error("Invalid registration response structure:", response);
+        throw new Error("Invalid response from server");
+      }
+
+      // Validate required fields in response
+      if (!response.data?.user || !response.data?.verification_token) {
+        console.error("Missing required fields in registration response:", {
+          hasUser: !!response.data?.user,
+          hasVerificationToken: !!response.data?.verification_token,
+        });
+        throw new Error("Incomplete registration response from server");
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Registration service error:", error);
+      throw error;
+    }
+  },
+
   /**
    * Login user with email and password
    * @param credentials - User credentials containing email and password
