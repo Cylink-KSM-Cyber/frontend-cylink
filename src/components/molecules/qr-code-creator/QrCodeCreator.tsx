@@ -78,14 +78,14 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
     selectedBackgroundColor,
     includeLogoChecked,
     logoSize,
-    errorCorrectionLevel,
+    qrSize,
     isLoading,
     isGenerating,
     setSelectedForegroundColor,
     setSelectedBackgroundColor,
     setIncludeLogoChecked,
     setLogoSize,
-    setErrorCorrectionLevel,
+    setQrSize,
     resetQrCode,
     handleFinish,
     loadColors,
@@ -256,12 +256,12 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
             selectedBackgroundColor={selectedBackgroundColor}
             includeLogoChecked={includeLogoChecked}
             logoSize={logoSize}
-            errorCorrectionLevel={errorCorrectionLevel}
+            qrSize={qrSize}
             setSelectedForegroundColor={setSelectedForegroundColor}
             setSelectedBackgroundColor={setSelectedBackgroundColor}
             setIncludeLogoChecked={setIncludeLogoChecked}
             setLogoSize={setLogoSize}
-            setErrorCorrectionLevel={setErrorCorrectionLevel}
+            setQrSize={setQrSize}
           />
         )}
       </div>
