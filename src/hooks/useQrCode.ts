@@ -11,13 +11,11 @@ import { fetchQrCodeColors, generateQrCode } from "@/services/qrcode";
 import { Url } from "@/interfaces/url";
 import { useToast } from "@/contexts/ToastContext";
 
-/**
- * Default QR code foreground and background colors
- */
-const DEFAULT_COLORS = {
-  foreground: "#000000", // Black
-  background: "#FFFFFF", // White
-};
+import {
+  DEFAULT_QR_COLORS,
+  DEFAULT_ERROR_CORRECTION_LEVEL,
+  LOGO_SIZE_CONFIG,
+} from "@/config/qrcode";
 
 /**
  * Custom hook for managing QR code operations
@@ -34,9 +32,11 @@ export const useQrCode = () => {
   const [selectedBackgroundColor, _setSelectedBackgroundColor] =
     useState<QrCodeColor | null>(null);
   const [includeLogoChecked, setIncludeLogoChecked] = useState<boolean>(false);
-  const [logoSize, setLogoSize] = useState<number>(0.25); // Default 25%
-  const [qrSize, setQrSize] = useState<number>(300); // Default size
-  const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<string>("H");
+  const [logoSize, setLogoSize] = useState<number>(LOGO_SIZE_CONFIG.default);
+  const [qrSize, setQrSize] = useState<number>(280); // Default size from config
+  const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<string>(
+    DEFAULT_ERROR_CORRECTION_LEVEL
+  );
 
   // State for loading and error handling
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -59,7 +59,7 @@ export const useQrCode = () => {
     if (!selectedForegroundColor) {
       setSelectedForegroundColor({
         name: "Black",
-        hex: DEFAULT_COLORS.foreground,
+        hex: DEFAULT_QR_COLORS.foreground,
       });
     }
 
@@ -67,7 +67,7 @@ export const useQrCode = () => {
     if (!selectedBackgroundColor) {
       setSelectedBackgroundColor({
         name: "White",
-        hex: DEFAULT_COLORS.background,
+        hex: DEFAULT_QR_COLORS.background,
       });
     }
   }, [selectedForegroundColor, selectedBackgroundColor]);
