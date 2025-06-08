@@ -13,6 +13,13 @@ import {
   RiStarLine,
   RiSearchLine,
 } from "react-icons/ri";
+import {
+  RECENT_URLS_LIMIT,
+  POPULAR_URLS_LIMIT,
+  RECENT_SEARCHES_LIMIT,
+  MIN_SEARCH_TERM_LENGTH,
+  POPULAR_URL_CATEGORIES,
+} from "@/config/qrcode";
 
 /**
  * Props for URL Selection Step component
@@ -71,7 +78,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       )
-      .slice(0, 6);
+      .slice(0, RECENT_URLS_LIMIT);
   }, [existingUrls]);
 
   // Get popular URLs (top 4 by clicks)
@@ -79,7 +86,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
     return existingUrls
       .filter((url) => url.clicks > 0)
       .sort((a, b) => b.clicks - a.clicks)
-      .slice(0, 4);
+      .slice(0, POPULAR_URLS_LIMIT);
   }, [existingUrls]);
 
   // Filter URLs based on search query
@@ -107,8 +114,14 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
       setSearchQuery(query);
 
       // Add to recent searches if it's a meaningful search (>2 chars)
-      if (query.trim().length > 2 && !recentSearches.includes(query.trim())) {
-        setRecentSearches((prev) => [query.trim(), ...prev.slice(0, 4)]); // Keep last 5 searches
+      if (
+        query.trim().length > MIN_SEARCH_TERM_LENGTH &&
+        !recentSearches.includes(query.trim())
+      ) {
+        setRecentSearches((prev) => [
+          query.trim(),
+          ...prev.slice(0, RECENT_SEARCHES_LIMIT - 1),
+        ]); // Keep last N searches
       }
     },
     [recentSearches]
@@ -421,10 +434,9 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
               </span>
             </div>
             <div className="text-xs text-blue-600 space-y-1">
-              <div>• Social media profiles</div>
-              <div>• Business websites</div>
-              <div>• Portfolio links</div>
-              <div>• Contact information</div>
+              {POPULAR_URL_CATEGORIES.map((category, index) => (
+                <div key={index}>• {category}</div>
+              ))}
             </div>
           </div>
         </div>
