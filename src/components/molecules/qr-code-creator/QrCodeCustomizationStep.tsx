@@ -10,35 +10,12 @@ import {
   RiCheckboxCircleFill,
 } from "react-icons/ri";
 
-/**
- * QR Code size options
- */
-const QR_SIZE_OPTIONS = [
-  { value: 200, label: "Small", size: "200×200px" },
-  { value: 280, label: "Medium", size: "280×280px" },
-  { value: 400, label: "Large", size: "400×400px" },
-];
-
-/**
- * Preset color options for easy selection
- */
-const PRESET_FOREGROUND_COLORS = [
-  { hex: "#000000", name: "Black" },
-  { hex: "#1F2937", name: "Dark Gray" },
-  { hex: "#3B82F6", name: "Blue" },
-  { hex: "#EF4444", name: "Red" },
-  { hex: "#10B981", name: "Green" },
-  { hex: "#8B5CF6", name: "Purple" },
-];
-
-const PRESET_BACKGROUND_COLORS = [
-  { hex: "#FFFFFF", name: "White" },
-  { hex: "#F9FAFB", name: "Light Gray" },
-  { hex: "#EBF8FF", name: "Light Blue" },
-  { hex: "#FEF2F2", name: "Light Red" },
-  { hex: "#ECFDF5", name: "Light Green" },
-  { hex: "#FAF5FF", name: "Light Purple" },
-];
+import {
+  QR_SIZE_OPTIONS,
+  PRESET_FOREGROUND_COLORS,
+  PRESET_BACKGROUND_COLORS,
+  DEFAULT_ERROR_CORRECTION_LEVEL,
+} from "@/config/qrcode";
 
 /**
  * Props for QR Code Customization Step component
@@ -198,7 +175,7 @@ const QrCodeCustomizationStep: React.FC<QrCodeCustomizationStepProps> = ({
           generatedQrUrl={generatedQrUrl}
           isLoading={isLoading || isGenerating}
           value={previewUrl}
-          errorCorrectionLevel="M" // Always use Medium 15% as smart default
+          errorCorrectionLevel={DEFAULT_ERROR_CORRECTION_LEVEL} // Always use smart default
           size={280} // Fixed preview size
           logoSize={logoSize}
         />
