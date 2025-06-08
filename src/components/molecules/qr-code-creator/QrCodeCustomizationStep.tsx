@@ -4,7 +4,11 @@ import React, { useState } from "react";
 import QrCodePreview from "@/components/atoms/QrCodePreview";
 import { QrCodeColor } from "@/interfaces/qrcode";
 import { Url } from "@/interfaces/url";
-import { RiArrowDownSLine, RiArrowUpSLine } from "react-icons/ri";
+import {
+  RiArrowDownSLine,
+  RiArrowUpSLine,
+  RiCheckboxCircleFill,
+} from "react-icons/ri";
 
 /**
  * QR Code size options
@@ -213,6 +217,28 @@ const QrCodeCustomizationStep: React.FC<QrCodeCustomizationStepProps> = ({
               </p>
             </div>
 
+            {/* Selected URL Display - More Prominent */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 mt-1">
+                  <RiCheckboxCircleFill className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="ml-3 flex-1">
+                  <div className="text-sm font-medium text-blue-900 mb-1">
+                    Selected URL
+                  </div>
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    {isExistingUrl && selectedUrl
+                      ? selectedUrl.title || `URL ${selectedUrl.id}`
+                      : "New URL"}
+                  </div>
+                  <div className="text-xs text-blue-700 font-mono bg-blue-100 inline-block px-2 py-1 rounded mt-2">
+                    {previewUrl}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Essential Options */}
             <div className="space-y-6">
               {/* Foreground Color Selection */}
@@ -352,116 +378,122 @@ const QrCodeCustomizationStep: React.FC<QrCodeCustomizationStepProps> = ({
               </div>
             </div>
 
-            {/* Advanced Settings (Collapsible) */}
-            <div className="border-t border-gray-200 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-gray-900"
-              >
-                <span>Advanced Settings</span>
-                {showAdvanced ? (
-                  <RiArrowUpSLine className="w-4 h-4" />
-                ) : (
-                  <RiArrowDownSLine className="w-4 h-4" />
-                )}
-              </button>
+            {/* Advanced Settings (Collapsible) with Subtle Divider */}
+            <div className="relative">
+              {/* Subtle Divider Line */}
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
 
-              {showAdvanced && (
-                <div className="mt-4 space-y-4">
-                  {/* Logo Size (only if logo is enabled) */}
-                  {includeLogoChecked && (
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                >
+                  <span>Advanced Settings</span>
+                  {showAdvanced ? (
+                    <RiArrowUpSLine className="w-4 h-4 transition-transform" />
+                  ) : (
+                    <RiArrowDownSLine className="w-4 h-4 transition-transform" />
+                  )}
+                </button>
+
+                {showAdvanced && (
+                  <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                    {/* Logo Size (only if logo is enabled) */}
+                    {includeLogoChecked && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Logo Size
+                        </label>
+                        <input
+                          type="range"
+                          min="10"
+                          max="40"
+                          step="5"
+                          value={logoSize * 100}
+                          onChange={(e) =>
+                            setLogoSize(Number(e.target.value) / 100)
+                          }
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                          disabled={isLoading || isGenerating}
+                        />
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>Small (10%)</span>
+                          <span>Medium (25%)</span>
+                          <span>Large (40%)</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Extended Color Palette */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Logo Size
+                        Extended Color Palette
                       </label>
-                      <input
-                        type="range"
-                        min="10"
-                        max="40"
-                        step="5"
-                        value={logoSize * 100}
-                        onChange={(e) =>
-                          setLogoSize(Number(e.target.value) / 100)
-                        }
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                        disabled={isLoading || isGenerating}
-                      />
-                      <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>Small (10%)</span>
-                        <span>Medium (25%)</span>
-                        <span>Large (40%)</span>
-                      </div>
-                    </div>
-                  )}
 
-                  {/* Extended Color Palette */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Extended Color Palette
-                    </label>
+                      <div className="space-y-3">
+                        <div>
+                          <div className="text-xs text-gray-600 mb-1">
+                            Foreground Colors
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {foregroundColors
+                              .slice(0, 12)
+                              .map((color, index) => (
+                                <button
+                                  key={`${color.hex}-${index}`}
+                                  type="button"
+                                  className={`w-6 h-6 rounded border ${
+                                    selectedForegroundColor?.hex === color.hex
+                                      ? "border-blue-500"
+                                      : "border-gray-200"
+                                  }`}
+                                  style={{ backgroundColor: color.hex }}
+                                  onClick={() =>
+                                    setSelectedForegroundColor(color)
+                                  }
+                                  disabled={isLoading || isGenerating}
+                                  title={color.name}
+                                />
+                              ))}
+                          </div>
+                        </div>
 
-                    <div className="space-y-3">
-                      <div>
-                        <div className="text-xs text-gray-600 mb-1">
-                          Foreground Colors
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {foregroundColors.slice(0, 12).map((color, index) => (
-                            <button
-                              key={`${color.hex}-${index}`}
-                              type="button"
-                              className={`w-6 h-6 rounded border ${
-                                selectedForegroundColor?.hex === color.hex
-                                  ? "border-blue-500"
-                                  : "border-gray-200"
-                              }`}
-                              style={{ backgroundColor: color.hex }}
-                              onClick={() => setSelectedForegroundColor(color)}
-                              disabled={isLoading || isGenerating}
-                              title={color.name}
-                            />
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="text-xs text-gray-600 mb-1">
-                          Background Colors
-                        </div>
-                        <div className="flex flex-wrap gap-1">
-                          {backgroundColors.slice(0, 12).map((color, index) => (
-                            <button
-                              key={`${color.hex}-${index}`}
-                              type="button"
-                              className={`w-6 h-6 rounded border ${
-                                selectedBackgroundColor?.hex === color.hex
-                                  ? "border-blue-500"
-                                  : "border-gray-200"
-                              }`}
-                              style={{ backgroundColor: color.hex }}
-                              onClick={() => setSelectedBackgroundColor(color)}
-                              disabled={isLoading || isGenerating}
-                              title={color.name}
-                            />
-                          ))}
+                        <div>
+                          <div className="text-xs text-gray-600 mb-1">
+                            Background Colors
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {backgroundColors
+                              .slice(0, 12)
+                              .map((color, index) => (
+                                <button
+                                  key={`${color.hex}-${index}`}
+                                  type="button"
+                                  className={`w-6 h-6 rounded border ${
+                                    selectedBackgroundColor?.hex === color.hex
+                                      ? "border-blue-500"
+                                      : "border-gray-200"
+                                  }`}
+                                  style={{ backgroundColor: color.hex }}
+                                  onClick={() =>
+                                    setSelectedBackgroundColor(color)
+                                  }
+                                  disabled={isLoading || isGenerating}
+                                  title={color.name}
+                                />
+                              ))}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
-            {/* URL Info */}
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div className="text-xs font-medium text-gray-500 mb-1">
-                Short URL
-              </div>
-              <div className="text-sm font-medium text-black mb-3">
-                {previewUrl}
-              </div>
-
+            {/* Original URL Info - Moved to bottom and made less prominent */}
+            <div className="mt-6 p-3 bg-gray-50 rounded-lg border">
               <div className="text-xs font-medium text-gray-500 mb-1">
                 Original URL
               </div>
@@ -492,14 +524,29 @@ const QrCodeCustomizationStep: React.FC<QrCodeCustomizationStepProps> = ({
               download it or share it using the buttons below.
             </p>
 
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-xs font-medium text-gray-500 mb-1">
-                Short URL
+            {/* Selected URL Display in Success State */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 mt-1">
+                  <RiCheckboxCircleFill className="w-5 h-5 text-green-600" />
+                </div>
+                <div className="ml-3 flex-1">
+                  <div className="text-sm font-medium text-green-900 mb-1">
+                    QR Code Created For
+                  </div>
+                  <div className="text-sm font-medium text-gray-900 truncate">
+                    {isExistingUrl && selectedUrl
+                      ? selectedUrl.title || `URL ${selectedUrl.id}`
+                      : "New URL"}
+                  </div>
+                  <div className="text-xs text-green-700 font-mono bg-green-100 inline-block px-2 py-1 rounded mt-2">
+                    {previewUrl}
+                  </div>
+                </div>
               </div>
-              <div className="text-sm font-medium text-black mb-3">
-                {previewUrl}
-              </div>
+            </div>
 
+            <div className="p-4 bg-gray-50 rounded-lg">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-xs font-medium text-gray-500">
