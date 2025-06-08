@@ -136,6 +136,7 @@ export const useQrCodeCreation = (
         limit: 100,
         sortBy: "created_at",
         sortOrder: "desc",
+        status: "active", // Only fetch active URLs that are not expired
       });
       setExistingUrls(response.data || []);
       urlsFetchedRef.current = true;
