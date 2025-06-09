@@ -8,6 +8,8 @@ import {
   UrlTotalClicksResponse,
 } from "@/interfaces/urlTotalClicks";
 import { ChartDataPoint } from "@/interfaces/dashboard";
+import AuthService from "@/services/auth";
+import { AxiosError } from "axios";
 
 interface UseUrlTotalClicksReturn {
   data: UrlTotalClicksData | null;
@@ -99,11 +101,17 @@ export const useUrlTotalClicks = (
       }
 
       return timeSeriesData
-        .filter((item) => item && item.date && typeof item.clicks === "number")
+        .filter((item) => {
+          return (
+            item &&
+            item.date &&
+            typeof item.clicks === "number" &&
+            !isNaN(item.clicks)
+          );
+        })
         .map((item) => ({
           date: item.date,
           value: item.clicks || 0,
-          // Simpan label ringkas hanya dengan jumlah klik
           label: `${item.clicks || 0}`,
         }));
     },
@@ -143,13 +151,26 @@ export const useUrlTotalClicks = (
         effectInstance !== undefined &&
         effectInstance !== effectInstanceRef.current
       ) {
-        console.log("Stale effect instance, skipping...");
         return;
       }
 
       // Prevent concurrent fetches
       if (fetchInProgressRef.current) {
-        console.log("Fetch already in progress, skipping...");
+        return;
+      }
+
+      // Check authentication before making API call
+      const isAuthenticated = AuthService.isAuthenticated();
+      const token = AuthService.getAccessToken();
+
+      if (!isAuthenticated || !token) {
+        setApiResponse({
+          data: null,
+          timeSeriesData: [],
+          isLoading: false,
+          isError: true,
+          error: new Error("Authentication required. Please log in again."),
+        });
         return;
       }
 
@@ -158,7 +179,6 @@ export const useUrlTotalClicks = (
         hasDataBeenFetchedRef.current &&
         !haveParamsChanged(paramsRef.current, params)
       ) {
-        console.log("Params unchanged, skipping fetch...");
         return;
       }
 
@@ -180,7 +200,6 @@ export const useUrlTotalClicks = (
           queryString ? `?${queryString}` : ""
         }`;
 
-        console.log(`Fetching URL total clicks from ${endpoint}`);
         const response = await get<UrlTotalClicksResponse>(endpoint);
 
         // Check if the effect instance is still current
@@ -188,9 +207,6 @@ export const useUrlTotalClicks = (
           effectInstance !== undefined &&
           effectInstance !== effectInstanceRef.current
         ) {
-          console.log(
-            "Effect instance changed during fetch, discarding result..."
-          );
           return;
         }
 
@@ -202,7 +218,6 @@ export const useUrlTotalClicks = (
           const chartData = transformTimeSeriesData(timeSeriesData);
 
           // Update all states atomically with original data structure
-          // The null checks will be handled in the component level
           setApiResponse({
             data: response.data,
             timeSeriesData: chartData,
@@ -216,16 +231,22 @@ export const useUrlTotalClicks = (
           throw new Error("Invalid API response format");
         }
       } catch (err) {
-        console.error("Failed to fetch URL total clicks:", err);
+        // Handle authentication errors specifically
+        let errorMessage = "Failed to fetch URL total clicks";
+        if (err && typeof err === "object" && "response" in err) {
+          const axiosError = err as AxiosError;
+          if (axiosError.response?.status === 401) {
+            errorMessage = "Authentication failed. Please log in again.";
+            // Clear tokens on 401 error
+            AuthService.clearTokens();
+          }
+        }
 
         setApiResponse((prev) => ({
           ...prev,
           isLoading: false,
           isError: true,
-          error:
-            err instanceof Error
-              ? err
-              : new Error("Failed to fetch URL total clicks"),
+          error: err instanceof Error ? err : new Error(errorMessage),
         }));
       } finally {
         fetchInProgressRef.current = false;
