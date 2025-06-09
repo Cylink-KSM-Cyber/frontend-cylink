@@ -96,24 +96,70 @@ export const useUrlTotalClicks = (
     (
       timeSeriesData: UrlTotalClicksData["time_series"]["data"]
     ): ChartDataPoint[] => {
+      console.log("[DEBUG] transformTimeSeriesData input:", timeSeriesData);
+
       if (!timeSeriesData || !Array.isArray(timeSeriesData)) {
+        console.warn("[DEBUG] Invalid timeSeriesData:", {
+          timeSeriesData,
+          isArray: Array.isArray(timeSeriesData),
+        });
         return [];
       }
 
-      return timeSeriesData
-        .filter((item) => {
-          return (
-            item &&
-            item.date &&
-            typeof item.clicks === "number" &&
-            !isNaN(item.clicks)
+      const validData = timeSeriesData.filter((item) => {
+        if (!item || !item.date) {
+          console.warn(
+            "[DEBUG] Invalid item filtered out (missing item or date):",
+            item
           );
-        })
-        .map((item) => ({
+          return false;
+        }
+
+        // Convert string clicks to number if needed
+        const clicksValue =
+          typeof item.clicks === "string"
+            ? parseInt(item.clicks, 10)
+            : item.clicks;
+        const isValidClicks =
+          typeof clicksValue === "number" &&
+          !isNaN(clicksValue) &&
+          clicksValue >= 0;
+
+        if (!isValidClicks) {
+          console.warn(
+            "[DEBUG] Invalid item filtered out (invalid clicks):",
+            item
+          );
+          return false;
+        }
+
+        return true;
+      });
+
+      console.log("[DEBUG] Valid items after filter:", validData);
+
+      const transformedData = validData.map((item) => {
+        // Convert string clicks to number for chart
+        const clicksValue =
+          typeof item.clicks === "string"
+            ? parseInt(item.clicks, 10)
+            : item.clicks;
+
+        const transformed = {
           date: item.date,
-          value: item.clicks || 0,
-          label: `${item.clicks || 0}`,
-        }));
+          value: clicksValue || 0,
+          label: `${clicksValue || 0}`,
+        };
+
+        console.log("[DEBUG] Item transformation:", {
+          original: item,
+          transformed,
+        });
+        return transformed;
+      });
+
+      console.log("[DEBUG] Final transformed data:", transformedData);
+      return transformedData;
     },
     []
   );
@@ -214,8 +260,27 @@ export const useUrlTotalClicks = (
           // Validate response data structure
           const timeSeriesData = response.data.time_series?.data || [];
 
+          // Temporary debug logging to see actual API response
+          console.group("[DEBUG] API Response Analysis");
+          console.log("Full API Response:", response);
+          console.log("Response Data Structure:", {
+            hasData: !!response.data,
+            hasSummary: !!response.data.summary,
+            hasTimeSeries: !!response.data.time_series,
+            timeSeriesDataArray: timeSeriesData,
+            timeSeriesLength: timeSeriesData.length,
+            firstTimeSeriesItem: timeSeriesData[0],
+          });
+          console.groupEnd();
+
           // Transform time series data for the chart
           const chartData = transformTimeSeriesData(timeSeriesData);
+
+          console.log("[DEBUG] Transformation Result:", {
+            originalDataLength: timeSeriesData.length,
+            transformedDataLength: chartData.length,
+            transformedData: chartData,
+          });
 
           // Update all states atomically with original data structure
           setApiResponse({
