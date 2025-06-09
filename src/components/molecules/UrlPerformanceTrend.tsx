@@ -32,7 +32,7 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
   );
 
   // Fetch total clicks data using our custom hook
-  const { timeSeriesData, data, isLoading, isError } =
+  const { timeSeriesData, data, isLoading, isError, error } =
     useUrlTotalClicks(apiParams);
 
   // Handle time period change
@@ -45,6 +45,14 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
     return safeFormatPercentage(value);
   };
 
+  // Determine error message based on error type
+  const getErrorMessage = () => {
+    if (error?.message.includes("Authentication")) {
+      return "Please log in to view performance data.";
+    }
+    return "Failed to load performance data. Please try again later.";
+  };
+
   // Error state
   if (isError) {
     return (
@@ -53,7 +61,17 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
           URL Performance Trends
         </h2>
         <div className="flex items-center justify-center h-48 text-red-500">
-          <p>Failed to load performance data. Please try again later.</p>
+          <div className="text-center">
+            <p className="mb-2">{getErrorMessage()}</p>
+            {error?.message.includes("Authentication") && (
+              <button
+                onClick={() => (window.location.href = "/login")}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Go to Login
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
