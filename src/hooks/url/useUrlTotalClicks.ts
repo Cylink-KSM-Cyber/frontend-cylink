@@ -94,12 +94,18 @@ export const useUrlTotalClicks = (
     (
       timeSeriesData: UrlTotalClicksData["time_series"]["data"]
     ): ChartDataPoint[] => {
-      return timeSeriesData.map((item) => ({
-        date: item.date,
-        value: item.clicks,
-        // Simpan label ringkas hanya dengan jumlah klik
-        label: `${item.clicks}`,
-      }));
+      if (!timeSeriesData || !Array.isArray(timeSeriesData)) {
+        return [];
+      }
+
+      return timeSeriesData
+        .filter((item) => item && item.date && typeof item.clicks === "number")
+        .map((item) => ({
+          date: item.date,
+          value: item.clicks || 0,
+          // Simpan label ringkas hanya dengan jumlah klik
+          label: `${item.clicks || 0}`,
+        }));
     },
     []
   );
@@ -189,12 +195,14 @@ export const useUrlTotalClicks = (
         }
 
         if (response?.data) {
-          // Transform time series data for the chart
-          const chartData = transformTimeSeriesData(
-            response.data.time_series.data
-          );
+          // Validate response data structure
+          const timeSeriesData = response.data.time_series?.data || [];
 
-          // Update all states atomically
+          // Transform time series data for the chart
+          const chartData = transformTimeSeriesData(timeSeriesData);
+
+          // Update all states atomically with original data structure
+          // The null checks will be handled in the component level
           setApiResponse({
             data: response.data,
             timeSeriesData: chartData,

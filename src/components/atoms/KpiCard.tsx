@@ -1,5 +1,6 @@
 import React from "react";
 import { KpiCardData } from "@/interfaces/dashboard";
+import { safeToFixed } from "@/utils/numberFormatting";
 
 /**
  * KPI Card Component
@@ -59,7 +60,7 @@ const KpiCard: React.FC<
             />
           </svg>
         )}
-        {Math.abs(typeof trend === "number" ? trend : 0).toFixed(1)}%
+        {safeToFixed(Math.abs(typeof trend === "number" ? trend : 0), 1)}%
       </span>
     );
   };
@@ -128,7 +129,7 @@ const KpiCard: React.FC<
             } font-medium`}
           >
             {trend >= 0 ? "+" : ""}
-            {trend.toFixed(1)}%
+            {safeToFixed(trend, 1)}%
           </span>
           <span className="text-gray-400 ml-1">total clicks</span>
         </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { CtrBreakdownData } from "@/interfaces/dashboard";
+import { safeToFixed } from "@/utils/numberFormatting";
 
 interface CtrBreakdownChartProps {
   breakdownData: CtrBreakdownData;
@@ -100,7 +101,7 @@ const CtrBreakdownChart: React.FC<CtrBreakdownChartProps> = ({
                   {item.source}
                 </span>
                 <span className="text-sm font-medium text-gray-700">
-                  {item.ctr.toFixed(1)}%
+                  {safeToFixed(item.ctr, 1)}%
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2.5">
@@ -122,10 +123,11 @@ const CtrBreakdownChart: React.FC<CtrBreakdownChartProps> = ({
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-500">Average CTR</span>
           <span className="text-lg font-bold text-purple-600">
-            {(
+            {safeToFixed(
               sourceData.reduce((acc, item) => acc + item.ctr, 0) /
-              sourceData.length
-            ).toFixed(2)}
+                sourceData.length,
+              2
+            )}
             %
           </span>
         </div>
