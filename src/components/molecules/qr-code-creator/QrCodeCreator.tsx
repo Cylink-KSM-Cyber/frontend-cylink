@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import Modal from "@/components/atoms/Modal";
-import { useQrCodeCreation } from "@/hooks/useQrCodeCreation";
+import { useQrCodeCreation } from "@/hooks/qrcode/useQrCodeCreation";
 import StepIndicator from "./StepIndicator";
 import UrlSelectionStep from "./UrlSelectionStep";
 import QrCodeCustomizationStep from "./QrCodeCustomizationStep";
@@ -78,14 +78,14 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
     selectedBackgroundColor,
     includeLogoChecked,
     logoSize,
-    errorCorrectionLevel,
+    qrSize,
     isLoading,
     isGenerating,
     setSelectedForegroundColor,
     setSelectedBackgroundColor,
     setIncludeLogoChecked,
     setLogoSize,
-    setErrorCorrectionLevel,
+    setQrSize,
     resetQrCode,
     handleFinish,
     loadColors,
@@ -124,8 +124,7 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
 
   // Handle form submission (next step or create QR code)
   const handleSubmit = () => {
-    const data = form.getValues();
-    handleFormSubmit(data);
+    handleFormSubmit();
   };
 
   // Handle Download QR Code button click
@@ -256,12 +255,12 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
             selectedBackgroundColor={selectedBackgroundColor}
             includeLogoChecked={includeLogoChecked}
             logoSize={logoSize}
-            errorCorrectionLevel={errorCorrectionLevel}
+            qrSize={qrSize}
             setSelectedForegroundColor={setSelectedForegroundColor}
             setSelectedBackgroundColor={setSelectedBackgroundColor}
             setIncludeLogoChecked={setIncludeLogoChecked}
             setLogoSize={setLogoSize}
-            setErrorCorrectionLevel={setErrorCorrectionLevel}
+            setQrSize={setQrSize}
           />
         )}
       </div>

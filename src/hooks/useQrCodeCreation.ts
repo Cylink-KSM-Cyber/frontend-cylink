@@ -70,7 +70,7 @@ export const useQrCodeCreation = (
     resolver: zodResolver(qrCodeCreateSchema),
     defaultValues: {
       urlSource: "existing",
-      existingUrlId: undefined,
+      existingUrlId: null,
       title: "",
       originalUrl: "",
       customCode: "",
