@@ -26,11 +26,18 @@ const isBrowser = () => typeof window !== "undefined";
  * @returns The token or null if not available
  */
 export const getToken = (): string | null => {
-  if (!isBrowser()) return null;
+  if (!isBrowser()) {
+    return null;
+  }
 
   try {
     const token = Cookies.get("accessToken");
-    return token ?? null;
+
+    if (token && token.trim() !== "") {
+      return token;
+    } else {
+      return null;
+    }
   } catch (error) {
     logger.error("Error retrieving token from cookies", error);
     return null;
@@ -46,6 +53,7 @@ api.interceptors.request.use(
     try {
       if (isBrowser()) {
         const token = getToken();
+
         if (token && config.headers) {
           // Set authorization header safely
           config.headers.Authorization = `Bearer ${token}`;
@@ -149,7 +157,23 @@ export const get = async <T>(
 ): Promise<T> => {
   try {
     logger.debug(`GET request: ${url}`);
-    const response = await api.get<T>(url, config);
+
+    // Ensure authentication header is set (fallback if interceptor fails)
+    const enhancedConfig = { ...config };
+    if (isBrowser()) {
+      const token = getToken();
+      if (
+        token &&
+        (!enhancedConfig.headers || !enhancedConfig.headers.Authorization)
+      ) {
+        enhancedConfig.headers = {
+          ...enhancedConfig.headers,
+          Authorization: `Bearer ${token}`,
+        };
+      }
+    }
+
+    const response = await api.get<T>(url, enhancedConfig);
     return response.data;
   } catch (error) {
     logger.error(`GET request failed: ${url}`, error);
