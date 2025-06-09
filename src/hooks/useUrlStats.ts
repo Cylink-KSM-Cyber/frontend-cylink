@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { ExtendedDashboardStats } from "@/interfaces/url";
 import { useTotalClicks } from "@/hooks/useTotalClicks";
 import useMostClickedUrl from "./useMostClickedUrl";
+import { useActiveUrls } from "./useActiveUrls";
 
 /**
  * Custom hook for fetching and managing dashboard statistics
@@ -24,6 +25,9 @@ export const useUrlStats = () => {
   } = useTotalClicks(totalClicksParams);
 
   const { urls } = useMostClickedUrl();
+
+  // Use the new hook to get accurate active URLs count
+  const { activeUrlsCount, isLoading: isActiveUrlsLoading } = useActiveUrls();
 
   // Log the value of totalClicksData for debugging
   useEffect(() => {
@@ -82,8 +86,8 @@ export const useUrlStats = () => {
 
           conversionRate: stats?.conversionRate ?? 0,
           qrCodesGenerated: stats?.qrCodesGenerated ?? 0,
-          activeUrls:
-            totalClicksData?.summary?.comparison?.active_urls?.current ?? 35,
+          // Use accurate active URLs count from the dedicated hook
+          activeUrls: activeUrlsCount,
           urlsCreatedToday: stats?.urlsCreatedToday ?? 0,
 
           // Use real average clicks data from API if available, otherwise use mock data
@@ -152,11 +156,17 @@ export const useUrlStats = () => {
       }
     };
 
-    // Only fetch stats when totalClicksData are loaded
-    if (!isTotalClicksLoading && totalClicksData !== null) {
+    // Only fetch stats when totalClicksData and activeUrls are loaded
+    if (
+      !isTotalClicksLoading &&
+      !isActiveUrlsLoading &&
+      totalClicksData !== null
+    ) {
       console.log(
-        "totalClicksData loaded, fetching stats with values:",
-        totalClicksData
+        "totalClicksData and activeUrls loaded, fetching stats with values:",
+        totalClicksData,
+        "activeUrls:",
+        activeUrlsCount
       );
       fetchStats();
     }
@@ -164,6 +174,8 @@ export const useUrlStats = () => {
     urls,
     totalClicksData,
     isTotalClicksLoading,
+    activeUrlsCount,
+    isActiveUrlsLoading,
     stats,
     isLoading,
     statsLoaded,
@@ -189,8 +201,8 @@ export const useUrlStats = () => {
 
         conversionRate: stats?.conversionRate ?? 0,
         qrCodesGenerated: stats?.qrCodesGenerated ?? 0,
-        activeUrls:
-          totalClicksData?.summary?.comparison?.active_urls?.current ?? 35,
+        // Use accurate active URLs count from the dedicated hook
+        activeUrls: activeUrlsCount,
         urlsCreatedToday: stats?.urlsCreatedToday ?? 0,
 
         // Use real average clicks data from API if available, otherwise use mock data
@@ -254,7 +266,8 @@ export const useUrlStats = () => {
   const combinedError = error || totalClicksError;
 
   // Loading is true if any hook is loading
-  const combinedIsLoading = isLoading || isTotalClicksLoading;
+  const combinedIsLoading =
+    isLoading || isTotalClicksLoading || isActiveUrlsLoading;
 
   return {
     urls,
