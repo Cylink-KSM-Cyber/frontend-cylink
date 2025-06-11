@@ -3,6 +3,11 @@ import {
   LoginRequest,
   ApiLoginResponse,
   LoginResponse,
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
+  User,
 } from "@/interfaces/auth";
 import Cookies from "js-cookie";
 
@@ -95,6 +100,52 @@ const AuthService = {
   },
 
   /**
+   * Save user data to local storage
+   * @param user - User data to save
+   */
+  saveUser: (user: User): void => {
+    if (typeof window === "undefined") return;
+
+    try {
+      console.log("Saving user data:", user);
+      Cookies.set("userData", JSON.stringify(user));
+      console.log("User data saved successfully to cookies");
+
+      // Verify the data was saved correctly
+      const savedData = Cookies.get("userData");
+      console.log("Verification - saved data:", savedData);
+    } catch (error) {
+      console.error("Error saving user data to Cookies:", error);
+      throw new Error("Failed to save user data");
+    }
+  },
+
+  /**
+   * Get stored user data
+   * @returns The stored user data or null if not found
+   */
+  getUser: (): User | null => {
+    if (typeof window === "undefined") return null;
+
+    try {
+      const userData = Cookies.get("userData");
+      console.log("Retrieved raw user data from cookies:", userData);
+
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        console.log("Parsed user data:", parsedData);
+        return parsedData;
+      } else {
+        console.log("No user data found in cookies");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error retrieving user data from Cookies:", error);
+      return null;
+    }
+  },
+
+  /**
    * Clear authentication tokens from storage on logout
    */
   clearTokens: (): void => {
@@ -104,6 +155,7 @@ const AuthService = {
       Cookies.remove("accessToken");
       Cookies.remove("refreshToken");
       Cookies.remove("rememberMe");
+      Cookies.remove("userData");
     } catch (error) {
       console.error("Error clearing tokens from Cookies:", error);
     }
@@ -134,7 +186,7 @@ const AuthService = {
 
     try {
       const token = Cookies.get("accessToken");
-      return token === undefined ? null : token;
+      return token ?? null;
     } catch (error) {
       console.error("Error retrieving token from Cookies:", error);
       return null;
@@ -150,10 +202,52 @@ const AuthService = {
 
     try {
       const token = Cookies.get("refreshToken");
-      return token === undefined ? null : token;
+      return token ?? null;
     } catch (error) {
       console.error("Error retrieving token from Cookies:", error);
       return null;
+    }
+  },
+
+  /**
+   * Request password reset email
+   * @param email - Email address to send reset link to
+   * @returns Promise with forgot password response data
+   */
+  forgotPassword: async (
+    email: ForgotPasswordRequest
+  ): Promise<ForgotPasswordResponse> => {
+    try {
+      const response = await post<ForgotPasswordResponse>(
+        "/api/v1/auth/forgot-password",
+        email
+      );
+      return response;
+    } catch (error) {
+      console.error("Forgot password service error:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * Reset password with new password
+   * @param resetData - New password and confirmation
+   * @param token - Reset token from email
+   * @returns Promise with reset password response data
+   */
+  resetPassword: async (
+    resetData: ResetPasswordRequest,
+    token: string
+  ): Promise<ResetPasswordResponse> => {
+    try {
+      const response = await post<ResetPasswordResponse>(
+        `/api/v1/auth/reset-password?token=${encodeURIComponent(token)}`,
+        resetData
+      );
+      return response;
+    } catch (error) {
+      console.error("Reset password service error:", error);
+      throw error;
     }
   },
 };

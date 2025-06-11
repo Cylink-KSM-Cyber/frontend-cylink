@@ -1,9 +1,12 @@
+"use client";
+
 import React, { useState } from "react";
 import { Url } from "@/interfaces/url";
 import StatusBadge from "@/components/atoms/StatusBadge";
 import ButtonIcon from "@/components/atoms/ButtonIcon";
 import Button from "@/components/atoms/Button";
 import { formatShortUrl } from "@/utils/urlFormatter";
+import { useRouter } from "next/navigation";
 
 // Icon imports
 import {
@@ -16,6 +19,11 @@ import {
   RiArrowDownSLine,
   RiLink,
 } from "react-icons/ri";
+
+import { MdInfoOutline } from "react-icons/md";
+
+// Loading skeleton import
+import LoadingIndicator from "@/components/atoms/LoadingIndicator";
 
 /**
  * Prop types for UrlsTable component
@@ -61,6 +69,10 @@ interface UrlsTableProps {
    * Optional CSS classes to apply
    */
   className?: string;
+  /**
+   * Function to call when view detail button is clicked
+   */
+  onViewDetail?: (url: Url) => void;
 }
 
 /**
@@ -78,8 +90,11 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   onEdit,
   onDelete,
   className = "",
+  onViewDetail,
 }) => {
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const router = useRouter();
+  const [loadingDetailId, setLoadingDetailId] = useState<number | null>(null);
 
   // Handle sort click
   const handleSortClick = (column: string) => {
@@ -101,6 +116,20 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
     setTimeout(() => {
       setCopiedId(null);
     }, 2000);
+  };
+
+  // Handle view detail click with loading state
+  const handleViewDetailClick = (url: Url) => {
+    setLoadingDetailId(url.id);
+
+    // If custom handler is provided, use it
+    if (onViewDetail) {
+      onViewDetail(url);
+      return;
+    }
+
+    // Otherwise, navigate to detail page
+    router.push(`/dashboard/urls/${url.id}`);
   };
 
   // Generate the sort indicator for column headers
@@ -127,6 +156,20 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   // Truncate long URLs
   const truncateUrl = (url: string, maxLength = 40) => {
     return url.length > maxLength ? `${url.substring(0, maxLength)}...` : url;
+  };
+
+  // Get trend color based on click trend value
+  const getTrendColor = (clickTrend: number) => {
+    if (clickTrend > 0) return "text-[#009688]";
+    if (clickTrend < 0) return "text-[#D32F2F]";
+    return "text-[#607D8B]";
+  };
+
+  // Get trend arrow based on click trend value
+  const getTrendArrow = (clickTrend: number) => {
+    if (clickTrend > 0) return "↑";
+    if (clickTrend < 0) return "↓";
+    return "→";
   };
 
   // If loading, show skeleton table
@@ -221,6 +264,13 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
               <th
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
+                onClick={() => handleSortClick("expiry_date")}
+              >
+                Expired {getSortIndicator("expiry_date")}
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-[#333333] uppercase tracking-wider cursor-pointer"
                 onClick={() => handleSortClick("clicks")}
               >
                 Clicks {getSortIndicator("clicks")}
@@ -269,25 +319,24 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-[#333333]">
+                    {url.expiry_date
+                      ? formatDate(url.expiry_date)
+                      : "No expiry"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     <div className="text-sm font-medium text-[#333333]">
                       {url.clicks.toLocaleString()}
                     </div>
                     {url.clickTrend !== undefined && (
                       <div
-                        className={`ml-2 text-xs ${
-                          url.clickTrend > 0
-                            ? "text-[#009688]"
-                            : url.clickTrend < 0
-                            ? "text-[#D32F2F]"
-                            : "text-[#607D8B]"
-                        }`}
+                        className={`ml-2 text-xs ${getTrendColor(
+                          url.clickTrend
+                        )}`}
                       >
-                        {url.clickTrend > 0
-                          ? "↑"
-                          : url.clickTrend < 0
-                          ? "↓"
-                          : "→"}{" "}
+                        {getTrendArrow(url.clickTrend)}{" "}
                         {Math.abs(url.clickTrend).toFixed(1)}%
                       </div>
                     )}
@@ -298,6 +347,19 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex justify-end space-x-1">
+                    <ButtonIcon
+                      icon={
+                        loadingDetailId === url.id ? (
+                          <LoadingIndicator size="sm" />
+                        ) : (
+                          <MdInfoOutline />
+                        )
+                      }
+                      onClick={() => handleViewDetailClick(url)}
+                      tooltip="View Detail"
+                      ariaLabel="View Detail Link"
+                      disabled={loadingDetailId === url.id}
+                    />
                     <ButtonIcon
                       icon={copiedId === url.id ? "✓" : <RiFileCopyLine />}
                       onClick={() => handleCopyClick(url)}

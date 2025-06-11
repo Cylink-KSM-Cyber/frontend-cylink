@@ -9,7 +9,7 @@ import Input from "@/components/atoms/Input";
 import Button from "@/components/atoms/Button";
 import Checkbox from "@/components/atoms/Checkbox";
 import Link from "next/link";
-import useAuth from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Login form schema validation
@@ -48,7 +48,6 @@ interface LoginFormProps {
  */
 const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
   const { login, isLoading } = useAuth();
-  // const { showToast } = useToast();
 
   // Form validation with react-hook-form and zod
   const {
@@ -69,13 +68,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
    * @param data - Form values
    */
   const onSubmit = async (data: LoginFormValues) => {
-    await login({
-      email: data.email,
-      password: data.password,
-    });
-    // console.log("ini onSubmit");
-
-    // showToast("Login successful", "success");
+    await login(
+      {
+        email: data.email,
+        password: data.password,
+      },
+      data.rememberMe
+    );
   };
 
   return (

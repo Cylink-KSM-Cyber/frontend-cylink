@@ -43,7 +43,7 @@ export const useUrls = (
       const response = await fetchUrls(filter);
       console.log("URL API response:", response);
 
-      if (response && response.data) {
+      if (response?.data) {
         console.log("URLs from API:", response.data);
         console.log("URLs count:", response.data.length);
 
@@ -88,7 +88,9 @@ export const useUrls = (
     if (
       "sortBy" in updatedNewFilter &&
       updatedNewFilter.sortBy &&
-      !["created_at", "clicks", "title"].includes(updatedNewFilter.sortBy)
+      !["created_at", "clicks", "title", "expiry_date"].includes(
+        updatedNewFilter.sortBy
+      )
     ) {
       // Reset to default value if invalid
       updatedNewFilter.sortBy = "created_at";
@@ -100,7 +102,7 @@ export const useUrls = (
         ...prevFilter,
         ...updatedNewFilter,
         // Reset to page 1 if any filter other than page changes
-        page: updatedNewFilter.page !== undefined ? updatedNewFilter.page : 1,
+        page: updatedNewFilter.page ?? 1,
       };
       console.log("Updated filter:", updatedFilter);
       return updatedFilter;

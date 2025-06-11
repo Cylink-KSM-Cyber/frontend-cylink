@@ -17,7 +17,7 @@ export interface Url {
   user_id: number;
   customDomain?: string;
   tags?: string[];
-  clickTrend?: number; // Percentage change in clicks (e.g., +15%)
+  clickTrend?: number; // Percentage change in clicks (e.g., +15%);
 }
 
 /**
@@ -29,7 +29,7 @@ export interface QrCode {
   urlId: number;
   shortCode?: string;
   shortUrl?: string;
-  imageUrl: string | undefined;
+  imageUrl?: string;
   pngUrl?: string;
   svgUrl?: string;
   createdAt: string;
@@ -131,8 +131,8 @@ export interface DashboardStats {
  */
 export interface UrlFilter {
   search?: string;
-  status?: "active" | "expired" | "inactive" | "all" | string | undefined;
-  sortBy?: "created_at" | "clicks" | "title";
+  status?: "active" | "expired" | "inactive" | "all" | undefined;
+  sortBy?: "created_at" | "clicks" | "title" | "expiry_date";
   sortOrder?: "asc" | "desc";
   page: number;
   limit: number;

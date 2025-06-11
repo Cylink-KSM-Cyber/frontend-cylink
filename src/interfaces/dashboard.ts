@@ -4,9 +4,11 @@
 
 import { Url } from "./url";
 import { IconType } from "react-icons";
+import { UrlAnalyticsData } from "@/interfaces/urlAnalytics";
 
 /**
- * Time Period Selection Options
+ * Time Period Type
+ * @description Possible time periods for dashboard data
  */
 export type TimePeriod = "7" | "14" | "30" | "90" | "custom";
 
@@ -23,17 +25,23 @@ export interface PeriodComparisonDetails {
 
 /**
  * KPI Card Data Interface
+ * @description Data structure for a KPI card
  */
 export interface KpiCardData {
   title: string;
-  value: number | string;
+  value: string | number;
   trend?: number;
   trendLabel?: string;
-  icon?: IconType;
-  isLoading?: boolean;
-  isError?: boolean;
-  color?: string;
-  periodDetails?: PeriodComparisonDetails;
+  icon: IconType;
+  isLoading: boolean;
+  isError: boolean;
+  periodDetails?: {
+    current: number;
+    previous: number;
+    change: number;
+    periodDays: number;
+    dateRange?: string;
+  };
 }
 
 /**
@@ -78,26 +86,30 @@ export interface CtrBreakdownData {
 
 /**
  * Recent Activity Item Interface
+ * @description Structure for a recent activity item
  */
 export interface RecentActivityItem {
   id: number;
   type: "url_created" | "url_clicked" | "qr_generated";
   timestamp: string;
   description: string;
-  url?: Url;
-  metadata?: Record<string, unknown>;
+  url: Url;
+  metadata?: {
+    clicks?: number;
+    qr_downloads?: number;
+  };
 }
 
 /**
- * Top Performer URL Analytics Interface
- * @description Contains detailed analytics for the top performing URL
+ * Top Performer Analytics Interface
+ * @description Structure for detailed analytics of the top performing URL
  */
 export interface TopPerformerAnalytics {
   urlId: number;
   shortCode: string;
   totalClicks: number;
   uniqueVisitors: number;
-  clicksComparison?: {
+  clicksComparison: {
     current: number;
     previous: number;
     change: number;
@@ -106,11 +118,16 @@ export interface TopPerformerAnalytics {
   };
   isLoading: boolean;
   isError: boolean;
-  error?: Error | null;
+  error: Error | null;
+  browserStats?: { [key: string]: number };
+  deviceStats?: { [key: string]: number };
+  countryStats?: { [key: string]: number };
+  topReferrers?: Array<{ referrer: string; count: number }>;
 }
 
 /**
  * Dashboard Analytics Data Interface
+ * @description Structure of all data required for the dashboard
  */
 export interface DashboardAnalyticsData {
   kpiData: {
@@ -119,8 +136,24 @@ export interface DashboardAnalyticsData {
     averageCtr: KpiCardData;
     topPerformer: KpiCardData;
   };
-  urlPerformance: UrlPerformanceData;
-  ctrBreakdown: CtrBreakdownData;
+  urlPerformance: {
+    timeSeriesData: Array<{ date: string; value: number; label: string }>;
+    topPerformingUrls: Array<Url>;
+    isLoading: boolean;
+    isError: boolean;
+    error: Error | null;
+  };
+  ctrBreakdown: {
+    sourceData: Array<{
+      source: string;
+      ctr: number;
+      clicks: number;
+      impressions: number;
+    }>;
+    isLoading: boolean;
+    isError: boolean;
+    error: Error | null;
+  };
   recentActivity: {
     items: RecentActivityItem[];
     isLoading: boolean;
@@ -130,4 +163,5 @@ export interface DashboardAnalyticsData {
   refresh: () => Promise<void>;
   setTimePeriod: (period: TimePeriod) => void;
   topPerformerAnalytics?: TopPerformerAnalytics;
+  urlAnalytics?: UrlAnalyticsData;
 }
