@@ -47,10 +47,6 @@ const ChangelogEntry: React.FC<ChangelogEntryProps> = ({
 
         {/* Content Column */}
         <div className="flex-1 min-w-0">
-          <h2 className="text-3xl font-bold mb-6 leading-tight text-gray-900">
-            {entry.frontmatter.title}
-          </h2>
-
           {/* Category badges */}
           <div className="flex flex-wrap gap-2 mb-6">
             {entry.frontmatter.category.map((cat) => (
