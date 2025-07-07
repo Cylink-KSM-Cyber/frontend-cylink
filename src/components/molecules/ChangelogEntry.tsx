@@ -1,18 +1,20 @@
-/**
- * ChangelogEntry component for light timeline layout
- * @param props - Component properties
- * @returns ChangelogEntry component
- */
-
 "use client";
 
 import React from "react";
+import DOMPurify from "dompurify";
 import { ChangelogEntryProps } from "@/interfaces/changelog";
 import ChangelogCategoryBadge from "@/components/atoms/ChangelogCategoryBadge";
 import { processMarkdownContent } from "@/utils/markdownProcessor";
 
 /**
  * ChangelogEntry component for light timeline layout
+ *
+ * Features:
+ * - Secure HTML rendering with DOMPurify sanitization to prevent XSS attacks
+ * - Timeline layout with date, version, and content sections
+ * - Category badges and markdown content processing
+ * - Responsive design for mobile and desktop
+ *
  * @param props - Component properties
  * @returns ChangelogEntry component
  */
@@ -56,12 +58,14 @@ const ChangelogEntry: React.FC<ChangelogEntryProps> = ({
             ))}
           </div>
 
-          {/* Content with Rich Text Hierarchy */}
+          {/* Content with Rich Text Hierarchy - HTML sanitized to prevent XSS */}
           <div className="prose prose-gray prose-lg max-w-none">
             <div
               className="text-gray-700 leading-relaxed space-y-4"
               dangerouslySetInnerHTML={{
-                __html: processMarkdownContent(entry.content),
+                __html: DOMPurify.sanitize(
+                  processMarkdownContent(entry.content)
+                ),
               }}
             />
           </div>
