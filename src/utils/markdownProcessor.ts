@@ -1,142 +1,216 @@
 /**
  * Markdown Processing Utilities
- * @description Utility functions for processing and rendering markdown content with proper styling
+ *
+ * This module provides utilities for processing markdown content in changelog entries
+ * with light theme styling. It handles conversion of markdown syntax to HTML with
+ * appropriate Tailwind CSS classes for consistent visual hierarchy.
+ *
+ * Features:
+ * - Markdown to HTML conversion with light theme styling
+ * - Heading hierarchy processing (h1-h6)
+ * - Text formatting (bold, italic, inline code)
+ * - List processing (ordered and unordered)
+ * - Horizontal rules and paragraph handling
+ * - Content preview generation
+ * - Reading time estimation
+ *
+ * @module markdownProcessor
  */
 
 /**
- * Process markdown content with proper heading hierarchy for dark theme
- * @param content - Raw markdown content
- * @returns Processed HTML string with TailwindCSS classes
+ * Process markdown content and convert it to HTML with light theme styling
+ *
+ * Converts common markdown syntax to HTML elements with appropriate Tailwind classes
+ * for light theme. Maintains proper visual hierarchy and spacing for readability.
+ *
+ * Supported markdown features:
+ * - Headings (h1-h6) with size hierarchy
+ * - Bold text (**text** and __text__)
+ * - Italic text (*text* and _text_)
+ * - Inline code (`code`)
+ * - Horizontal rules (---)
+ * - Ordered and unordered lists
+ * - Paragraphs with proper spacing
+ *
+ * @param content - Raw markdown content string
+ * @returns Processed HTML string with light theme Tailwind classes
  */
 export function processMarkdownContent(content: string): string {
-  return (
-    content
-      // Remove the main title (first h1) since we show it separately
-      .replace(/^# .+$/m, "")
-      // Convert horizontal rules
-      .replace(/^---$/gm, '<hr class="border-gray-700 my-8">')
-      // Convert h2 (##) to styled h2
-      .replace(
-        /^## (.+)$/gm,
-        '<h2 class="text-2xl font-bold text-white mt-10 mb-6 leading-tight">$1</h2>'
-      )
-      // Convert h3 (###) to styled h3
-      .replace(
-        /^### (.+)$/gm,
-        '<h3 class="text-xl font-semibold text-white mt-8 mb-4 leading-tight">$1</h3>'
-      )
-      // Convert h4 (####) to styled h4
-      .replace(
-        /^#### (.+)$/gm,
-        '<h4 class="text-lg font-medium text-white mt-6 mb-3 leading-tight">$1</h4>'
-      )
-      // Convert h5 (#####) to styled h5
-      .replace(
-        /^##### (.+)$/gm,
-        '<h5 class="text-base font-medium text-gray-200 mt-4 mb-2 leading-tight">$1</h5>'
-      )
-      // Convert h6 (######) to styled h6
-      .replace(
-        /^###### (.+)$/gm,
-        '<h6 class="text-sm font-medium text-gray-300 mt-3 mb-2 leading-tight uppercase tracking-wide">$1</h6>'
-      )
-      // Convert unordered lists
-      .replace(
-        /^\- (.+)$/gm,
-        '<li class="text-gray-300 leading-relaxed">$1</li>'
-      )
-      // Convert ordered lists
-      .replace(
-        /^\d+\. (.+)$/gm,
-        '<li class="text-gray-300 leading-relaxed">$1</li>'
-      )
-      // Wrap consecutive list items in ul tags
-      .replace(/(<li.*?<\/li>\s*)+/g, (match) => {
-        return `<ul class="list-disc pl-6 space-y-2 mb-6 text-gray-300">${match}</ul>`;
-      })
-      // Convert bold text (** or __)
-      .replace(
-        /\*\*(.+?)\*\*/g,
-        '<strong class="font-semibold text-white">$1</strong>'
-      )
-      .replace(
-        /__(.+?)__/g,
-        '<strong class="font-semibold text-white">$1</strong>'
-      )
-      // Convert italic text (* or _)
-      .replace(/\*(.+?)\*/g, '<em class="italic text-gray-200">$1</em>')
-      .replace(/_(.+?)_/g, '<em class="italic text-gray-400">$1</em>')
-      // Convert inline code
-      .replace(
-        /`(.+?)`/g,
-        '<code class="bg-gray-800 text-gray-200 px-2 py-1 rounded text-sm font-mono">$1</code>'
-      )
-      // Convert paragraphs - split by double newlines and wrap non-tag content
-      .split(/\n\s*\n/)
-      .map((para) => {
-        const trimmed = para.trim();
-        if (!trimmed) return "";
+  if (!content) return "";
 
-        // If it's already a tag (heading, list, hr, etc.), return as is
-        if (trimmed.startsWith("<")) return trimmed;
+  let processedContent = content;
 
-        // If it contains line breaks, preserve them
-        if (trimmed.includes("\n")) {
-          return `<p class="text-gray-300 leading-relaxed mb-4">${trimmed.replace(
-            /\n/g,
-            "<br>"
-          )}</p>`;
-        }
+  // Process headings with light theme styling and proper hierarchy
+  processedContent = processedContent
+    .replace(
+      /^# (.+)$/gm,
+      '<h1 class="text-3xl font-bold text-gray-900 mb-6 mt-8 first:mt-0">$1</h1>'
+    )
+    .replace(
+      /^## (.+)$/gm,
+      '<h2 class="text-2xl font-bold text-gray-900 mb-4 mt-6">$1</h2>'
+    )
+    .replace(
+      /^### (.+)$/gm,
+      '<h3 class="text-xl font-semibold text-gray-900 mb-3 mt-5">$1</h3>'
+    )
+    .replace(
+      /^#### (.+)$/gm,
+      '<h4 class="text-lg font-medium text-gray-900 mb-2 mt-4">$1</h4>'
+    )
+    .replace(
+      /^##### (.+)$/gm,
+      '<h5 class="text-base font-medium text-gray-900 mb-2 mt-3">$1</h5>'
+    )
+    .replace(
+      /^###### (.+)$/gm,
+      '<h6 class="text-sm font-medium text-gray-900 mb-1 mt-2">$1</h6>'
+    );
 
-        // Regular paragraph
-        return `<p class="text-gray-300 leading-relaxed mb-4">${trimmed}</p>`;
-      })
-      .join("\n\n")
+  // Process bold text (**text** and __text__)
+  processedContent = processedContent
+    .replace(
+      /\*\*(.*?)\*\*/g,
+      '<strong class="font-semibold text-gray-900">$1</strong>'
+    )
+    .replace(
+      /__(.*?)__/g,
+      '<strong class="font-semibold text-gray-900">$1</strong>'
+    );
+
+  // Process italic text (*text* and _text_)
+  processedContent = processedContent
+    .replace(
+      /(?<!\*)\*(?!\*)([^*]+)(?<!\*)\*(?!\*)/g,
+      '<em class="italic text-gray-800">$1</em>'
+    )
+    .replace(
+      /(?<!_)_(?!_)([^_]+)(?<!_)_(?!_)/g,
+      '<em class="italic text-gray-800">$1</em>'
+    );
+
+  // Process inline code
+  processedContent = processedContent.replace(
+    /`([^`]+)`/g,
+    '<code class="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>'
   );
+
+  // Process horizontal rules
+  processedContent = processedContent.replace(
+    /^---$/gm,
+    '<hr class="border-gray-200 my-6">'
+  );
+
+  // Process unordered lists
+  processedContent = processedContent.replace(
+    /^- (.+)$/gm,
+    '<li class="text-gray-700 mb-1">$1</li>'
+  );
+
+  // Process ordered lists
+  processedContent = processedContent.replace(
+    /^\d+\. (.+)$/gm,
+    '<li class="text-gray-700 mb-1">$1</li>'
+  );
+
+  // Wrap consecutive list items in ul/ol tags
+  processedContent = processedContent.replace(
+    /(<li[^>]*>[\s\S]*?<\/li>\s*)+/g,
+    (match) => {
+      if (match.includes("text-gray-700")) {
+        return `<ul class="list-disc list-inside space-y-1 mb-4 ml-4">${match}</ul>`;
+      }
+      return match;
+    }
+  );
+
+  // Process paragraphs (text that isn't already wrapped in HTML tags)
+  const lines = processedContent.split("\n");
+  const processedLines = lines.map((line) => {
+    const trimmedLine = line.trim();
+
+    // Skip empty lines, lines that start with HTML tags, or list items
+    if (
+      !trimmedLine ||
+      trimmedLine.startsWith("<") ||
+      trimmedLine.startsWith("-") ||
+      /^\d+\./.test(trimmedLine)
+    ) {
+      return line;
+    }
+
+    // Wrap non-HTML lines in paragraph tags
+    return `<p class="text-gray-700 mb-4 leading-relaxed">${trimmedLine}</p>`;
+  });
+
+  return processedLines.join("\n");
 }
 
 /**
- * Generate content preview for collapsed entries
- * @param content - Full content string
- * @param maxLength - Maximum length for preview (default: 150)
- * @returns Truncated content with ellipsis
+ * Generate a content preview from processed markdown
+ *
+ * Creates a shortened version of the processed content for use in
+ * collapsed states or preview cards. Strips HTML tags and limits
+ * character count while preserving readability.
+ *
+ * @param content - Processed HTML content string
+ * @param maxLength - Maximum character length for preview (default: 150)
+ * @returns Truncated plain text preview
  */
 export function generateContentPreview(
   content: string,
   maxLength: number = 150
 ): string {
-  // Remove markdown syntax for preview
-  const cleanContent = content
-    .replace(/^#+\s/gm, "") // Remove heading markers
-    .replace(/\*\*(.+?)\*\*/g, "$1") // Remove bold markers
-    .replace(/\*(.+?)\*/g, "$1") // Remove italic markers
-    .replace(/`(.+?)`/g, "$1") // Remove code markers
-    .replace(/^\- /gm, "") // Remove list markers
-    .replace(/\n/g, " ") // Replace newlines with spaces
-    .trim();
+  if (!content) return "";
 
-  if (cleanContent.length <= maxLength) return cleanContent;
-  return cleanContent.substring(0, maxLength) + "...";
+  // Strip HTML tags
+  const plainText = content.replace(/<[^>]*>/g, " ");
+
+  // Clean up extra whitespace
+  const cleanText = plainText.replace(/\s+/g, " ").trim();
+
+  // Truncate to maxLength and add ellipsis if needed
+  if (cleanText.length <= maxLength) {
+    return cleanText;
+  }
+
+  // Find the last complete word within the limit
+  const truncated = cleanText.substring(0, maxLength);
+  const lastSpaceIndex = truncated.lastIndexOf(" ");
+
+  if (lastSpaceIndex > maxLength * 0.8) {
+    return truncated.substring(0, lastSpaceIndex) + "...";
+  }
+
+  return truncated + "...";
 }
 
 /**
- * Extract reading time estimate from markdown content
- * @param content - Markdown content
- * @param wordsPerMinute - Reading speed (default: 200 WPM)
- * @returns Reading time in minutes
+ * Estimate reading time for processed content
+ *
+ * Calculates approximate reading time based on word count and
+ * average reading speed. Useful for displaying reading time
+ * estimates in the UI.
+ *
+ * @param content - Processed HTML content string
+ * @param wordsPerMinute - Average reading speed (default: 200 WPM)
+ * @returns Estimated reading time in minutes (minimum 1 minute)
  */
 export function estimateReadingTime(
   content: string,
   wordsPerMinute: number = 200
 ): number {
-  const cleanContent = content
-    .replace(/^#+\s/gm, "") // Remove heading markers
-    .replace(/\*\*(.+?)\*\*/g, "$1") // Remove bold markers
-    .replace(/\*(.+?)\*/g, "$1") // Remove italic markers
-    .replace(/`(.+?)`/g, "$1") // Remove code markers
-    .replace(/^\- /gm, "") // Remove list markers
-    .trim();
+  if (!content) return 1;
 
-  const wordCount = cleanContent.split(/\s+/).length;
-  return Math.ceil(wordCount / wordsPerMinute);
+  // Strip HTML tags and count words
+  const plainText = content.replace(/<[^>]*>/g, " ");
+  const wordCount = plainText
+    .split(/\s+/)
+    .filter((word) => word.length > 0).length;
+
+  // Calculate reading time in minutes
+  const readingTime = Math.ceil(wordCount / wordsPerMinute);
+
+  // Return minimum 1 minute
+  return Math.max(1, readingTime);
 }
