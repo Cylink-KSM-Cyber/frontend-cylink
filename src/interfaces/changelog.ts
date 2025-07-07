@@ -61,14 +61,10 @@ export interface ChangelogEntry {
 export interface ChangelogEntryProps {
   /** Changelog entry data */
   entry: ChangelogEntry;
-  /** Whether the entry is expanded by default */
-  defaultExpanded?: boolean;
-  /** Whether to show the full content or just preview */
-  showFullContent?: boolean;
+  /** Whether this is the last entry (for timeline line) */
+  isLast?: boolean;
   /** Custom CSS classes */
   className?: string;
-  /** Callback when entry is expanded/collapsed */
-  onToggle?: (expanded: boolean) => void;
 }
 
 /**
@@ -77,12 +73,6 @@ export interface ChangelogEntryProps {
 export interface ChangelogListProps {
   /** Array of changelog entries */
   entries: ChangelogEntry[];
-  /** Number of entries to show initially */
-  initialCount?: number;
-  /** Whether to enable pagination */
-  enablePagination?: boolean;
-  /** Items per page for pagination */
-  itemsPerPage?: number;
   /** Custom CSS classes */
   className?: string;
 }
