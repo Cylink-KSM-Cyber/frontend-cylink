@@ -1,8 +1,3 @@
-/**
- * ChangelogList component
- * @description Organism component for displaying changelog entries in dark timeline layout
- */
-
 "use client";
 
 import React from "react";
@@ -54,10 +49,10 @@ const ChangelogList: React.FC<ChangelogListProps> = ({
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-white mb-2">
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
           No changelog entries found
         </h3>
-        <p className="text-gray-400">
+        <p className="text-gray-600">
           Changelog entries will appear here once they are published.
         </p>
       </div>
