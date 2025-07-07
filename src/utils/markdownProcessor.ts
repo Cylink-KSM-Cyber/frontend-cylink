@@ -101,26 +101,37 @@ export function processMarkdownContent(content: string): string {
     '<hr class="border-gray-200 my-6">'
   );
 
-  // Process unordered lists
+  // Process unordered lists and mark them with data attribute
   processedContent = processedContent.replace(
     /^- (.+)$/gm,
-    '<li class="text-gray-700 mb-1">$1</li>'
+    '<li class="text-gray-700 mb-1" data-list-type="unordered">$1</li>'
   );
 
-  // Process ordered lists
+  // Process ordered lists and mark them with data attribute
   processedContent = processedContent.replace(
     /^\d+\. (.+)$/gm,
-    '<li class="text-gray-700 mb-1">$1</li>'
+    '<li class="text-gray-700 mb-1" data-list-type="ordered">$1</li>'
   );
 
-  // Wrap consecutive list items in ul/ol tags
+  // Wrap consecutive list items in appropriate ul/ol tags based on their type
   processedContent = processedContent.replace(
-    /(<li[^>]*>[\s\S]*?<\/li>\s*)+/g,
+    /(<li[^>]*data-list-type="(ordered|unordered)"[^>]*>[\s\S]*?<\/li>\s*)+/g,
     (match) => {
-      if (match.includes("text-gray-700")) {
-        return `<ul class="list-disc list-inside space-y-1 mb-4 ml-4">${match}</ul>`;
+      // Determine list type from the first list item
+      const listTypeMatch = match.match(/data-list-type="(ordered|unordered)"/);
+      const listType = listTypeMatch ? listTypeMatch[1] : "unordered";
+
+      // Remove data attributes from the final output
+      const cleanedMatch = match.replace(
+        /\s*data-list-type="(ordered|unordered)"/g,
+        ""
+      );
+
+      if (listType === "ordered") {
+        return `<ol class="list-decimal list-inside space-y-1 mb-4 ml-4">${cleanedMatch}</ol>`;
+      } else {
+        return `<ul class="list-disc list-inside space-y-1 mb-4 ml-4">${cleanedMatch}</ul>`;
       }
-      return match;
     }
   );
 
