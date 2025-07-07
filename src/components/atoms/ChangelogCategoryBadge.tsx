@@ -6,54 +6,66 @@
 "use client";
 
 import React from "react";
-import {
-  ChangelogCategoryBadgeProps,
-  ChangelogCategory,
-} from "@/interfaces/changelog";
+import { ChangelogCategoryBadgeProps } from "@/interfaces/changelog";
 
 /**
- * Color configuration for different changelog categories in dark theme
- */
-const categoryColors: Record<ChangelogCategory, string> = {
-  Feature: "bg-blue-900 text-blue-200",
-  "Bug Fix": "bg-red-900 text-red-200",
-  Improvement: "bg-green-900 text-green-200",
-  Security: "bg-yellow-900 text-yellow-200",
-  Performance: "bg-purple-900 text-purple-200",
-  Documentation: "bg-gray-800 text-gray-300",
-  "Breaking Change": "bg-orange-900 text-orange-200",
-};
-
-/**
- * ChangelogCategoryBadge component with dark theme color-coded category display
- * @param props - Component properties
- * @returns ChangelogCategoryBadge component
+ * ChangelogCategoryBadge Component
+ *
+ * Displays a colored badge for changelog entry categories with light theme styling.
+ * Each category has its own distinct color scheme for easy visual identification.
+ *
+ * Features:
+ * - Category-specific colors for visual distinction
+ * - Multiple size variants for different use cases
+ * - Light theme colors that complement the application design
+ * - Semantic color choices that reflect category meaning
+ *
+ * Color scheme (light theme):
+ * - Feature: Blue (bg-blue-100, text-blue-800)
+ * - Bug Fix: Red (bg-red-100, text-red-800)
+ * - Improvement: Green (bg-green-100, text-green-800)
+ * - Security: Orange (bg-orange-100, text-orange-800)
+ * - Performance: Purple (bg-purple-100, text-purple-800)
+ * - Documentation: Indigo (bg-indigo-100, text-indigo-800)
+ * - Breaking Change: Gray (bg-gray-100, text-gray-800)
+ *
+ * @param category - The changelog category to display
+ * @param size - Size variant (sm, md, lg)
+ * @param className - Additional CSS classes
+ * @returns Category badge component with appropriate styling
  */
 const ChangelogCategoryBadge: React.FC<ChangelogCategoryBadgeProps> = ({
   category,
   size = "md",
   className = "",
 }) => {
-  const colorClasses = categoryColors[category] || categoryColors["Feature"];
-
   // Size classes
-  const getSizeClasses = () => {
-    switch (size) {
-      case "sm":
-        return "px-2.5 py-0.5 text-xs";
-      case "lg":
-        return "px-4 py-2 text-sm";
-      default: // md
-        return "px-3 py-1.5 text-xs";
-    }
+  const sizeClasses = {
+    sm: "px-2 py-1 text-xs",
+    md: "px-3 py-1.5 text-sm",
+    lg: "px-4 py-2 text-base",
+  };
+
+  // Category-specific colors for light theme
+  const categoryColors = {
+    Feature: "bg-blue-100 text-blue-800 border-blue-200",
+    "Bug Fix": "bg-red-100 text-red-800 border-red-200",
+    Improvement: "bg-green-100 text-green-800 border-green-200",
+    Security: "bg-orange-100 text-orange-800 border-orange-200",
+    Performance: "bg-purple-100 text-purple-800 border-purple-200",
+    Documentation: "bg-indigo-100 text-indigo-800 border-indigo-200",
+    "Breaking Change": "bg-gray-100 text-gray-800 border-gray-200",
   };
 
   return (
     <span
       className={`
-        inline-flex items-center font-medium rounded-full
-        ${colorClasses}
-        ${getSizeClasses()}
+        inline-flex items-center
+        rounded-full
+        border
+        font-medium
+        ${sizeClasses[size]}
+        ${categoryColors[category]}
         ${className}
       `}
     >
