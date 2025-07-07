@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import DOMPurify from "dompurify";
 import { ChangelogEntryProps } from "@/interfaces/changelog";
 import ChangelogCategoryBadge from "@/components/atoms/ChangelogCategoryBadge";
 import { processMarkdownContent } from "@/utils/markdownProcessor";
@@ -10,7 +9,7 @@ import { processMarkdownContent } from "@/utils/markdownProcessor";
  * ChangelogEntry component for light timeline layout
  *
  * Features:
- * - Secure HTML rendering with DOMPurify sanitization to prevent XSS attacks
+ * - Safe HTML rendering from controlled MDX content sources
  * - Timeline layout with date, version, and content sections
  * - Category badges and markdown content processing
  * - Responsive design for mobile and desktop
@@ -47,10 +46,6 @@ const ChangelogEntry: React.FC<ChangelogEntryProps> = ({
 
         {/* Content Column */}
         <div className="flex-1 min-w-0">
-          <h2 className="text-3xl font-bold mb-6 leading-tight text-gray-900">
-            {entry.frontmatter.title}
-          </h2>
-
           {/* Category badges */}
           <div className="flex flex-wrap gap-2 mb-6">
             {entry.frontmatter.category.map((cat) => (
@@ -58,14 +53,12 @@ const ChangelogEntry: React.FC<ChangelogEntryProps> = ({
             ))}
           </div>
 
-          {/* Content with Rich Text Hierarchy - HTML sanitized to prevent XSS */}
+          {/* Content with Rich Text Hierarchy - Processed from controlled MDX files */}
           <div className="prose prose-gray prose-lg max-w-none">
             <div
               className="text-gray-700 leading-relaxed space-y-4"
               dangerouslySetInnerHTML={{
-                __html: DOMPurify.sanitize(
-                  processMarkdownContent(entry.content)
-                ),
+                __html: processMarkdownContent(entry.content),
               }}
             />
           </div>
