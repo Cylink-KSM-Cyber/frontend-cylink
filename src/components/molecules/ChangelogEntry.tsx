@@ -68,7 +68,7 @@ const ChangelogEntry: React.FC<ChangelogEntryProps> = ({
       <div className="hidden md:flex gap-8">
         {/* Date and Version Column - Desktop */}
         <div className="flex-shrink-0 w-32">
-          <div className="text-gray-500 text-sm mb-1">
+          <div className="text-gray-500 text-sm mb-2">
             {new Date(entry.frontmatter.date).toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
