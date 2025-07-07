@@ -85,13 +85,20 @@ function processMarkdownContent(content: string): string {
       .replace(/(<li.*?<\/li>\s*)+/g, (match) => {
         return `<ul class="list-disc pl-6 space-y-2 mb-6 text-gray-300">${match}</ul>`;
       })
-      // Convert bold text
+      // Convert horizontal rules
+      .replace(/^---$/gm, '<hr class="border-gray-700 my-8">')
+      // Convert bold text (** or __)
       .replace(
         /\*\*(.+?)\*\*/g,
         '<strong class="font-semibold text-white">$1</strong>'
       )
-      // Convert italic text
+      .replace(
+        /__(.+?)__/g,
+        '<strong class="font-semibold text-white">$1</strong>'
+      )
+      // Convert italic text (* or _)
       .replace(/\*(.+?)\*/g, '<em class="italic text-gray-200">$1</em>')
+      .replace(/_(.+?)_/g, '<em class="italic text-gray-400">$1</em>')
       // Convert inline code
       .replace(
         /`(.+?)`/g,
