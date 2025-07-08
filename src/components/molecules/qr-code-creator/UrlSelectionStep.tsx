@@ -13,6 +13,7 @@ import {
   RiStarLine,
   RiSearchLine,
 } from "react-icons/ri";
+import { truncateUrl } from "@/utils/urlFormatter";
 import {
   RECENT_URLS_LIMIT,
   POPULAR_URLS_LIMIT,
@@ -154,15 +155,15 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
   }> = ({ url, isSelected, showClickCount = true }) => (
     <div
       onClick={() => handleUrlSelect(url)}
-      className={`group p-4 border rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg ${
+      className={`group p-4 border rounded-lg cursor-pointer transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 motion-reduce:hover:transform-none ${
         isSelected
           ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200 shadow-md"
-          : "border-gray-200 hover:border-blue-300 hover:bg-gray-50"
+          : "border-gray-200 hover:border-blue-400 hover:border-2 hover:bg-blue-50/50 hover:shadow-md hover:ring-1 hover:ring-blue-200/50"
       }`}
     >
       <div className="flex items-start justify-between mb-3">
         <h4 className="font-medium text-gray-900 truncate flex-1 mr-2 group-hover:text-blue-700 transition-colors">
-          {url.title || `URL ${url.id}`}
+          {truncateUrl(url.title || `URL ${url.id}`, 30)}
         </h4>
         {showClickCount && (
           <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
@@ -173,9 +174,14 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center text-sm text-gray-600 group-hover:text-gray-700 transition-colors">
+        <div className="flex items-center text-sm text-gray-600 group-hover:text-gray-700 transition-colors min-w-0">
           <RiLinkM className="w-3 h-3 mr-2 flex-shrink-0 text-gray-400" />
-          <span className="truncate">{url.original_url}</span>
+          <span
+            className="truncate min-w-0 flex-1 break-all"
+            title={url.original_url}
+          >
+            {truncateUrl(url.original_url, 45)}
+          </span>
         </div>
 
         <div className="flex items-center justify-between">

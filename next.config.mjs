@@ -1,13 +1,17 @@
-import type { NextConfig } from "next";
 import createMDX from "@next/mdx";
 
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Configure `pageExtensions` to include markdown and MDX files
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
 
-  /* config options here */
-  images: {
-    domains: ["placehold.co"],
+  // Experimental features
+  experimental: {
+    turbo: {
+      resolveAlias: {
+        canvas: "./empty-module.js",
+      },
+    },
   },
 
   // Existing configurations
