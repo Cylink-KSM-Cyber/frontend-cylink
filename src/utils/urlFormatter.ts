@@ -30,3 +30,51 @@ export function formatShortUrl(shortUrl: string): string {
 
   return fullUrl;
 }
+
+/**
+ * Truncates long URLs to improve UI readability and prevent overflow
+ * Handles edge cases like invalid inputs, protocol preservation, and unicode characters
+ *
+ * @param url The URL to truncate
+ * @param maxLength Maximum number of characters to display (default: 45)
+ * @returns Truncated URL with ellipsis if longer than maxLength
+ */
+export function truncateUrl(url: string, maxLength: number = 45): string {
+  // Type and input validation
+  if (!url || typeof url !== "string") return "";
+
+  // Normalize maxLength to prevent edge cases
+  if (maxLength < 4) maxLength = 4; // Minimum for "a..."
+  if (maxLength < 0 || !Number.isFinite(maxLength)) maxLength = 45; // Reset to default
+
+  // Handle very short URLs that don't need truncation
+  if (url.length <= maxLength) return url;
+
+  // Smart truncation - preserve protocol when possible
+  if (
+    maxLength > 10 &&
+    (url.startsWith("http://") || url.startsWith("https://"))
+  ) {
+    const protocolEnd = url.indexOf("://") + 3;
+    if (protocolEnd > 0 && protocolEnd < maxLength - 3) {
+      // Ensure we keep protocol intact and have meaningful content after
+      const availableLength = maxLength - 3; // Reserve 3 chars for "..."
+      const minContentAfterProtocol = Math.min(
+        5,
+        availableLength - protocolEnd
+      );
+
+      if (protocolEnd + minContentAfterProtocol <= availableLength) {
+        return url.substring(0, availableLength) + "...";
+      }
+    }
+  }
+
+  // Standard truncation with safe substring
+  try {
+    return url.substring(0, Math.max(1, maxLength - 3)) + "...";
+  } catch {
+    // Fallback for any unexpected string issues
+    return url.slice(0, Math.max(1, maxLength - 3)) + "...";
+  }
+}
