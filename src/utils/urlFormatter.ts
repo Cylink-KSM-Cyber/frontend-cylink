@@ -44,8 +44,10 @@ export function truncateUrl(url: string, maxLength: number = 45): string {
   if (!url || typeof url !== "string") return "";
 
   // Normalize maxLength to prevent edge cases
+  // First: Reset invalid inputs to default
+  if (!Number.isFinite(maxLength) || maxLength < 0) maxLength = 45; // Reset to default
+  // Then: Enforce minimum length for valid inputs
   if (maxLength < 4) maxLength = 4; // Minimum for "a..."
-  if (maxLength < 0 || !Number.isFinite(maxLength)) maxLength = 45; // Reset to default
 
   // Handle very short URLs that don't need truncation
   if (url.length <= maxLength) return url;
