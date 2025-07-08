@@ -206,7 +206,7 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
       isOpen={isOpen}
       onClose={handleClose}
       variant="default"
-      size={currentStep === 1 ? "md" : "lg"}
+      size="lg"
       overlayStyle="glassmorphism"
       footer={
         <QrCodeModalFooter
