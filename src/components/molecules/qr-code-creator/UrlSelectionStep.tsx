@@ -5,6 +5,8 @@ import { UseFormReturn } from "react-hook-form";
 import { QrCodeCreateFormSchema } from "@/hooks/useQrCodeCreation";
 import { Url } from "@/interfaces/url";
 import SearchInput from "@/components/atoms/SearchInput";
+import InputWithCharacterCounter from "@/components/atoms/InputWithCharacterCounter";
+import { URL_CUSTOM_CODE_LIMITS } from "@/config/urlLimits";
 import { formatDistanceToNow } from "date-fns";
 import {
   RiLinkM,
@@ -266,11 +268,14 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
               <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                 cylink.co/
               </span>
-              <input
+              <InputWithCharacterCounter
                 type="text"
                 id="customCode"
                 placeholder="custom-url"
-                {...register("customCode")}
+                {...register("customCode", {
+                  maxLength: URL_CUSTOM_CODE_LIMITS.MAX_LENGTH,
+                })}
+                maxLength={URL_CUSTOM_CODE_LIMITS.MAX_LENGTH}
                 className="flex-1 p-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               />
             </div>
