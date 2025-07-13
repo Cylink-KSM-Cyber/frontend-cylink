@@ -24,10 +24,8 @@ export const URL_CUSTOM_CODE_LIMITS = {
  * @description Regular expressions for URL validation
  */
 export const URL_VALIDATION_PATTERNS = {
-  /** Pattern for custom code validation - letters, numbers, and hyphens only */
+  /** Primary pattern for custom code validation - letters, numbers, and hyphens only */
   CUSTOM_CODE_REGEX: /^[a-zA-Z0-9-]+$/,
-  /** Pattern for custom code validation with underscores (alternative) */
-  CUSTOM_CODE_REGEX_ALT: /^[a-zA-Z0-9-_]+$/,
   /** Pattern for URL validation (basic) */
   URL_REGEX: /^https?:\/\/.+/,
 } as const;

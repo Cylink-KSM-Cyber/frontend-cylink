@@ -6,7 +6,7 @@ import { QrCodeCreateFormSchema } from "@/hooks/useQrCodeCreation";
 import { Url } from "@/interfaces/url";
 import SearchInput from "@/components/atoms/SearchInput";
 import InputWithCharacterCounter from "@/components/atoms/InputWithCharacterCounter";
-import { URL_CUSTOM_CODE_LIMITS } from "@/config/urlLimits";
+import { URL_CUSTOM_CODE_LIMITS, URL_DISPLAY_CONFIG } from "@/config/urlLimits";
 import { formatDistanceToNow } from "date-fns";
 import {
   RiLinkM,
@@ -279,6 +279,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
                     maxLength: URL_CUSTOM_CODE_LIMITS.MAX_LENGTH,
                   })}
                   maxLength={URL_CUSTOM_CODE_LIMITS.MAX_LENGTH}
+                  fieldName={URL_DISPLAY_CONFIG.CUSTOM_CODE_A11Y_DESCRIPTION}
                   className="rounded-l-none border-l-0"
                 />
               </div>

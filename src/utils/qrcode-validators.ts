@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DEFAULT_URL_EXPIRY_DAYS } from "@/config/qrcode";
+import { URL_CUSTOM_CODE_LIMITS } from "@/config/urlLimits";
 
 /**
  * QR Code Validation Utilities
@@ -56,7 +57,7 @@ const customCodeSchema = z
   }, "Custom code can only contain letters, numbers, hyphens, and underscores")
   .refine((code) => {
     if (!code) return true; // Optional field
-    return code.length <= 30;
+    return code.length <= URL_CUSTOM_CODE_LIMITS.MAX_LENGTH;
   }, "Custom code must be 30 characters or less");
 
 /**
