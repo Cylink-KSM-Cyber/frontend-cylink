@@ -64,6 +64,7 @@ const CreateUrlModal: React.FC<CreateUrlModalProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
   } = useForm<CreateUrlFormSchema>({
     resolver: zodResolver(createUrlSchema),
     defaultValues: {
@@ -73,6 +74,9 @@ const CreateUrlModal: React.FC<CreateUrlModalProps> = ({
       expiryDate: "",
     },
   });
+
+  // Watch customCode value for character counter
+  const customCodeValue = watch("customCode");
 
   const handleFormSubmit = (data: CreateUrlFormSchema) => {
     onSubmit(data);
@@ -186,7 +190,7 @@ const CreateUrlModal: React.FC<CreateUrlModalProps> = ({
                   showCharacterCounter={true}
                   counterPosition="bottom-right"
                   error={errors.customCode?.message}
-                  helperText={URL_DISPLAY_CONFIG.CUSTOM_CODE_HELP_TEXT}
+                  value={customCodeValue || ""}
                   className="rounded-l-none border-l-0"
                   {...register("customCode")}
                 />
