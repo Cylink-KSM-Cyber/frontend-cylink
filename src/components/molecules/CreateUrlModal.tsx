@@ -38,7 +38,10 @@ export interface CreateUrlFormData {
 const createUrlSchema = z.object({
   title: z.string().min(1, "Title is required"),
   originalUrl: z.string().url("Please enter a valid URL"),
-  customCode: z.string().optional(),
+  customCode: z
+    .string()
+    .max(30, "Custom code must be 30 characters or less")
+    .optional(),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
 
