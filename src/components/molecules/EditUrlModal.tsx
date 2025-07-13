@@ -37,8 +37,8 @@ const EditUrlSchema = z.object({
       "Custom code must contain only letters, numbers, and hyphens"
     )
     .refine(
-      (value) => !value || value.length <= 50,
-      "Custom code must be 50 characters or less"
+      (value) => !value || value.length <= 30,
+      "Custom code must be 30 characters or less"
     ),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
