@@ -269,17 +269,19 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
               <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                 cylink.co/
               </span>
-              <InputWithCharacterCounter
-                type="text"
-                id="customCode"
-                placeholder="custom-url"
-                value={customCodeValue || ""}
-                {...register("customCode", {
-                  maxLength: URL_CUSTOM_CODE_LIMITS.MAX_LENGTH,
-                })}
-                maxLength={URL_CUSTOM_CODE_LIMITS.MAX_LENGTH}
-                className="flex-1 p-3 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              />
+              <div className="flex-1">
+                <InputWithCharacterCounter
+                  type="text"
+                  id="customCode"
+                  placeholder="custom-url"
+                  value={customCodeValue || ""}
+                  {...register("customCode", {
+                    maxLength: URL_CUSTOM_CODE_LIMITS.MAX_LENGTH,
+                  })}
+                  maxLength={URL_CUSTOM_CODE_LIMITS.MAX_LENGTH}
+                  className="rounded-l-none border-l-0"
+                />
+              </div>
             </div>
             {errors.customCode && (
               <p className="mt-1 text-sm text-red-600">
