@@ -97,6 +97,9 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
     },
   });
 
+  // Watch customCode value for character counter
+  const customCodeValue = watch("customCode");
+
   // Effect to populate form when URL changes or modal opens
   React.useEffect(() => {
     if (url && isOpen) {
@@ -317,7 +320,7 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
                   showCharacterCounter={true}
                   counterPosition="bottom-right"
                   error={errors.customCode?.message}
-                  helperText={URL_DISPLAY_CONFIG.CUSTOM_CODE_HELP_TEXT}
+                  value={customCodeValue || ""}
                   className="rounded-l-none border-l-0"
                   {...register("customCode")}
                 />
