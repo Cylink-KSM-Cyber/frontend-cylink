@@ -53,7 +53,11 @@ const customCodeSchema = z
   .refine((code) => {
     if (!code) return true; // Optional field
     return /^[a-zA-Z0-9-_]+$/.test(code);
-  }, "Custom code can only contain letters, numbers, hyphens, and underscores");
+  }, "Custom code can only contain letters, numbers, hyphens, and underscores")
+  .refine((code) => {
+    if (!code) return true; // Optional field
+    return code.length <= 30;
+  }, "Custom code must be 30 characters or less");
 
 /**
  * Expiry date validation schema
