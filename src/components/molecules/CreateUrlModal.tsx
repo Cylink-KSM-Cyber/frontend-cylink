@@ -6,7 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Modal from "@/components/atoms/Modal";
 import Button from "@/components/atoms/Button";
+import InputWithCharacterCounter from "@/components/atoms/InputWithCharacterCounter";
 import { RiAddLine, RiLinkM } from "react-icons/ri";
+import { URL_CUSTOM_CODE_LIMITS, URL_DISPLAY_CONFIG } from "@/config/urlLimits";
 
 /**
  * CreateUrlModalProps interface
@@ -173,21 +175,23 @@ const CreateUrlModal: React.FC<CreateUrlModalProps> = ({
             </label>
             <div className="flex">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                cylink.co/
+                {URL_DISPLAY_CONFIG.SHORT_URL_DOMAIN}/
               </span>
-              <input
-                type="text"
-                id="customCode"
-                placeholder="custom-url"
-                {...register("customCode")}
-                className="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="flex-1">
+                <InputWithCharacterCounter
+                  id="customCode"
+                  placeholder={URL_DISPLAY_CONFIG.CUSTOM_CODE_PLACEHOLDER}
+                  maxLength={URL_CUSTOM_CODE_LIMITS.MAX_LENGTH}
+                  fieldName={URL_DISPLAY_CONFIG.CUSTOM_CODE_A11Y_DESCRIPTION}
+                  showCharacterCounter={true}
+                  counterPosition="bottom-right"
+                  error={errors.customCode?.message}
+                  helperText={URL_DISPLAY_CONFIG.CUSTOM_CODE_HELP_TEXT}
+                  className="rounded-l-none border-l-0"
+                  {...register("customCode")}
+                />
+              </div>
             </div>
-            {errors.customCode && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.customCode.message}
-              </p>
-            )}
           </div>
 
           <div>
