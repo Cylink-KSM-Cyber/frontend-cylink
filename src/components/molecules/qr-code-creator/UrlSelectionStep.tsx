@@ -64,6 +64,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
   } = form;
 
   const selectedUrlId = watch("existingUrlId");
+  const customCodeValue = watch("customCode");
 
   // Format date to relative time
   const formatDate = (dateString: string) => {
@@ -272,6 +273,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
                 type="text"
                 id="customCode"
                 placeholder="custom-url"
+                value={customCodeValue || ""}
                 {...register("customCode", {
                   maxLength: URL_CUSTOM_CODE_LIMITS.MAX_LENGTH,
                 })}
