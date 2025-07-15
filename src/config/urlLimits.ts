@@ -4,6 +4,8 @@
  * @author CyLink Frontend Team
  */
 
+import type { CharacterStatus } from "@/interfaces/characterCounter";
+
 /**
  * URL Custom Code Limits
  * @description Configuration constants for custom code character limits
@@ -134,39 +136,48 @@ export const validateCustomCodeFormat = (
  * @param currentLength - Current character count
  * @returns Status object with styling information
  */
-export const getCharacterCountStatus = (currentLength: number) => {
+export const getCharacterCountStatus = (
+  currentLength: number
+): {
+  status: CharacterStatus;
+  color: string;
+  weight: string;
+  animate: boolean;
+} => {
   const { MAX_LENGTH, WARNING_THRESHOLD, CRITICAL_THRESHOLD } =
     URL_CUSTOM_CODE_LIMITS;
 
+  let status: CharacterStatus;
   if (currentLength >= MAX_LENGTH) {
+    status = "critical";
     return {
-      status: "critical" as const,
+      status,
       color: "text-red-600",
       weight: "font-semibold",
       animate: true,
     };
   }
-
   if (currentLength >= CRITICAL_THRESHOLD) {
+    status = "danger";
     return {
-      status: "danger" as const,
+      status,
       color: "text-red-500",
       weight: "font-medium",
       animate: false,
     };
   }
-
   if (currentLength >= WARNING_THRESHOLD) {
+    status = "warning";
     return {
-      status: "warning" as const,
+      status,
       color: "text-yellow-600",
       weight: "font-medium",
       animate: false,
     };
   }
-
+  status = "normal";
   return {
-    status: "normal" as const,
+    status,
     color: "text-gray-500",
     weight: "font-normal",
     animate: false,

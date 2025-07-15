@@ -9,8 +9,10 @@ import {
   getCharacterCountA11yAttributes,
   validateCharacterCount,
   CHARACTER_COUNT_CONSTANTS,
+  getCharacterCountStatus,
 } from "@/utils/characterCounter";
 import { URL_CUSTOM_CODE_LIMITS } from "@/config/urlLimits";
+import type { CharacterStatus } from "@/interfaces/characterCounter";
 
 /**
  * Props for InputWithCharacterCounter component
@@ -165,11 +167,12 @@ const InputWithCharacterCounter: React.FC<InputWithCharacterCounterProps> = ({
   };
 
   // Determine animation state
-  const getAnimationState = () => {
-    if (characterCount >= maxLength) return "danger";
-    if (characterCount >= Math.floor(maxLength * warningThreshold))
-      return "warning";
-    return "normal";
+  const getAnimationState = (): CharacterStatus => {
+    return getCharacterCountStatus(
+      characterCount,
+      maxLength,
+      Math.floor(maxLength * warningThreshold)
+    );
   };
 
   return (

@@ -4,6 +4,8 @@
  * @author CyLink Frontend Team
  */
 
+import type { CharacterStatus } from "@/interfaces/characterCounter";
+
 /**
  * Character count display configuration
  * @interface CharacterCountConfig
@@ -73,31 +75,51 @@ export const getCharacterCountStyle = (
   warningThreshold?: number
 ): CharacterCountStyle => {
   const threshold = warningThreshold ?? Math.floor(max * 0.8);
+  const status = getCharacterCountStatus(current, max, threshold);
 
-  // Danger state (at or over limit)
-  if (current >= max) {
-    return {
-      textColor: "text-red-600",
-      fontWeight: "font-semibold",
-      additionalClasses: "animate-pulse",
-    };
+  // Map status to style
+  switch (status) {
+    case "critical":
+    case "danger":
+      return {
+        textColor: "text-red-600",
+        fontWeight: "font-semibold",
+        additionalClasses: "animate-pulse",
+      };
+    case "warning":
+      return {
+        textColor: "text-yellow-600",
+        fontWeight: "font-medium",
+        additionalClasses: "",
+      };
+    case "normal":
+    default:
+      return {
+        textColor: "text-gray-500",
+        fontWeight: "font-normal",
+        additionalClasses: "",
+      };
   }
+};
 
-  // Warning state (approaching limit)
-  if (current >= threshold) {
-    return {
-      textColor: "text-yellow-600",
-      fontWeight: "font-medium",
-      additionalClasses: "",
-    };
-  }
+/**
+ * Get character count status based on current count and limit
+ * @param current - Current character count
+ * @param max - Maximum character limit
+ * @param warningThreshold - Warning threshold
+ * @returns Character status
+ */
+export const getCharacterCountStatus = (
+  current: number,
+  max: number,
+  warningThreshold?: number
+): CharacterStatus => {
+  const threshold = warningThreshold ?? Math.floor(max * 0.8);
 
-  // Normal state
-  return {
-    textColor: "text-gray-500",
-    fontWeight: "font-normal",
-    additionalClasses: "",
-  };
+  if (current >= max) return "critical";
+  if (current >= Math.floor(max * 0.9)) return "danger";
+  if (current >= threshold) return "warning";
+  return "normal";
 };
 
 /**
