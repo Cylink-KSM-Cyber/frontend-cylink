@@ -1,23 +1,54 @@
 /**
+ * URL-related TypeScript Interfaces
+ * @description Defines interfaces for URL entities, forms, and API responses
+ * @see {@link import('@/config/urlLimits').URL_CUSTOM_CODE_LIMITS} for character limits configuration
+ * @author CyLink Frontend Team
+ */
+
+/**
  * URL Interface
  * @description Defines the structure of a shortened URL entity
+ * @see {@link import('@/config/urlLimits').URL_CUSTOM_CODE_LIMITS} for character limits configuration
  */
 export interface Url {
+  /** Unique identifier for the URL */
   id: number;
+  /** Original URL that was shortened */
   original_url: string;
+  /**
+   * Short code used in the URL (max 30 characters)
+   * @description Contains only letters, numbers, and hyphens
+   * @example "my-custom-url" or "abc123"
+   * @constraints
+   * - Maximum length: 30 characters
+   * - Allowed characters: letters (a-z, A-Z), numbers (0-9), hyphens (-)
+   * - Must be unique across all URLs
+   */
   short_code: string;
+  /** Complete shortened URL */
   short_url: string;
+  /** Optional title for the URL */
   title?: string;
+  /** Optional description for the URL */
   description?: string;
+  /** ISO timestamp when the URL was created */
   created_at: string;
+  /** ISO timestamp when the URL was last updated */
   updated_at: string;
+  /** Optional expiry date for the URL (ISO string format) */
   expiry_date?: string;
+  /** Number of clicks on the shortened URL */
   clicks: number;
+  /** Whether the URL is active */
   is_active: boolean;
+  /** ID of the user who created the URL */
   user_id: number;
+  /** Optional custom domain for the URL */
   customDomain?: string;
+  /** Optional tags for categorizing the URL */
   tags?: string[];
-  clickTrend?: number; // Percentage change in clicks (e.g., +15%);
+  /** Percentage change in clicks (e.g., +15%) */
+  clickTrend?: number;
 }
 
 /**
@@ -364,10 +395,26 @@ export interface ExtendedDashboardStats extends DashboardStats {
   };
 }
 
+/**
+ * Create URL Form Data Interface
+ * @description Defines the structure of form data for creating new URLs
+ */
 export interface CreateUrlFormData {
+  /** Original URL to be shortened */
   originalUrl: string;
+  /**
+   * Optional custom code for the short URL (max 30 characters)
+   * @description Must contain only letters, numbers, and hyphens
+   * @example "my-custom-url"
+   * @constraints
+   * - Maximum length: 30 characters
+   * - Allowed characters: letters (a-z, A-Z), numbers (0-9), hyphens (-)
+   * - Must be unique across all URLs
+   */
   customCode?: string;
+  /** Title for the shortened URL */
   title: string;
+  /** Expiry date for the shortened URL (ISO string format) */
   expiryDate: string;
 }
 
@@ -389,10 +436,26 @@ export interface CreateUrlFormResponse {
   };
 }
 
+/**
+ * Edit URL Form Data Interface
+ * @description Defines the structure of form data for editing existing URLs
+ */
 export interface EditUrlFormData {
+  /** Original URL to be shortened */
   originalUrl: string;
+  /**
+   * Optional custom code for the short URL (max 30 characters)
+   * @description Must contain only letters, numbers, and hyphens
+   * @example "my-custom-url"
+   * @constraints
+   * - Maximum length: 30 characters
+   * - Allowed characters: letters (a-z, A-Z), numbers (0-9), hyphens (-)
+   * - Must be unique across all URLs
+   */
   customCode?: string;
+  /** Title for the shortened URL */
   title?: string;
+  /** Expiry date for the shortened URL (ISO string format) */
   expiryDate?: string;
 }
 
