@@ -14,11 +14,21 @@ if (isClient && !posthog.__loaded) {
 }
 
 /**
+ * Type for user properties that can be sent to PostHog
+ */
+export type PostHogUserProperties = Record<string, string | number | boolean | null | undefined>;
+
+/**
+ * Type for event properties that can be sent to PostHog
+ */
+export type PostHogEventProperties = Record<string, string | number | boolean | null | undefined>;
+
+/**
  * Identify a user in PostHog
  * @param userId - User ID to identify
  * @param userProperties - Additional user properties
  */
-export const identifyUser = (userId: string, userProperties?: Record<string, any>) => {
+export const identifyUser = (userId: string, userProperties?: PostHogUserProperties) => {
   if (isClient) {
     posthog.identify(userId, userProperties);
   }
@@ -29,7 +39,7 @@ export const identifyUser = (userId: string, userProperties?: Record<string, any
  * @param eventName - Name of the event to capture
  * @param properties - Additional event properties
  */
-export const captureEvent = (eventName: string, properties?: Record<string, any>) => {
+export const captureEvent = (eventName: string, properties?: PostHogEventProperties) => {
   if (isClient) {
     posthog.capture(eventName, properties);
   }
@@ -44,8 +54,11 @@ export const resetUser = () => {
   }
 };
 
-export default {
+// Create a named object before exporting as default
+const posthogClient = {
   identifyUser,
   captureEvent,
   resetUser,
 };
+
+export default posthogClient;

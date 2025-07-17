@@ -169,10 +169,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Identify user in PostHog
       posthogClient.identifyUser(user.id.toString(), {
         email: user.email,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        $name: `${user.firstName} ${user.lastName}`.trim(),
-        role: user.role,
-        created_at: user.createdAt
+        username: user.username,
+        created_at: user.created_at,
+        updated_at: user.updated_at
       });
       
       // Capture login event
