@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { useToast } from "@/contexts/ToastContext";
 import { ToastType } from "@/components/atoms/Toast";
+import posthogClient from "@/utils/posthogClient";
 
 // Navigation delay to allow toast to be visible
 const NAVIGATION_DELAY = 2000;
@@ -165,6 +166,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(user);
 
+      // Identify user in PostHog
+      posthogClient.identifyUser(user.id.toString(), {
+        email: user.email,
+        username: user.username,
+        created_at: user.created_at,
+        updated_at: user.updated_at
+      });
+      
+      // Capture login event
+      posthogClient.captureEvent('user_logged_in', {
+        login_method: 'email',
+        remember_me: remember
+      });
+
       // Show success toast with longer duration to ensure visibility before navigation
       showToast("Successfully logged in", "success", TOAST_DURATION);
       console.log("Success toast shown, will navigate after delay");
@@ -236,6 +251,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = () => {
     // Clear any existing toasts
     clearAllToasts();
+
+    // Capture logout event before resetting user
+    if (user) {
+      posthogClient.captureEvent('user_logged_out', {
+        user_id: user.id
+      });
+    }
+
+    // Reset PostHog user identification
+    posthogClient.resetUser();
 
     // Clear tokens and user data from storage
     AuthService.clearTokens();
