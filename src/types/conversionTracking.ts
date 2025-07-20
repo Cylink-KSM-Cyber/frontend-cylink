@@ -20,6 +20,7 @@
 export type ConversionGoalType =
   | "url_created"
   | "url_edited"
+  | "url_deleted"
   | "url_clicked"
   | "qr_code_generated"
   | "user_registered"
@@ -55,6 +56,16 @@ export type UrlCreationMethod =
 export type UrlEditMethod = "manual" | "bulk_edit" | "api";
 
 /**
+ * URL Deletion Method Types
+ *
+ * Defines the methods by which URLs can be deleted in the system.
+ * This ensures consistency in tracking how URLs are removed.
+ *
+ * @description Defines the methods by which URLs can be deleted
+ */
+export type UrlDeletionMethod = "manual" | "bulk_delete" | "api" | "expired";
+
+/**
  * Device Type Types
  *
  * Defines the types of devices that can be tracked for analytics.
@@ -85,6 +96,7 @@ export const isConversionGoalType = (
   const validTypes: ConversionGoalType[] = [
     "url_created",
     "url_edited",
+    "url_deleted",
     "url_clicked",
     "qr_code_generated",
     "user_registered",

@@ -16,6 +16,7 @@ import {
   UseConversionTrackingReturn,
   UrlCreationProperties,
   UrlEditProperties,
+  UrlDeletionProperties,
   UrlClickProperties,
   QrCodeGenerationProperties,
 } from "@/interfaces/conversionTracking";
@@ -100,6 +101,38 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
       };
 
       posthogClient.captureEvent("url_edited", eventProperties);
+    },
+    [getBaseProperties]
+  );
+
+  /**
+   * Track URL deletion conversion
+   * @param properties - URL deletion specific properties
+   */
+  const trackUrlDeletion = useCallback(
+    (properties: UrlDeletionProperties) => {
+      // Validate critical properties
+      if (!properties.url_id || properties.url_id <= 0) {
+        console.warn("Invalid url_id provided to trackUrlDeletion");
+        return;
+      }
+
+      if (!properties.url_title || properties.url_title.trim().length === 0) {
+        console.warn("Invalid url_title provided to trackUrlDeletion");
+        return;
+      }
+
+      if (!properties.short_code || properties.short_code.trim().length === 0) {
+        console.warn("Invalid short_code provided to trackUrlDeletion");
+        return;
+      }
+
+      const eventProperties: PostHogEventProperties = {
+        ...getBaseProperties(),
+        ...properties,
+      };
+
+      posthogClient.captureEvent("url_deleted", eventProperties);
     },
     [getBaseProperties]
   );
@@ -258,6 +291,7 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
   return {
     trackUrlCreation,
     trackUrlEdit,
+    trackUrlDeletion,
     trackUrlClick,
     trackQrCodeGeneration,
     trackConversion,
