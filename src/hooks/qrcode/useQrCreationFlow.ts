@@ -10,6 +10,7 @@ import {
 } from "@/utils/qrcode-validators";
 import { QR_CREATION_STEPS } from "@/config/qrcode";
 import { Url } from "@/interfaces/url";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 /**
  * QR Creation Flow Hook
@@ -27,6 +28,7 @@ export const useQrCreationFlow = (
   // Current step state
   const [currentStep, setCurrentStep] = useState(1);
   const [isCreatingUrl, setIsCreatingUrl] = useState(false);
+  const { trackUrlCreation } = useConversionTracking();
 
   // Form state with validation
   const form = useForm<QrCodeCreateFormSchema>({
@@ -149,6 +151,18 @@ export const useQrCreationFlow = (
           original_url: formData.originalUrl!,
           custom_code: formData.customCode || undefined,
           expiry_date: formData.expiryDate!,
+        });
+
+        // Track URL creation from QR code flow
+        trackUrlCreation({
+          url_id: newUrl.id,
+          url_title: formData.title!,
+          has_custom_code: !!formData.customCode,
+          custom_code_length: formData.customCode?.length || 0,
+          expiry_date: formData.expiryDate!,
+          original_url_length: formData.originalUrl!.length,
+          creation_method: "qr_code_flow",
+          success: true,
         });
 
         return { success: true, url: newUrl };

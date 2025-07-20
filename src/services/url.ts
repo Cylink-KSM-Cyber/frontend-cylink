@@ -2,6 +2,8 @@ import { get, del, put, getPublic } from "./api";
 import { UrlApiResponse, UrlFilter, Url } from "@/interfaces/url";
 import { UrlAnalyticsResponse } from "@/interfaces/urlAnalytics";
 import logger from "@/utils/logger";
+import { getDeviceType } from "@/utils/deviceDetection";
+import GeolocationCache from "@/utils/geolocation";
 
 /**
  * URL Service
@@ -207,10 +209,44 @@ export const fetchUrlByShortCode = async (shortCode: string): Promise<Url> => {
  * @param shortCode - The short code of the URL that was clicked
  */
 export const recordUrlClick = async (shortCode: string): Promise<void> => {
+  // Validate input
+  if (
+    !shortCode ||
+    typeof shortCode !== "string" ||
+    shortCode.trim().length === 0
+  ) {
+    console.warn("Invalid shortCode provided to recordUrlClick");
+    return;
+  }
+
   try {
     console.log(`Recording click for URL with short code: ${shortCode}`);
     const endpoint = `/api/v1/urls/click/${shortCode}`;
     await get(endpoint);
+
+    // Track URL click conversion in PostHog (client-side only)
+    if (typeof window !== "undefined") {
+      try {
+        const posthogClient = (await import("@/utils/posthogClient")).default;
+        const location = await GeolocationCache.getLocation();
+
+        posthogClient.captureEvent("url_clicked", {
+          short_code: shortCode,
+          timestamp: new Date().toISOString(),
+          source: window.location.pathname,
+          user_agent: navigator.userAgent,
+          screen_resolution: `${screen.width}x${screen.height}`,
+          referrer: document.referrer || undefined,
+          device_type: getDeviceType(),
+          location: location,
+        });
+      } catch (posthogError) {
+        console.warn(
+          `Failed to track PostHog event for ${shortCode}`,
+          posthogError
+        );
+      }
+    }
   } catch (error) {
     console.error(
       `Failed to record click for URL with short code ${shortCode}:`,

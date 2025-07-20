@@ -5,6 +5,8 @@
 import { get, getPublic } from "@/services/api";
 import { AxiosError } from "axios";
 import logger from "@/utils/logger";
+import { getDeviceType } from "@/utils/deviceDetection";
+import GeolocationCache from "@/utils/geolocation";
 
 // Define known routes to exclude from short URL detection
 const KNOWN_ROUTES = [
@@ -266,10 +268,44 @@ function extractOriginalUrlFromResponse(
  * @param shortCode The short code that was clicked
  */
 async function recordUrlClick(shortCode: string): Promise<void> {
+  // Validate input
+  if (
+    !shortCode ||
+    typeof shortCode !== "string" ||
+    shortCode.trim().length === 0
+  ) {
+    logger.urlShortener.warn("Invalid shortCode provided to recordUrlClick");
+    return;
+  }
+
   try {
     const endpoint = `/api/v1/urls/click/${shortCode}`;
     await get(endpoint);
     logger.urlShortener.debug(`Click recorded for ${shortCode}`);
+
+    // Track URL click conversion in PostHog (client-side only)
+    if (typeof window !== "undefined") {
+      try {
+        const posthogClient = (await import("@/utils/posthogClient")).default;
+        const location = await GeolocationCache.getLocation();
+
+        posthogClient.captureEvent("url_clicked", {
+          short_code: shortCode,
+          timestamp: new Date().toISOString(),
+          source: window.location.pathname,
+          user_agent: navigator.userAgent,
+          screen_resolution: `${screen.width}x${screen.height}`,
+          referrer: document.referrer || undefined,
+          device_type: getDeviceType(),
+          location: location,
+        });
+      } catch (posthogError) {
+        logger.urlShortener.warn(
+          `Failed to track PostHog event for ${shortCode}`,
+          posthogError
+        );
+      }
+    }
   } catch (error) {
     logger.urlShortener.warn(`Failed to record click for ${shortCode}`, error);
     // Don't throw - we don't want to block the main redirect flow
