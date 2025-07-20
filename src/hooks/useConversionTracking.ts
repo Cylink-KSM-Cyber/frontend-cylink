@@ -11,90 +11,14 @@
 
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
-
-/**
- * Conversion Goal Types
- * @description Defines the available conversion goal types for tracking
- */
-export type ConversionGoalType =
-  | "url_created"
-  | "url_edited"
-  | "url_clicked"
-  | "qr_code_generated"
-  | "user_registered"
-  | "user_logged_in"
-  | "user_logged_out"
-  | "feature_used"
-  | "settings_updated"
-  | "search_performed"
-  | "error_occurred";
-
-/**
- * Conversion Tracking Hook Return Type
- * @description Return type for the useConversionTracking hook
- */
-export interface UseConversionTrackingReturn {
-  /** Track URL creation conversion */
-  trackUrlCreation: (properties: {
-    url_id: number;
-    url_title: string;
-    has_custom_code: boolean;
-    custom_code_length: number;
-    expiry_date: string;
-    original_url_length: number;
-    creation_method: "manual" | "qr_code_flow" | "api" | "bulk_import";
-    success: boolean;
-  }) => void;
-  /** Track URL edit conversion */
-  trackUrlEdit: (properties: {
-    url_id: number;
-    url_title: string;
-    has_custom_code: boolean;
-    custom_code_length: number;
-    expiry_date: string;
-    original_url_length: number;
-    edit_method: "manual" | "bulk_edit" | "api";
-    fields_modified: string[];
-    success: boolean;
-  }) => void;
-  /** Track URL click conversion */
-  trackUrlClick: (properties: {
-    url_id?: number;
-    short_code: string;
-    referrer?: string;
-    user_agent?: string;
-    location?: string;
-    device_type?: "mobile" | "desktop" | "tablet" | "other";
-  }) => void;
-  /** Track QR code generation conversion */
-  trackQrCodeGeneration: (properties: {
-    url_id: number;
-    customization_options: {
-      foreground_color?: string;
-      background_color?: string;
-      size?: number;
-      format?: "png" | "svg" | "jpeg";
-    };
-    downloaded: boolean;
-    shared: boolean;
-  }) => void;
-  /** Track generic conversion goal */
-  trackConversion: (
-    goalType: ConversionGoalType,
-    properties?: PostHogEventProperties
-  ) => void;
-  /** Track feature usage */
-  trackFeatureUsage: (
-    featureName: string,
-    properties?: PostHogEventProperties
-  ) => void;
-  /** Track error occurrence */
-  trackError: (
-    errorType: string,
-    errorMessage: string,
-    properties?: PostHogEventProperties
-  ) => void;
-}
+import { ConversionGoalType } from "@/types/conversionTracking";
+import {
+  UseConversionTrackingReturn,
+  UrlCreationProperties,
+  UrlEditProperties,
+  UrlClickProperties,
+  QrCodeGenerationProperties,
+} from "@/interfaces/conversionTracking";
 
 /**
  * Custom hook for PostHog conversion tracking
@@ -125,16 +49,7 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - URL creation specific properties
    */
   const trackUrlCreation = useCallback(
-    (properties: {
-      url_id: number;
-      url_title: string;
-      has_custom_code: boolean;
-      custom_code_length: number;
-      expiry_date: string;
-      original_url_length: number;
-      creation_method: "manual" | "qr_code_flow" | "api" | "bulk_import";
-      success: boolean;
-    }) => {
+    (properties: UrlCreationProperties) => {
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -150,17 +65,7 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - URL edit specific properties
    */
   const trackUrlEdit = useCallback(
-    (properties: {
-      url_id: number;
-      url_title: string;
-      has_custom_code: boolean;
-      custom_code_length: number;
-      expiry_date: string;
-      original_url_length: number;
-      edit_method: "manual" | "bulk_edit" | "api";
-      fields_modified: string[];
-      success: boolean;
-    }) => {
+    (properties: UrlEditProperties) => {
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -177,14 +82,7 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - URL click specific properties
    */
   const trackUrlClick = useCallback(
-    (properties: {
-      url_id?: number;
-      short_code: string;
-      referrer?: string;
-      user_agent?: string;
-      location?: string;
-      device_type?: "mobile" | "desktop" | "tablet" | "other";
-    }) => {
+    (properties: UrlClickProperties) => {
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -200,17 +98,7 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - QR code generation specific properties
    */
   const trackQrCodeGeneration = useCallback(
-    (properties: {
-      url_id: number;
-      customization_options: {
-        foreground_color?: string;
-        background_color?: string;
-        size?: number;
-        format?: "png" | "svg" | "jpeg";
-      };
-      downloaded: boolean;
-      shared: boolean;
-    }) => {
+    (properties: QrCodeGenerationProperties) => {
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         url_id: properties.url_id,
