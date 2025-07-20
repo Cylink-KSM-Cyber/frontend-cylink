@@ -43,6 +43,21 @@ export interface UrlEditProperties {
 }
 
 /**
+ * URL Deletion Tracking Properties
+ * @description Properties required for tracking URL deletion events
+ */
+export interface UrlDeletionProperties {
+  url_id: number;
+  url_title: string;
+  short_code: string;
+  original_url_length: number;
+  total_clicks: number;
+  deletion_method: ConversionTrackingTypes.UrlDeletionMethod;
+  deletion_reason?: string;
+  success: boolean;
+}
+
+/**
  * URL Click Tracking Properties
  * @description Properties required for tracking URL click events
  */
@@ -86,6 +101,8 @@ export interface UseConversionTrackingReturn {
   trackUrlCreation: (properties: UrlCreationProperties) => void;
   /** Track URL edit conversion */
   trackUrlEdit: (properties: UrlEditProperties) => void;
+  /** Track URL deletion conversion */
+  trackUrlDeletion: (properties: UrlDeletionProperties) => void;
   /** Track URL click conversion */
   trackUrlClick: (properties: UrlClickProperties) => void;
   /** Track QR code generation conversion */
