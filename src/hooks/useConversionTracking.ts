@@ -18,6 +18,7 @@ import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
  */
 export type ConversionGoalType =
   | "url_created"
+  | "url_edited"
   | "url_clicked"
   | "qr_code_generated"
   | "user_registered"
@@ -42,6 +43,18 @@ export interface UseConversionTrackingReturn {
     expiry_date: string;
     original_url_length: number;
     creation_method: "manual" | "qr_code_flow" | "api" | "bulk_import";
+    success: boolean;
+  }) => void;
+  /** Track URL edit conversion */
+  trackUrlEdit: (properties: {
+    url_id: number;
+    url_title: string;
+    has_custom_code: boolean;
+    custom_code_length: number;
+    expiry_date: string;
+    original_url_length: number;
+    edit_method: "manual" | "bulk_edit" | "api";
+    fields_modified: string[];
     success: boolean;
   }) => void;
   /** Track URL click conversion */
@@ -128,6 +141,33 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
       };
 
       posthogClient.captureEvent("url_created", eventProperties);
+    },
+    [getBaseProperties]
+  );
+
+  /**
+   * Track URL edit conversion
+   * @param properties - URL edit specific properties
+   */
+  const trackUrlEdit = useCallback(
+    (properties: {
+      url_id: number;
+      url_title: string;
+      has_custom_code: boolean;
+      custom_code_length: number;
+      expiry_date: string;
+      original_url_length: number;
+      edit_method: "manual" | "bulk_edit" | "api";
+      fields_modified: string[];
+      success: boolean;
+    }) => {
+      const eventProperties: PostHogEventProperties = {
+        ...getBaseProperties(),
+        ...properties,
+        fields_modified: properties.fields_modified.join(","), // Convert array to string for PostHog
+      };
+
+      posthogClient.captureEvent("url_edited", eventProperties);
     },
     [getBaseProperties]
   );
@@ -245,6 +285,7 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
 
   return {
     trackUrlCreation,
+    trackUrlEdit,
     trackUrlClick,
     trackQrCodeGeneration,
     trackConversion,
