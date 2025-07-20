@@ -8,7 +8,7 @@
  */
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
-import { QrCodeGenerationProperties } from "@/interfaces/conversionTracking";
+import { QrCodeGenerationProperties } from "@/interfaces/conversionTrackings/QrCodeGenerationProperties";
 import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackQrCodeGeneration = () => {
