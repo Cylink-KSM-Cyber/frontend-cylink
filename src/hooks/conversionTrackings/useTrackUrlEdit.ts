@@ -9,6 +9,7 @@
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
 import { UrlEditProperties } from "@/interfaces/conversionTracking";
+import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackUrlEdit = () => {
   const trackUrlEdit = useCallback((properties: UrlEditProperties) => {
@@ -25,15 +26,7 @@ export const useTrackUrlEdit = () => {
       return;
     }
     const eventProperties: PostHogEventProperties = {
-      timestamp: new Date().toISOString(),
-      source:
-        typeof window !== "undefined" ? window.location.pathname : "server",
-      user_agent:
-        typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-      screen_resolution:
-        typeof screen !== "undefined"
-          ? `${screen.width}x${screen.height}`
-          : undefined,
+      ...getBaseEventProperties(),
       ...properties,
       fields_modified: properties.fields_modified.join(","),
     };

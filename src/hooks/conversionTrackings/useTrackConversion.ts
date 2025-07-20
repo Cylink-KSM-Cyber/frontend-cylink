@@ -9,6 +9,7 @@
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
 import { ConversionGoalType } from "@/types/conversionTracking";
+import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackConversion = () => {
   const trackConversion = useCallback(
@@ -18,15 +19,7 @@ export const useTrackConversion = () => {
         return;
       }
       const eventProperties = {
-        timestamp: new Date().toISOString(),
-        source:
-          typeof window !== "undefined" ? window.location.pathname : "server",
-        user_agent:
-          typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-        screen_resolution:
-          typeof screen !== "undefined"
-            ? `${screen.width}x${screen.height}`
-            : undefined,
+        ...getBaseEventProperties(),
         ...properties,
       };
       posthogClient.captureEvent(goalType, eventProperties);

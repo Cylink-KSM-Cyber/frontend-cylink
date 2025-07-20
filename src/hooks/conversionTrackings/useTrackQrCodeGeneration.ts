@@ -9,6 +9,7 @@
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
 import { QrCodeGenerationProperties } from "@/interfaces/conversionTracking";
+import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackQrCodeGeneration = () => {
   const trackQrCodeGeneration = useCallback(
@@ -27,15 +28,7 @@ export const useTrackQrCodeGeneration = () => {
         return;
       }
       const eventProperties: PostHogEventProperties = {
-        timestamp: new Date().toISOString(),
-        source:
-          typeof window !== "undefined" ? window.location.pathname : "server",
-        user_agent:
-          typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-        screen_resolution:
-          typeof screen !== "undefined"
-            ? `${screen.width}x${screen.height}`
-            : undefined,
+        ...getBaseEventProperties(),
         url_id: properties.url_id,
         customization_options: JSON.stringify(properties.customization_options),
         downloaded: properties.downloaded,

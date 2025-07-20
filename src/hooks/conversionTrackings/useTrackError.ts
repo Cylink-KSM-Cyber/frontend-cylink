@@ -8,6 +8,7 @@
  */
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
+import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackError = () => {
   const trackError = useCallback(
@@ -33,15 +34,7 @@ export const useTrackError = () => {
         return;
       }
       const eventProperties = {
-        timestamp: new Date().toISOString(),
-        source:
-          typeof window !== "undefined" ? window.location.pathname : "server",
-        user_agent:
-          typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-        screen_resolution:
-          typeof screen !== "undefined"
-            ? `${screen.width}x${screen.height}`
-            : undefined,
+        ...getBaseEventProperties(),
         error_type: errorType,
         error_message: errorMessage,
         ...properties,

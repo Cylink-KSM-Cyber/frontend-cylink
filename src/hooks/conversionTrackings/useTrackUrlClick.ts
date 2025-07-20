@@ -9,6 +9,7 @@
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
 import { UrlClickProperties } from "@/interfaces/conversionTracking";
+import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackUrlClick = () => {
   const trackUrlClick = useCallback((properties: UrlClickProperties) => {
@@ -17,15 +18,7 @@ export const useTrackUrlClick = () => {
       return;
     }
     const eventProperties: PostHogEventProperties = {
-      timestamp: new Date().toISOString(),
-      source:
-        typeof window !== "undefined" ? window.location.pathname : "server",
-      user_agent:
-        typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-      screen_resolution:
-        typeof screen !== "undefined"
-          ? `${screen.width}x${screen.height}`
-          : undefined,
+      ...getBaseEventProperties(),
       ...properties,
     };
     posthogClient.captureEvent("url_clicked", eventProperties);

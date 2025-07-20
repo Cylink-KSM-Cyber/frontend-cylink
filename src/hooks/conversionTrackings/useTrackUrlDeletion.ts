@@ -9,6 +9,7 @@
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
 import { UrlDeletionProperties } from "@/interfaces/conversionTracking";
+import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackUrlDeletion = () => {
   const trackUrlDeletion = useCallback((properties: UrlDeletionProperties) => {
@@ -31,15 +32,7 @@ export const useTrackUrlDeletion = () => {
       deletion_reason: properties.deletion_reason?.substring(0, 200),
     };
     const eventProperties: PostHogEventProperties = {
-      timestamp: new Date().toISOString(),
-      source:
-        typeof window !== "undefined" ? window.location.pathname : "server",
-      user_agent:
-        typeof navigator !== "undefined" ? navigator.userAgent : undefined,
-      screen_resolution:
-        typeof screen !== "undefined"
-          ? `${screen.width}x${screen.height}`
-          : undefined,
+      ...getBaseEventProperties(),
       ...sanitizedProperties,
     };
     posthogClient.captureEvent("url_deleted", eventProperties);
