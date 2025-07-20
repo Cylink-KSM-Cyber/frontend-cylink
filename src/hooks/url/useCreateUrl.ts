@@ -1,11 +1,23 @@
 import { CreateUrlFormData, CreateUrlFormResponse } from "@/interfaces/url";
 import Cookies from "js-cookie";
 import { useState } from "react";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
+/**
+ * URL Creation Hook
+ * @description Custom hook for creating URLs with PostHog conversion tracking
+ * @returns URL creation functions and state
+ */
 export const useCreateUrl = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { trackUrlCreation } = useConversionTracking();
 
+  /**
+   * Create a new URL with PostHog conversion tracking
+   * @param formData - URL creation form data
+   * @returns Promise with the created URL response
+   */
   const createUrl = async (formData: CreateUrlFormData) => {
     setIsCreating(true);
     setError(null);
@@ -37,6 +49,19 @@ export const useCreateUrl = () => {
       }
 
       const responseData = await response.json();
+
+      // Track URL creation conversion goal in PostHog
+      trackUrlCreation({
+        url_id: responseData.data.id,
+        url_title: formData.title,
+        has_custom_code: !!formData.customCode,
+        custom_code_length: formData.customCode?.length || 0,
+        expiry_date: formData.expiryDate,
+        original_url_length: formData.originalUrl.length,
+        creation_method: "manual", // or 'qr_code_flow' if called from QR creation
+        success: true,
+      });
+
       return responseData as CreateUrlFormResponse;
     } catch (err) {
       console.error("Error in createUrl:", err);
