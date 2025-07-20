@@ -236,6 +236,9 @@ async function recordUrlClick(
     const endpoint = `/api/v1/urls/click/${shortCode}`;
     await serverSideApiGet(endpoint, token);
     logger.urlShortener.debug(`Click recorded: ${shortCode}`);
+
+    // Note: PostHog tracking is handled client-side in shortUrlUtils.ts
+    // Server-side middleware cannot access browser APIs for PostHog tracking
   } catch {
     // Don't throw - we don't want to block the main redirect flow
     logger.urlShortener.warn(`Failed to record click: ${shortCode}`);
