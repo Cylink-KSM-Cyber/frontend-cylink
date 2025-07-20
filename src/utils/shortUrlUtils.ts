@@ -270,8 +270,68 @@ async function recordUrlClick(shortCode: string): Promise<void> {
     const endpoint = `/api/v1/urls/click/${shortCode}`;
     await get(endpoint);
     logger.urlShortener.debug(`Click recorded for ${shortCode}`);
+
+    // Track URL click conversion in PostHog (client-side only)
+    if (typeof window !== "undefined") {
+      try {
+        const posthogClient = (await import("@/utils/posthogClient")).default;
+        posthogClient.captureEvent("url_clicked", {
+          short_code: shortCode,
+          timestamp: new Date().toISOString(),
+          source: window.location.pathname,
+          user_agent: navigator.userAgent,
+          screen_resolution: `${screen.width}x${screen.height}`,
+          referrer: document.referrer || undefined,
+          device_type: getDeviceType(),
+          location: await getGeographicLocation(),
+        });
+      } catch (posthogError) {
+        logger.urlShortener.warn(
+          `Failed to track PostHog event for ${shortCode}`,
+          posthogError
+        );
+      }
+    }
   } catch (error) {
     logger.urlShortener.warn(`Failed to record click for ${shortCode}`, error);
     // Don't throw - we don't want to block the main redirect flow
+  }
+}
+
+/**
+ * Get device type based on user agent
+ * @returns Device type string
+ */
+function getDeviceType(): "mobile" | "desktop" | "tablet" | "other" {
+  if (typeof window === "undefined") return "other";
+
+  const userAgent = navigator.userAgent.toLowerCase();
+
+  if (/mobile|android|iphone|ipad|phone/.test(userAgent)) {
+    return "mobile";
+  }
+
+  if (/tablet|ipad/.test(userAgent)) {
+    return "tablet";
+  }
+
+  return "desktop";
+}
+
+/**
+ * Get geographic location if available
+ * @returns Promise with location string or undefined
+ */
+async function getGeographicLocation(): Promise<string | undefined> {
+  if (typeof window === "undefined") return undefined;
+
+  try {
+    // Try to get location from IP geolocation (if available)
+    const response = await fetch("https://ipapi.co/json/");
+    const data = await response.json();
+    return `${data.city}, ${data.country_name}`;
+  } catch {
+    // Fallback to timezone as location indicator
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 }
