@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Url, UrlFilter } from "@/interfaces/url";
 import { fetchUrls, updateUrlStatusById, deleteUrlById } from "@/services/url";
 import { useToast } from "@/contexts/ToastContext";
-import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 /**
  * Custom hook for fetching and managing URLs
@@ -31,7 +30,6 @@ export const useUrls = (
     total_pages: 0,
   });
   const { showToast } = useToast();
-  const { trackUrlDeletion } = useConversionTracking();
 
   /**
    * Fetch URLs based on current filter
@@ -151,23 +149,7 @@ export const useUrls = (
   const deleteUrl = useCallback(
     async (id: number): Promise<boolean> => {
       try {
-        // Find the URL data before deletion for tracking
-        const urlToDelete = urls.find((url) => url.id === id);
-
         const response = await deleteUrlById(id);
-
-        // Track successful URL deletion
-        if (urlToDelete) {
-          trackUrlDeletion({
-            url_id: urlToDelete.id,
-            url_title: urlToDelete.title || "Untitled",
-            short_code: urlToDelete.short_url,
-            original_url_length: urlToDelete.original_url.length,
-            total_clicks: urlToDelete.clicks,
-            deletion_method: "manual",
-            success: true,
-          });
-        }
 
         // Display success toast
         showToast(
@@ -185,27 +167,12 @@ export const useUrls = (
 
         setError(err instanceof Error ? err : new Error(errorMessage));
 
-        // Track failed deletion
-        const urlToDelete = urls.find((url) => url.id === id);
-        if (urlToDelete) {
-          trackUrlDeletion({
-            url_id: urlToDelete.id,
-            url_title: urlToDelete.title || "Untitled",
-            short_code: urlToDelete.short_url,
-            original_url_length: urlToDelete.original_url.length,
-            total_clicks: urlToDelete.clicks,
-            deletion_method: "manual",
-            deletion_reason: errorMessage,
-            success: false,
-          });
-        }
-
         // Display error toast
         showToast(errorMessage, "error", 4000);
         return false;
       }
     },
-    [showToast, fetchUrlData, urls, trackUrlDeletion]
+    [showToast, fetchUrlData]
   );
 
   return {
