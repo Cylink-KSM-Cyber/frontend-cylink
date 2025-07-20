@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import Logo from "@/components/atoms/Logo";
 import LoginForm from "@/components/molecules/LoginForm";
+import Link from "next/link";
 
 /**
  * Login container properties
@@ -64,13 +65,13 @@ const LoginContainer: React.FC<LoginContainerProps> = ({ className = "" }) => {
       >
         <div className="text-center text-xs text-gray-500">
           By signing in, you agree to our{" "}
-          <a href="/terms" className="text-black hover:underline">
+          <Link href="/terms" className="text-black hover:underline">
             Terms of Service
-          </a>{" "}
+          </Link>{" "}
           and{" "}
-          <a href="/privacy" className="text-black hover:underline">
+          <Link href="/privacy" className="text-black hover:underline">
             Privacy Policy
-          </a>
+          </Link>
         </div>
       </motion.div>
     </motion.div>

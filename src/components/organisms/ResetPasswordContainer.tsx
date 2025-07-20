@@ -7,6 +7,7 @@ import LoadingSpinner from "@/components/atoms/LoadingSpinner";
 import ResetPasswordForm from "@/components/molecules/ResetPasswordForm";
 import TokenValidationError from "@/components/molecules/TokenValidationError";
 import useResetPassword from "@/hooks/useResetPassword";
+import Link from "next/link";
 
 /**
  * Reset password container properties
@@ -95,9 +96,12 @@ const ResetPasswordContainer: React.FC<ResetPasswordContainerProps> = ({
         >
           <div className="text-center text-xs text-gray-500">
             Remember your password?{" "}
-            <a href="/login" className="text-black hover:underline font-medium">
+            <Link
+              href="/login"
+              className="text-black hover:underline font-medium"
+            >
               Sign in
-            </a>
+            </Link>
           </div>
         </motion.div>
       )}
