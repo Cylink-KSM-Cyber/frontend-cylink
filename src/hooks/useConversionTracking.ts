@@ -46,7 +46,7 @@ export interface UseConversionTrackingReturn {
   }) => void;
   /** Track URL click conversion */
   trackUrlClick: (properties: {
-    url_id: number;
+    url_id?: number;
     short_code: string;
     referrer?: string;
     user_agent?: string;
@@ -138,7 +138,7 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackUrlClick = useCallback(
     (properties: {
-      url_id: number;
+      url_id?: number;
       short_code: string;
       referrer?: string;
       user_agent?: string;
