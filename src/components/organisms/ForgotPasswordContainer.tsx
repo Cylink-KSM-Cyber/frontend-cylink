@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import Logo from "@/components/atoms/Logo";
 import ForgotPasswordForm from "@/components/molecules/ForgotPasswordForm";
+import Link from "next/link";
 
 /**
  * Forgot password container properties
@@ -66,9 +67,12 @@ const ForgotPasswordContainer: React.FC<ForgotPasswordContainerProps> = ({
       >
         <div className="text-center text-xs text-gray-500">
           Remember your password?{" "}
-          <a href="/login" className="text-black hover:underline font-medium">
+          <Link
+            href="/login"
+            className="text-black hover:underline font-medium"
+          >
             Sign in
-          </a>
+          </Link>
         </div>
       </motion.div>
     </motion.div>
