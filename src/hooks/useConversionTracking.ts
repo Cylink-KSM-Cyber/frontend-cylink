@@ -11,90 +11,14 @@
 
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
-
-/**
- * Conversion Goal Types
- * @description Defines the available conversion goal types for tracking
- */
-export type ConversionGoalType =
-  | "url_created"
-  | "url_edited"
-  | "url_clicked"
-  | "qr_code_generated"
-  | "user_registered"
-  | "user_logged_in"
-  | "user_logged_out"
-  | "feature_used"
-  | "settings_updated"
-  | "search_performed"
-  | "error_occurred";
-
-/**
- * Conversion Tracking Hook Return Type
- * @description Return type for the useConversionTracking hook
- */
-export interface UseConversionTrackingReturn {
-  /** Track URL creation conversion */
-  trackUrlCreation: (properties: {
-    url_id: number;
-    url_title: string;
-    has_custom_code: boolean;
-    custom_code_length: number;
-    expiry_date: string;
-    original_url_length: number;
-    creation_method: "manual" | "qr_code_flow" | "api" | "bulk_import";
-    success: boolean;
-  }) => void;
-  /** Track URL edit conversion */
-  trackUrlEdit: (properties: {
-    url_id: number;
-    url_title: string;
-    has_custom_code: boolean;
-    custom_code_length: number;
-    expiry_date: string;
-    original_url_length: number;
-    edit_method: "manual" | "bulk_edit" | "api";
-    fields_modified: string[];
-    success: boolean;
-  }) => void;
-  /** Track URL click conversion */
-  trackUrlClick: (properties: {
-    url_id?: number;
-    short_code: string;
-    referrer?: string;
-    user_agent?: string;
-    location?: string;
-    device_type?: "mobile" | "desktop" | "tablet" | "other";
-  }) => void;
-  /** Track QR code generation conversion */
-  trackQrCodeGeneration: (properties: {
-    url_id: number;
-    customization_options: {
-      foreground_color?: string;
-      background_color?: string;
-      size?: number;
-      format?: "png" | "svg" | "jpeg";
-    };
-    downloaded: boolean;
-    shared: boolean;
-  }) => void;
-  /** Track generic conversion goal */
-  trackConversion: (
-    goalType: ConversionGoalType,
-    properties?: PostHogEventProperties
-  ) => void;
-  /** Track feature usage */
-  trackFeatureUsage: (
-    featureName: string,
-    properties?: PostHogEventProperties
-  ) => void;
-  /** Track error occurrence */
-  trackError: (
-    errorType: string,
-    errorMessage: string,
-    properties?: PostHogEventProperties
-  ) => void;
-}
+import { ConversionGoalType } from "@/types/conversionTracking";
+import {
+  UseConversionTrackingReturn,
+  UrlCreationProperties,
+  UrlEditProperties,
+  UrlClickProperties,
+  QrCodeGenerationProperties,
+} from "@/interfaces/conversionTracking";
 
 /**
  * Custom hook for PostHog conversion tracking
@@ -125,16 +49,18 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - URL creation specific properties
    */
   const trackUrlCreation = useCallback(
-    (properties: {
-      url_id: number;
-      url_title: string;
-      has_custom_code: boolean;
-      custom_code_length: number;
-      expiry_date: string;
-      original_url_length: number;
-      creation_method: "manual" | "qr_code_flow" | "api" | "bulk_import";
-      success: boolean;
-    }) => {
+    (properties: UrlCreationProperties) => {
+      // Validate critical properties
+      if (!properties.url_id || properties.url_id <= 0) {
+        console.warn("Invalid url_id provided to trackUrlCreation");
+        return;
+      }
+
+      if (!properties.url_title || properties.url_title.trim().length === 0) {
+        console.warn("Invalid url_title provided to trackUrlCreation");
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -150,17 +76,23 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - URL edit specific properties
    */
   const trackUrlEdit = useCallback(
-    (properties: {
-      url_id: number;
-      url_title: string;
-      has_custom_code: boolean;
-      custom_code_length: number;
-      expiry_date: string;
-      original_url_length: number;
-      edit_method: "manual" | "bulk_edit" | "api";
-      fields_modified: string[];
-      success: boolean;
-    }) => {
+    (properties: UrlEditProperties) => {
+      // Validate critical properties
+      if (!properties.url_id || properties.url_id <= 0) {
+        console.warn("Invalid url_id provided to trackUrlEdit");
+        return;
+      }
+
+      if (!properties.url_title || properties.url_title.trim().length === 0) {
+        console.warn("Invalid url_title provided to trackUrlEdit");
+        return;
+      }
+
+      if (!Array.isArray(properties.fields_modified)) {
+        console.warn("Invalid fields_modified provided to trackUrlEdit");
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -177,14 +109,13 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - URL click specific properties
    */
   const trackUrlClick = useCallback(
-    (properties: {
-      url_id?: number;
-      short_code: string;
-      referrer?: string;
-      user_agent?: string;
-      location?: string;
-      device_type?: "mobile" | "desktop" | "tablet" | "other";
-    }) => {
+    (properties: UrlClickProperties) => {
+      // Validate critical properties
+      if (!properties.short_code || properties.short_code.trim().length === 0) {
+        console.warn("Invalid short_code provided to trackUrlClick");
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -200,17 +131,23 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    * @param properties - QR code generation specific properties
    */
   const trackQrCodeGeneration = useCallback(
-    (properties: {
-      url_id: number;
-      customization_options: {
-        foreground_color?: string;
-        background_color?: string;
-        size?: number;
-        format?: "png" | "svg" | "jpeg";
-      };
-      downloaded: boolean;
-      shared: boolean;
-    }) => {
+    (properties: QrCodeGenerationProperties) => {
+      // Validate critical properties
+      if (!properties.url_id || properties.url_id <= 0) {
+        console.warn("Invalid url_id provided to trackQrCodeGeneration");
+        return;
+      }
+
+      if (
+        !properties.customization_options ||
+        typeof properties.customization_options !== "object"
+      ) {
+        console.warn(
+          "Invalid customization_options provided to trackQrCodeGeneration"
+        );
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         url_id: properties.url_id,
@@ -231,6 +168,12 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackConversion = useCallback(
     (goalType: ConversionGoalType, properties: PostHogEventProperties = {}) => {
+      // Validate goalType
+      if (!goalType || typeof goalType !== "string") {
+        console.warn("Invalid goalType provided to trackConversion");
+        return;
+      }
+
       const eventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -248,6 +191,16 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackFeatureUsage = useCallback(
     (featureName: string, properties: PostHogEventProperties = {}) => {
+      // Validate featureName
+      if (
+        !featureName ||
+        typeof featureName !== "string" ||
+        featureName.trim().length === 0
+      ) {
+        console.warn("Invalid featureName provided to trackFeatureUsage");
+        return;
+      }
+
       const eventProperties = {
         ...getBaseProperties(),
         feature_name: featureName,
@@ -271,6 +224,25 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
       errorMessage: string,
       properties: PostHogEventProperties = {}
     ) => {
+      // Validate error parameters
+      if (
+        !errorType ||
+        typeof errorType !== "string" ||
+        errorType.trim().length === 0
+      ) {
+        console.warn("Invalid errorType provided to trackError");
+        return;
+      }
+
+      if (
+        !errorMessage ||
+        typeof errorMessage !== "string" ||
+        errorMessage.trim().length === 0
+      ) {
+        console.warn("Invalid errorMessage provided to trackError");
+        return;
+      }
+
       const eventProperties = {
         ...getBaseProperties(),
         error_type: errorType,
