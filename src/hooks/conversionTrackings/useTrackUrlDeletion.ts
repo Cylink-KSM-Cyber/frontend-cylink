@@ -8,7 +8,7 @@
  */
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
-import { UrlDeletionProperties } from "@/interfaces/conversionTracking";
+import { UrlDeletionProperties } from "@/interfaces/conversionTrackings/UrlDeletionProperties";
 import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackUrlDeletion = () => {

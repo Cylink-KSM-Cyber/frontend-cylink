@@ -8,7 +8,7 @@
  */
 import { useCallback } from "react";
 import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
-import { UrlClickProperties } from "@/interfaces/conversionTracking";
+import { UrlClickProperties } from "@/interfaces/conversionTrackings/UrlClickProperties";
 import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
 
 export const useTrackUrlClick = () => {
