@@ -8,6 +8,7 @@ import UrlSelectionStep from "./UrlSelectionStep";
 import QrCodeCustomizationStep from "./QrCodeCustomizationStep";
 import QrCodeModalFooter from "./QrCodeModalFooter";
 import { Url } from "@/interfaces/url";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 /**
  * Props for QrCodeCreator component
@@ -54,6 +55,7 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
 }) => {
   // Use the custom hook to manage QR code creation
   const qrCodeCreation = useQrCodeCreation(createUrl, onCreated);
+  const { trackQrCodeGeneration } = useConversionTracking();
 
   // Track if modal has been initialized
   const hasInitializedRef = useRef(false);
@@ -116,6 +118,30 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
     lastStepRef.current = currentStep;
   }, [currentStep, loadColors]);
 
+  // Track QR code generation when successful
+  useEffect(() => {
+    if (generatedQrUrl && selectedUrlForQrCode) {
+      trackQrCodeGeneration({
+        url_id: selectedUrlForQrCode.id,
+        customization_options: {
+          foreground_color: selectedForegroundColor?.hex,
+          background_color: selectedBackgroundColor?.hex,
+          size: qrSize,
+          format: "png",
+        },
+        downloaded: false,
+        shared: false,
+      });
+    }
+  }, [
+    generatedQrUrl,
+    selectedUrlForQrCode,
+    selectedForegroundColor,
+    selectedBackgroundColor,
+    qrSize,
+    trackQrCodeGeneration,
+  ]);
+
   // Handle modal close
   const handleClose = () => {
     resetState();
@@ -138,6 +164,21 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+
+    // Track QR code download
+    if (selectedUrlForQrCode) {
+      trackQrCodeGeneration({
+        url_id: selectedUrlForQrCode.id,
+        customization_options: {
+          foreground_color: selectedForegroundColor?.hex,
+          background_color: selectedBackgroundColor?.hex,
+          size: qrSize,
+          format: "png",
+        },
+        downloaded: true,
+        shared: false,
+      });
+    }
   };
 
   // Handle Share QR Code button click
@@ -159,6 +200,21 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
       // Fallback to clipboard
       navigator.clipboard.writeText(previewUrl);
       alert("URL copied to clipboard!");
+    }
+
+    // Track QR code share
+    if (selectedUrlForQrCode) {
+      trackQrCodeGeneration({
+        url_id: selectedUrlForQrCode.id,
+        customization_options: {
+          foreground_color: selectedForegroundColor?.hex,
+          background_color: selectedBackgroundColor?.hex,
+          size: qrSize,
+          format: "png",
+        },
+        downloaded: false,
+        shared: true,
+      });
     }
   };
 
