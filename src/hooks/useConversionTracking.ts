@@ -46,8 +46,34 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
   }, []);
 
   /**
-   * Track URL creation conversion
+   * Track URL creation conversion goal in PostHog
+   * @description Captures URL creation events for analytics and conversion tracking.
+   * Tracks successful URL creations with relevant metadata including creation method
+   * and URL characteristics.
+   *
    * @param properties - URL creation specific properties
+   * @param properties.url_id - Unique identifier of the created URL
+   * @param properties.url_title - Title or name of the created URL
+   * @param properties.has_custom_code - Whether a custom short code was used
+   * @param properties.custom_code_length - Length of the custom code (0 if not used)
+   * @param properties.expiry_date - Expiry date of the URL
+   * @param properties.original_url_length - Length of the original URL
+   * @param properties.creation_method - Method used for creation (manual/qr_code_flow/api/bulk_import)
+   * @param properties.success - Whether the creation was successful
+   *
+   * @example
+   * ```typescript
+   * trackUrlCreation({
+   *   url_id: 123,
+   *   url_title: "My URL",
+   *   has_custom_code: true,
+   *   custom_code_length: 6,
+   *   expiry_date: "2024-12-31",
+   *   original_url_length: 150,
+   *   creation_method: "manual",
+   *   success: true
+   * });
+   * ```
    */
   const trackUrlCreation = useCallback(
     (properties: UrlCreationProperties) => {
@@ -73,8 +99,36 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
   );
 
   /**
-   * Track URL edit conversion
+   * Track URL edit conversion goal in PostHog
+   * @description Captures URL edit events for analytics and conversion tracking.
+   * Tracks successful URL modifications with details about which fields were changed
+   * and the edit method used.
+   *
    * @param properties - URL edit specific properties
+   * @param properties.url_id - Unique identifier of the edited URL
+   * @param properties.url_title - Title or name of the edited URL
+   * @param properties.has_custom_code - Whether a custom short code was used
+   * @param properties.custom_code_length - Length of the custom code (0 if not used)
+   * @param properties.expiry_date - Expiry date of the URL
+   * @param properties.original_url_length - Length of the original URL
+   * @param properties.edit_method - Method used for editing (manual/bulk_edit/api)
+   * @param properties.fields_modified - Array of field names that were modified
+   * @param properties.success - Whether the edit was successful
+   *
+   * @example
+   * ```typescript
+   * trackUrlEdit({
+   *   url_id: 123,
+   *   url_title: "Updated URL",
+   *   has_custom_code: false,
+   *   custom_code_length: 0,
+   *   expiry_date: "2024-12-31",
+   *   original_url_length: 150,
+   *   edit_method: "manual",
+   *   fields_modified: ["title", "expiry_date"],
+   *   success: true
+   * });
+   * ```
    */
   const trackUrlEdit = useCallback(
     (properties: UrlEditProperties) => {
@@ -106,8 +160,33 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
   );
 
   /**
-   * Track URL deletion conversion
+   * Track URL deletion conversion goal in PostHog
+   * @description Captures URL deletion events for analytics and conversion tracking.
+   * Tracks both successful and failed deletions with relevant metadata.
+   * Includes data sanitization to prevent sensitive information exposure.
+   *
    * @param properties - URL deletion specific properties
+   * @param properties.url_id - Unique identifier of the deleted URL
+   * @param properties.url_title - Title or name of the deleted URL (max 100 chars)
+   * @param properties.short_code - Short code of the deleted URL (max 50 chars)
+   * @param properties.original_url_length - Length of the original URL
+   * @param properties.total_clicks - Total clicks before deletion
+   * @param properties.deletion_method - Method used for deletion (manual/bulk/api/expired)
+   * @param properties.deletion_reason - Optional reason for deletion (max 200 chars, for failed deletions)
+   * @param properties.success - Whether the deletion was successful
+   *
+   * @example
+   * ```typescript
+   * trackUrlDeletion({
+   *   url_id: 123,
+   *   url_title: "My URL",
+   *   short_code: "abc123",
+   *   original_url_length: 150,
+   *   total_clicks: 42,
+   *   deletion_method: "manual",
+   *   success: true
+   * });
+   * ```
    */
   const trackUrlDeletion = useCallback(
     (properties: UrlDeletionProperties) => {
@@ -127,9 +206,17 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
         return;
       }
 
+      // Sanitize sensitive data to prevent information exposure
+      const sanitizedProperties = {
+        ...properties,
+        url_title: properties.url_title?.substring(0, 100), // Limit length
+        short_code: properties.short_code?.substring(0, 50), // Limit length
+        deletion_reason: properties.deletion_reason?.substring(0, 200), // Limit length
+      };
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
-        ...properties,
+        ...sanitizedProperties,
       };
 
       posthogClient.captureEvent("url_deleted", eventProperties);
@@ -138,8 +225,29 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
   );
 
   /**
-   * Track URL click conversion
+   * Track URL click conversion goal in PostHog
+   * @description Captures URL click events for analytics and conversion tracking.
+   * Tracks user interactions with shortened URLs including device and location data
+   * when available.
+   *
    * @param properties - URL click specific properties
+   * @param properties.url_id - Optional unique identifier of the clicked URL
+   * @param properties.short_code - Short code of the clicked URL
+   * @param properties.referrer - Optional referrer URL that led to the click
+   * @param properties.user_agent - Optional user agent string
+   * @param properties.location - Optional geographic location of the click
+   * @param properties.device_type - Optional device type (mobile/desktop/tablet/other)
+   *
+   * @example
+   * ```typescript
+   * trackUrlClick({
+   *   url_id: 123,
+   *   short_code: "abc123",
+   *   referrer: "https://google.com",
+   *   device_type: "mobile",
+   *   location: "US"
+   * });
+   * ```
    */
   const trackUrlClick = useCallback(
     (properties: UrlClickProperties) => {
@@ -160,8 +268,34 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
   );
 
   /**
-   * Track QR code generation conversion
+   * Track QR code generation conversion goal in PostHog
+   * @description Captures QR code generation events for analytics and conversion tracking.
+   * Tracks successful QR code creations with customization options and usage data.
+   *
    * @param properties - QR code generation specific properties
+   * @param properties.url_id - Unique identifier of the URL associated with the QR code
+   * @param properties.customization_options - QR code customization settings
+   * @param properties.customization_options.foreground_color - Optional foreground color
+   * @param properties.customization_options.background_color - Optional background color
+   * @param properties.customization_options.size - Optional QR code size
+   * @param properties.customization_options.format - Optional output format (png/svg/jpeg)
+   * @param properties.downloaded - Whether the QR code was downloaded
+   * @param properties.shared - Whether the QR code was shared
+   *
+   * @example
+   * ```typescript
+   * trackQrCodeGeneration({
+   *   url_id: 123,
+   *   customization_options: {
+   *     foreground_color: "#000000",
+   *     background_color: "#FFFFFF",
+   *     size: 300,
+   *     format: "png"
+   *   },
+   *   downloaded: true,
+   *   shared: false
+   * });
+   * ```
    */
   const trackQrCodeGeneration = useCallback(
     (properties: QrCodeGenerationProperties) => {
