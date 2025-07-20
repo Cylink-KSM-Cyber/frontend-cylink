@@ -156,7 +156,7 @@ export default function UrlsPage() {
 
   // Confirm URL deletion
   const confirmDeleteUrl = async (url: Url) => {
-    const success = await deleteUrl(url.id);
+    const success = await deleteUrl(url.id, url);
 
     if (success) {
       // Close modal

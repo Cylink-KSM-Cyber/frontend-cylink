@@ -1,6 +1,7 @@
 import { EditUrlFormData, EditUrlFormResponse } from "@/interfaces/url";
 import Cookies from "js-cookie";
 import { useState } from "react";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 /**
  * Custom hook for editing URL entries
@@ -9,6 +10,7 @@ import { useState } from "react";
 export const useEditUrl = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { trackUrlEdit } = useConversionTracking();
 
   /**
    * Edit a URL entry
@@ -59,12 +61,62 @@ export const useEditUrl = () => {
       }
 
       const responseData = await response.json();
+
+      // Track URL edit conversion goal in PostHog
+      const originalUrl =
+        responseData.data?.original_url || formData.originalUrl;
+      const fieldsModified = [];
+
+      // Determine which fields were modified
+      if (formData.title !== responseData.data?.title)
+        fieldsModified.push("title");
+      if (formData.originalUrl !== originalUrl)
+        fieldsModified.push("original_url");
+      if (formData.customCode !== responseData.data?.short_code)
+        fieldsModified.push("custom_code");
+      if (formData.expiryDate !== responseData.data?.expiry_date)
+        fieldsModified.push("expiry_date");
+
+      trackUrlEdit({
+        url_id: id,
+        url_title: formData.title || responseData.data?.title || "",
+        has_custom_code: !!(
+          formData.customCode || responseData.data?.short_code
+        ),
+        custom_code_length: (
+          formData.customCode ||
+          responseData.data?.short_code ||
+          ""
+        ).length,
+        expiry_date:
+          formData.expiryDate || responseData.data?.expiry_date || "",
+        original_url_length: originalUrl.length,
+        edit_method: "manual",
+        fields_modified:
+          fieldsModified.length > 0 ? fieldsModified : ["unknown"],
+        success: true,
+      });
+
       return responseData as EditUrlFormResponse;
     } catch (err) {
       console.error("Error in URL edit operation:", err);
       const error =
         err instanceof Error ? err : new Error("Failed to edit URL");
       setError(error);
+
+      // Track failed URL edit conversion goal in PostHog
+      trackUrlEdit({
+        url_id: id,
+        url_title: formData.title || "",
+        has_custom_code: !!formData.customCode,
+        custom_code_length: formData.customCode?.length || 0,
+        expiry_date: formData.expiryDate || "",
+        original_url_length: formData.originalUrl.length,
+        edit_method: "manual",
+        fields_modified: ["unknown"],
+        success: false,
+      });
+
       throw error;
     } finally {
       setIsEditing(false);
