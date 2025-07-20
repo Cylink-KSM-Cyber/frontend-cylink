@@ -2,6 +2,8 @@ import { useState } from "react";
 import { get, getPublic } from "@/services/api";
 import { AxiosError } from "axios";
 import logger from "@/utils/logger";
+import { getDeviceType } from "@/utils/deviceDetection";
+import GeolocationCache from "@/utils/geolocation";
 
 /**
  * Response interface for short URL lookup
@@ -166,6 +168,16 @@ export const useShortUrl = () => {
    * @param shortCode The short code that was clicked
    */
   const recordUrlClick = async (shortCode: string): Promise<void> => {
+    // Validate input
+    if (
+      !shortCode ||
+      typeof shortCode !== "string" ||
+      shortCode.trim().length === 0
+    ) {
+      logger.urlShortener.warn("Invalid shortCode provided to recordUrlClick");
+      return;
+    }
+
     try {
       const endpoint = `/api/v1/urls/click/${shortCode}`;
       await get(endpoint);
@@ -174,6 +186,8 @@ export const useShortUrl = () => {
       // Track URL click conversion in PostHog
       try {
         const posthogClient = (await import("@/utils/posthogClient")).default;
+        const location = await GeolocationCache.getLocation();
+
         posthogClient.captureEvent("url_clicked", {
           short_code: shortCode,
           timestamp: new Date().toISOString(),
@@ -182,7 +196,7 @@ export const useShortUrl = () => {
           screen_resolution: `${screen.width}x${screen.height}`,
           referrer: document.referrer || undefined,
           device_type: getDeviceType(),
-          location: await getGeographicLocation(),
+          location: location,
         });
       } catch (posthogError) {
         logger.urlShortener.warn(
@@ -196,40 +210,6 @@ export const useShortUrl = () => {
         error
       );
       // Don't throw - we don't want to block the main redirect flow
-    }
-  };
-
-  /**
-   * Get device type based on user agent
-   * @returns Device type string
-   */
-  const getDeviceType = (): "mobile" | "desktop" | "tablet" | "other" => {
-    const userAgent = navigator.userAgent.toLowerCase();
-
-    if (/mobile|android|iphone|ipad|phone/.test(userAgent)) {
-      return "mobile";
-    }
-
-    if (/tablet|ipad/.test(userAgent)) {
-      return "tablet";
-    }
-
-    return "desktop";
-  };
-
-  /**
-   * Get geographic location if available
-   * @returns Promise with location string or undefined
-   */
-  const getGeographicLocation = async (): Promise<string | undefined> => {
-    try {
-      // Try to get location from IP geolocation (if available)
-      const response = await fetch("https://ipapi.co/json/");
-      const data = await response.json();
-      return `${data.city}, ${data.country_name}`;
-    } catch {
-      // Fallback to timezone as location indicator
-      return Intl.DateTimeFormat().resolvedOptions().timeZone;
     }
   };
 
