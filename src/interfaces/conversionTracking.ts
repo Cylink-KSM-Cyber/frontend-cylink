@@ -9,13 +9,7 @@
  */
 
 import { PostHogEventProperties } from "@/utils/posthogClient";
-import {
-  ConversionGoalType,
-  UrlCreationMethod,
-  UrlEditMethod,
-  DeviceType,
-  QrCodeFormat,
-} from "@/types/conversionTracking";
+import * as ConversionTrackingTypes from "@/types/conversionTracking";
 
 /**
  * URL Creation Tracking Properties
@@ -28,7 +22,7 @@ export interface UrlCreationProperties {
   custom_code_length: number;
   expiry_date: string;
   original_url_length: number;
-  creation_method: UrlCreationMethod;
+  creation_method: ConversionTrackingTypes.UrlCreationMethod;
   success: boolean;
 }
 
@@ -43,7 +37,7 @@ export interface UrlEditProperties {
   custom_code_length: number;
   expiry_date: string;
   original_url_length: number;
-  edit_method: UrlEditMethod;
+  edit_method: ConversionTrackingTypes.UrlEditMethod;
   fields_modified: string[];
   success: boolean;
 }
@@ -58,7 +52,7 @@ export interface UrlClickProperties {
   referrer?: string;
   user_agent?: string;
   location?: string;
-  device_type?: DeviceType;
+  device_type?: ConversionTrackingTypes.DeviceType;
 }
 
 /**
@@ -69,7 +63,7 @@ export interface QrCodeCustomizationOptions {
   foreground_color?: string;
   background_color?: string;
   size?: number;
-  format?: QrCodeFormat;
+  format?: ConversionTrackingTypes.QrCodeFormat;
 }
 
 /**
@@ -98,7 +92,7 @@ export interface UseConversionTrackingReturn {
   trackQrCodeGeneration: (properties: QrCodeGenerationProperties) => void;
   /** Track generic conversion goal */
   trackConversion: (
-    goalType: ConversionGoalType,
+    goalType: ConversionTrackingTypes.ConversionGoalType,
     properties?: PostHogEventProperties
   ) => void;
   /** Track feature usage */

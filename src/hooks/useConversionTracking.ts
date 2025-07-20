@@ -50,6 +50,17 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackUrlCreation = useCallback(
     (properties: UrlCreationProperties) => {
+      // Validate critical properties
+      if (!properties.url_id || properties.url_id <= 0) {
+        console.warn("Invalid url_id provided to trackUrlCreation");
+        return;
+      }
+
+      if (!properties.url_title || properties.url_title.trim().length === 0) {
+        console.warn("Invalid url_title provided to trackUrlCreation");
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -66,6 +77,22 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackUrlEdit = useCallback(
     (properties: UrlEditProperties) => {
+      // Validate critical properties
+      if (!properties.url_id || properties.url_id <= 0) {
+        console.warn("Invalid url_id provided to trackUrlEdit");
+        return;
+      }
+
+      if (!properties.url_title || properties.url_title.trim().length === 0) {
+        console.warn("Invalid url_title provided to trackUrlEdit");
+        return;
+      }
+
+      if (!Array.isArray(properties.fields_modified)) {
+        console.warn("Invalid fields_modified provided to trackUrlEdit");
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -83,6 +110,12 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackUrlClick = useCallback(
     (properties: UrlClickProperties) => {
+      // Validate critical properties
+      if (!properties.short_code || properties.short_code.trim().length === 0) {
+        console.warn("Invalid short_code provided to trackUrlClick");
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -99,6 +132,22 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackQrCodeGeneration = useCallback(
     (properties: QrCodeGenerationProperties) => {
+      // Validate critical properties
+      if (!properties.url_id || properties.url_id <= 0) {
+        console.warn("Invalid url_id provided to trackQrCodeGeneration");
+        return;
+      }
+
+      if (
+        !properties.customization_options ||
+        typeof properties.customization_options !== "object"
+      ) {
+        console.warn(
+          "Invalid customization_options provided to trackQrCodeGeneration"
+        );
+        return;
+      }
+
       const eventProperties: PostHogEventProperties = {
         ...getBaseProperties(),
         url_id: properties.url_id,
@@ -119,6 +168,12 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackConversion = useCallback(
     (goalType: ConversionGoalType, properties: PostHogEventProperties = {}) => {
+      // Validate goalType
+      if (!goalType || typeof goalType !== "string") {
+        console.warn("Invalid goalType provided to trackConversion");
+        return;
+      }
+
       const eventProperties = {
         ...getBaseProperties(),
         ...properties,
@@ -136,6 +191,16 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
    */
   const trackFeatureUsage = useCallback(
     (featureName: string, properties: PostHogEventProperties = {}) => {
+      // Validate featureName
+      if (
+        !featureName ||
+        typeof featureName !== "string" ||
+        featureName.trim().length === 0
+      ) {
+        console.warn("Invalid featureName provided to trackFeatureUsage");
+        return;
+      }
+
       const eventProperties = {
         ...getBaseProperties(),
         feature_name: featureName,
@@ -159,6 +224,25 @@ export const useConversionTracking = (): UseConversionTrackingReturn => {
       errorMessage: string,
       properties: PostHogEventProperties = {}
     ) => {
+      // Validate error parameters
+      if (
+        !errorType ||
+        typeof errorType !== "string" ||
+        errorType.trim().length === 0
+      ) {
+        console.warn("Invalid errorType provided to trackError");
+        return;
+      }
+
+      if (
+        !errorMessage ||
+        typeof errorMessage !== "string" ||
+        errorMessage.trim().length === 0
+      ) {
+        console.warn("Invalid errorMessage provided to trackError");
+        return;
+      }
+
       const eventProperties = {
         ...getBaseProperties(),
         error_type: errorType,
