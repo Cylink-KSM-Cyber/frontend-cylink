@@ -55,7 +55,7 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
 }) => {
   // Use the custom hook to manage QR code creation
   const qrCodeCreation = useQrCodeCreation(createUrl, onCreated);
-  const { trackQrCodeGeneration } = useConversionTracking();
+  const { trackQrCodeGeneration, trackQrCodeSharing } = useConversionTracking();
 
   // Track if modal has been initialized
   const hasInitializedRef = useRef(false);
@@ -183,7 +183,14 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
 
   // Handle Share QR Code button click
   const handleShareClick = async () => {
-    if (!generatedQrUrl || !previewUrl) return;
+    if (!generatedQrUrl || !previewUrl || !selectedUrlForQrCode) return;
+
+    // Determine sharing platform
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    const sharingPlatform = isMobile ? "mobile" : "desktop";
 
     // Use Web Share API if available
     if (navigator.share) {
@@ -193,28 +200,103 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
           text: `Scan this QR code to visit ${previewUrl}`,
           url: previewUrl,
         });
+
+        // Track successful QR code sharing via Web Share API
+        trackQrCodeSharing({
+          qr_code_id: selectedUrlForQrCode.id, // Using URL ID as QR code ID for this context
+          url_id: selectedUrlForQrCode.id,
+          qr_code_title:
+            selectedUrlForQrCode.title ||
+            `QR Code for ${selectedUrlForQrCode.short_code}`,
+          short_url: previewUrl,
+          customization_options: {
+            foreground_color: selectedForegroundColor?.hex || "#000000",
+            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
+            size: qrSize,
+          },
+          sharing_method: "web_share_api",
+          sharing_platform: sharingPlatform,
+          includes_logo: includeLogoChecked,
+          total_scans: 0, // Not available in this context
+          qr_code_age_days: 0, // Not available in this context
+          success: true,
+        });
       } catch (err) {
         console.error("Error sharing:", err);
+
+        // Track failed QR code sharing
+        trackQrCodeSharing({
+          qr_code_id: selectedUrlForQrCode.id,
+          url_id: selectedUrlForQrCode.id,
+          qr_code_title:
+            selectedUrlForQrCode.title ||
+            `QR Code for ${selectedUrlForQrCode.short_code}`,
+          short_url: previewUrl,
+          customization_options: {
+            foreground_color: selectedForegroundColor?.hex || "#000000",
+            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
+            size: qrSize,
+          },
+          sharing_method: "web_share_api",
+          sharing_platform: sharingPlatform,
+          includes_logo: includeLogoChecked,
+          total_scans: 0,
+          qr_code_age_days: 0,
+          success: false,
+          error_message: err instanceof Error ? err.message : "Unknown error",
+        });
       }
     } else {
       // Fallback to clipboard
-      navigator.clipboard.writeText(previewUrl);
-      alert("URL copied to clipboard!");
-    }
+      try {
+        await navigator.clipboard.writeText(previewUrl);
+        alert("URL copied to clipboard!");
 
-    // Track QR code share
-    if (selectedUrlForQrCode) {
-      trackQrCodeGeneration({
-        url_id: selectedUrlForQrCode.id,
-        customization_options: {
-          foreground_color: selectedForegroundColor?.hex,
-          background_color: selectedBackgroundColor?.hex,
-          size: qrSize,
-          format: "png",
-        },
-        downloaded: false,
-        shared: true,
-      });
+        // Track successful QR code sharing via clipboard
+        trackQrCodeSharing({
+          qr_code_id: selectedUrlForQrCode.id,
+          url_id: selectedUrlForQrCode.id,
+          qr_code_title:
+            selectedUrlForQrCode.title ||
+            `QR Code for ${selectedUrlForQrCode.short_code}`,
+          short_url: previewUrl,
+          customization_options: {
+            foreground_color: selectedForegroundColor?.hex || "#000000",
+            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
+            size: qrSize,
+          },
+          sharing_method: "clipboard",
+          sharing_platform: sharingPlatform,
+          includes_logo: includeLogoChecked,
+          total_scans: 0,
+          qr_code_age_days: 0,
+          success: true,
+        });
+      } catch (err) {
+        console.error("Error copying to clipboard:", err);
+
+        // Track failed clipboard sharing
+        trackQrCodeSharing({
+          qr_code_id: selectedUrlForQrCode.id,
+          url_id: selectedUrlForQrCode.id,
+          qr_code_title:
+            selectedUrlForQrCode.title ||
+            `QR Code for ${selectedUrlForQrCode.short_code}`,
+          short_url: previewUrl,
+          customization_options: {
+            foreground_color: selectedForegroundColor?.hex || "#000000",
+            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
+            size: qrSize,
+          },
+          sharing_method: "clipboard",
+          sharing_platform: sharingPlatform,
+          includes_logo: includeLogoChecked,
+          total_scans: 0,
+          qr_code_age_days: 0,
+          success: false,
+          error_message: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
     }
   };
 
