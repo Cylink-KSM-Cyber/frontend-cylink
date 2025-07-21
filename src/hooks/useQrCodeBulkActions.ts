@@ -12,7 +12,11 @@ import { qrCodeDownloadService } from "@/services/qrCodeDownloadService";
  * @returns Bulk action handlers
  */
 export const useQrCodeBulkActions = (
-  deleteQrCode: (id: string | number) => Promise<boolean>,
+  deleteQrCode: (
+    id: string | number,
+    deletionMethod?: "manual" | "bulk",
+    deletionReason?: string
+  ) => Promise<boolean>,
   refreshQrCodes: () => Promise<boolean>,
   clearSelection: () => void
 ) => {
@@ -31,7 +35,11 @@ export const useQrCodeBulkActions = (
 
       for (const qrCode of selectedQrCodes) {
         try {
-          const success = await deleteQrCode(qrCode.id);
+          const success = await deleteQrCode(
+            qrCode.id,
+            "bulk",
+            "Bulk deletion"
+          );
           if (success) successCount++;
         } catch (error) {
           console.error(`Error deleting QR code ${qrCode.id}:`, error);

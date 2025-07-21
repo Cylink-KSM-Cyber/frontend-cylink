@@ -13,4 +13,5 @@ export * from "./conversionTrackings/UrlClickProperties";
 export * from "./conversionTrackings/QrCodeCustomizationOptions";
 export * from "./conversionTrackings/QrCodeGenerationProperties";
 export * from "./conversionTrackings/QrCodeEditProperties";
+export * from "./conversionTrackings/QrCodeDeletionProperties";
 export * from "./conversionTrackings/UseConversionTrackingReturn";
