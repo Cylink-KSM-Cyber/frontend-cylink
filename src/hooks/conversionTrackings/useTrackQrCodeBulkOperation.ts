@@ -70,6 +70,45 @@ export const useTrackQrCodeBulkOperation = () => {
         return;
       }
 
+      // Add array length consistency validation
+      if (properties.qr_code_ids.length !== properties.url_ids.length) {
+        console.warn(
+          "Array length mismatch: qr_code_ids and url_ids must have the same length"
+        );
+        return;
+      }
+
+      if (properties.qr_code_ids.length !== properties.qr_codes_count) {
+        console.warn(
+          "Count mismatch: qr_codes_count doesn't match actual array length"
+        );
+        return;
+      }
+
+      if (properties.qr_code_ids.length !== properties.qr_code_titles.length) {
+        console.warn(
+          "Array length mismatch: qr_code_ids and qr_code_titles must have the same length"
+        );
+        return;
+      }
+
+      if (properties.qr_code_ids.length !== properties.short_urls.length) {
+        console.warn(
+          "Array length mismatch: qr_code_ids and short_urls must have the same length"
+        );
+        return;
+      }
+
+      if (
+        properties.qr_code_ids.length !==
+        properties.customization_options.length
+      ) {
+        console.warn(
+          "Array length mismatch: qr_code_ids and customization_options must have the same length"
+        );
+        return;
+      }
+
       // Validate operation-specific properties
       if (properties.operation_type === "bulk_download") {
         if (

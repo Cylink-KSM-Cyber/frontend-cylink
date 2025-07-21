@@ -49,6 +49,40 @@ export const useQrCodeBulkActions = (
         } catch (error) {
           console.error(`Error deleting QR code ${qrCode.id}:`, error);
           failedCount++;
+
+          // Add specific error tracking for better debugging
+          if (error instanceof Error) {
+            if (
+              error.message.includes("network") ||
+              error.message.includes("fetch")
+            ) {
+              console.warn(
+                `Network error deleting QR code ${qrCode.id}:`,
+                error.message
+              );
+            } else if (
+              error.message.includes("validation") ||
+              error.message.includes("invalid")
+            ) {
+              console.warn(
+                `Validation error deleting QR code ${qrCode.id}:`,
+                error.message
+              );
+            } else if (
+              error.message.includes("unauthorized") ||
+              error.message.includes("403")
+            ) {
+              console.warn(
+                `Authorization error deleting QR code ${qrCode.id}:`,
+                error.message
+              );
+            } else {
+              console.warn(
+                `Unknown error deleting QR code ${qrCode.id}:`,
+                error.message
+              );
+            }
+          }
         }
       }
 

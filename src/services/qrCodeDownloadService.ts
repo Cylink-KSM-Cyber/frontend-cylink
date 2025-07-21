@@ -436,19 +436,46 @@ class QrCodeDownloadService {
     let failedCount = 0;
 
     try {
-      // For now, we'll download them individually since browser doesn't support zip creation easily
-      // In a production environment, this would typically be handled by the backend
-      for (const qrCode of qrCodes) {
-        try {
-          const success = await this.downloadQrCode(qrCode, format, "bulk");
-          if (success) {
-            successCount++;
+      // Process in batches to avoid overwhelming the browser and provide better performance
+      const BATCH_SIZE = 5; // Process 5 QR codes at a time
+      const batches = [];
+
+      for (let i = 0; i < qrCodes.length; i += BATCH_SIZE) {
+        batches.push(qrCodes.slice(i, i + BATCH_SIZE));
+      }
+
+      for (const batch of batches) {
+        // Process each batch in parallel
+        const batchPromises = batch.map(async (qrCode) => {
+          try {
+            const success = await this.downloadQrCode(qrCode, format, "bulk");
+            return { success, qrCodeId: qrCode.id, error: null };
+          } catch (error) {
+            console.error(`Failed to download QR code ${qrCode.id}:`, error);
+            return { success: false, qrCodeId: qrCode.id, error };
+          }
+        });
+
+        // Wait for all downloads in the current batch to complete
+        const batchResults = await Promise.allSettled(batchPromises);
+
+        // Process batch results
+        batchResults.forEach((result) => {
+          if (result.status === "fulfilled") {
+            if (result.value.success) {
+              successCount++;
+            } else {
+              failedCount++;
+            }
           } else {
             failedCount++;
+            console.error("Batch promise rejected:", result.reason);
           }
-        } catch (error) {
-          console.error(`Failed to download QR code ${qrCode.id}:`, error);
-          failedCount++;
+        });
+
+        // Add a small delay between batches to prevent overwhelming the browser
+        if (batches.length > 1) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
       }
 
