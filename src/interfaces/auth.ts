@@ -122,3 +122,14 @@ export interface AuthContextType {
   signup: (credentials: RegisterRequest) => Promise<void>;
   logout: () => void;
 }
+
+/**
+ * Verification response interface
+ */
+export interface VerificationResponse {
+  status: number;
+  message: string;
+  data?: {
+    user: User;
+  };
+}

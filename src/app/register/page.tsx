@@ -1,6 +1,5 @@
-import React from "react";
 import { Metadata } from "next";
-import RegisterTemplate from "@/components/templates/RegisterTemplate";
+import RegisterClientPage from "./RegisterClientPage";
 import "./register.css";
 
 /**
@@ -14,13 +13,9 @@ export const metadata: Metadata = {
 
 /**
  * Register page
- * @description The page for user authentication
+ * @description The page for user authentication and verification confirmation
  * @returns Register page component
  */
 export default function RegisterPage() {
-  return (
-    <div className="register-page">
-      <RegisterTemplate />
-    </div>
-  );
+  return <RegisterClientPage />;
 }
