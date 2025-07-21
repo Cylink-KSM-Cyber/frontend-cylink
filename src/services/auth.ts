@@ -3,6 +3,8 @@ import {
   LoginRequest,
   ApiLoginResponse,
   LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   ResetPasswordRequest,
@@ -12,10 +14,56 @@ import {
 import Cookies from "js-cookie";
 
 /**
- * Authentication service for login, registration, and other auth operations
- * @description Provides methods for authentication-related API calls
+ * Authentication Service
+ *
+ * Provides methods for authentication-related API calls such as login, registration, password reset, and token management. This service acts as an abstraction layer between the frontend and backend authentication endpoints, ensuring consistent and robust handling of authentication logic throughout the application.
+ *
+ * @module services/auth
  */
 const AuthService = {
+  /**
+   * Register a new user
+   *
+   * Registers a new user with the provided credentials. Handles response validation and ensures the frontend receives a consistent structure. Now matches backend response structure directly.
+   *
+   * @param credentials - User registration data containing email, password, and username
+   * @returns Promise with registration response data
+   */
+  signup: async (credentials: RegisterRequest): Promise<RegisterResponse> => {
+    try {
+      console.log("Sending registration request:", {
+        email: credentials.email,
+        username: credentials.username,
+        passwordLength: credentials.password?.length,
+        password_confirmationLength: credentials.password_confirmation?.length,
+      });
+
+      // Call API with registration data
+      const response = await post<RegisterResponse>("/api/v1/auth/register", {
+        email: credentials.email,
+        password: credentials.password,
+        username: credentials.username,
+        password_confirmation: credentials.password_confirmation,
+      });
+
+      console.log("Registration API response:", response);
+
+      // Validate response structure (minimal)
+      if (!response || typeof response !== "object") {
+        console.error("Invalid registration response structure:", response);
+        throw new Error("Invalid response from server");
+      }
+
+      // No longer expect user or verification_token fields
+      // Optionally, normalize data here if needed by frontend
+
+      return response;
+    } catch (error) {
+      console.error("Registration service error:", error);
+      throw error;
+    }
+  },
+
   /**
    * Login user with email and password
    * @param credentials - User credentials containing email and password

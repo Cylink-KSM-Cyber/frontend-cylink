@@ -22,13 +22,13 @@ interface ProvidersProps {
  */
 const Providers: React.FC<ProvidersProps> = ({ children }) => {
   return (
-    <AuthProvider>
-      <ToastProvider>
+    <ToastProvider>
+      <AuthProvider>
         <Suspense fallback={<div>Loading...</div>}>
           <SidebarProvider>{children}</SidebarProvider>
         </Suspense>
-      </ToastProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </ToastProvider>
   );
 };
 

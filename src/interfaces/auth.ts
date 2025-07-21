@@ -1,6 +1,18 @@
 /**
- * Interface for login request payload
- * @description Represents the data structure for login request
+ * User interface
+ */
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  email_verified_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  is_verified?: boolean;
+}
+
+/**
+ * Login request interface
  */
 export interface LoginRequest {
   email: string;
@@ -8,116 +20,77 @@ export interface LoginRequest {
 }
 
 /**
- * Interface for user data
- * @description Represents user data returned from API
+ * Register request interface
  */
-export interface User {
-  id: number;
-  username: string;
+export interface RegisterRequest {
   email: string;
-  created_at: string;
-  updated_at: string;
+  password: string;
+  password_confirmation: string;
+  username: string;
 }
 
 /**
- * Interface for authentication tokens
- * @description Contains access and refresh tokens (original interface)
+ * Register response interface
  */
-export interface AuthTokens {
-  access_token: string;
-  refresh_token: string;
-}
-
-/**
- * Interface for actual API authentication tokens
- * @description Matches the actual API response structure for tokens
- */
-export interface ApiAuthTokens {
-  type: string;
-  access: string;
-  refresh: string;
-  expiresAt: string | null;
-}
-
-/**
- * Interface for login response data (original interface)
- * @description Contains user data and authentication tokens
- */
-export interface LoginResponseData {
-  user: User;
-  tokens: AuthTokens;
-}
-
-/**
- * Interface for actual API login response data
- * @description Matches the actual API response structure
- */
-export interface ApiLoginResponseData {
-  user: User;
-  token: ApiAuthTokens;
-}
-
-/**
- * Interface for API response
- * @description Generic API response structure
- * @template T - Type of data contained in the response
- */
-export interface ApiResponse<T> {
+export interface RegisterResponse {
   status: number;
   message: string;
-  data: T;
+  data: {
+    user: User;
+    verification_token: string;
+  };
 }
 
 /**
- * Type for login response based on original interface
- * @description API response for login endpoint
+ * API Login response interface (from server)
  */
-export type LoginResponse = ApiResponse<LoginResponseData>;
-
-/**
- * Type for actual API login response
- * @description API response matching the actual structure
- */
-export type ApiLoginResponse = ApiResponse<ApiLoginResponseData>;
-
-/**
- * Interface for authentication context
- * @description Represents the authentication state and methods
- */
-export interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (credentials: LoginRequest, remember?: boolean) => Promise<void>;
-  logout: () => void;
-  error: string | null;
+export interface ApiLoginResponse {
+  status: number;
+  message: string;
+  data: {
+    user: User;
+    token: {
+      access: string;
+      refresh: string;
+    };
+  };
 }
 
 /**
- * Interface for forgot password request payload
- * @description Represents the data structure for forgot password request
+ * Login response interface (formatted for frontend)
+ */
+export interface LoginResponse {
+  status: number;
+  message: string;
+  data: {
+    user: User;
+    tokens: {
+      access_token: string;
+      refresh_token: string;
+    };
+  };
+}
+
+/**
+ * Forgot password request interface
  */
 export interface ForgotPasswordRequest {
   email: string;
 }
 
 /**
- * Interface for forgot password response data
- * @description Represents the data returned from forgot password API
+ * Forgot password response interface
  */
-export interface ForgotPasswordResponseData {
+export interface ForgotPasswordResponse {
+  status: number;
   message: string;
+  data?: {
+    message: string;
+  };
 }
 
 /**
- * Type for forgot password response
- * @description API response for forgot password endpoint
- */
-export type ForgotPasswordResponse = ApiResponse<ForgotPasswordResponseData>;
-
-/**
- * Interface for reset password request payload
- * @description Represents the data structure for reset password request
+ * Reset password request interface
  */
 export interface ResetPasswordRequest {
   password: string;
@@ -125,43 +98,38 @@ export interface ResetPasswordRequest {
 }
 
 /**
- * Interface for reset password response data
- * @description Represents the data returned from reset password API
+ * Reset password response interface
  */
-export interface ResetPasswordResponseData {
+export interface ResetPasswordResponse {
+  status: number;
   message: string;
-}
-
-/**
- * Type for reset password response
- * @description API response for reset password endpoint
- */
-export type ResetPasswordResponse = ApiResponse<ResetPasswordResponseData>;
-
-/**
- * Interface for password strength analysis
- * @description Represents password strength evaluation
- */
-export interface PasswordStrength {
-  score: number; // 0-4 (weak to strong)
-  level: "weak" | "fair" | "good" | "strong";
-  feedback: string[];
-  requirements: {
-    minLength: boolean;
-    hasUppercase: boolean;
-    hasLowercase: boolean;
-    hasNumber: boolean;
-    hasSpecialChar: boolean;
+  data?: {
+    message: string;
   };
 }
 
 /**
- * Interface for reset password token validation
- * @description Represents token validation state
+ * Authentication context interface
  */
-export interface TokenValidation {
-  isValid: boolean;
-  isExpired: boolean;
-  errorCode?: "MISSING_TOKEN" | "INVALID_TOKEN" | "TOKEN_EXPIRED";
-  message?: string;
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isModalOpen: boolean;
+  setIsModalOpen: (open: boolean) => void;
+  isLoading: boolean;
+  error: string | null;
+  login: (credentials: LoginRequest, remember?: boolean) => Promise<void>;
+  signup: (credentials: RegisterRequest) => Promise<void>;
+  logout: () => void;
+}
+
+/**
+ * Verification response interface
+ */
+export interface VerificationResponse {
+  status: number;
+  message: string;
+  data?: {
+    user: User;
+  };
 }
