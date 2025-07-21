@@ -19,6 +19,7 @@ import { AxiosError } from "axios";
 import { useToast } from "@/contexts/ToastContext";
 import { ToastType } from "@/components/atoms/Toast";
 import posthogClient from "@/utils/posthogClient";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 // Navigation delay to allow toast to be visible
 const NAVIGATION_DELAY = 2000;
@@ -67,6 +68,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { trackUserRegister } = useConversionTracking();
 
   /**
    * Initialize auth state from localStorage on mount
@@ -141,6 +143,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         status: "success",
         message: response.message,
       });
+
+      // Track user register conversion goal in PostHog
+      if (response && response.data && response.data.user) {
+        trackUserRegister({
+          user_id: response.data.user.id,
+          email: response.data.user.email,
+          username: credentials.username,
+          is_verified: !!response.data.user.is_verified,
+          registration_success: true,
+        });
+      }
 
       // Show success toast with longer duration to ensure visibility before navigation
       showToast(
