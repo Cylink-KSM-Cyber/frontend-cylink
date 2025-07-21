@@ -12,7 +12,11 @@ import { useToast } from "@/contexts/ToastContext";
  * @returns Actions and state for QR code operations
  */
 export const useQrCodeActions = (
-  deleteQrCode: (id: string | number) => Promise<boolean>,
+  deleteQrCode: (
+    id: string | number,
+    deletionMethod?: "manual" | "bulk",
+    deletionReason?: string
+  ) => Promise<boolean>,
   refreshQrCodes: () => Promise<boolean>,
   removeFromSelection: (qrCodeId: number) => void
 ) => {
@@ -28,7 +32,11 @@ export const useQrCodeActions = (
 
     setIsDeletingQrCode(true);
     try {
-      const success = await deleteQrCode(qrCode.id);
+      const success = await deleteQrCode(
+        qrCode.id,
+        "manual",
+        "User initiated deletion"
+      );
       if (success) {
         // Remove from selected QR codes if present
         removeFromSelection(qrCode.id);

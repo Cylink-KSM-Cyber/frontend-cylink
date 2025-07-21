@@ -3,6 +3,7 @@ import { QrCode } from "@/interfaces/url";
 import { fetchQrCodes, deleteQrCodeById } from "@/services/qrcode";
 import { QrCodeFilter } from "@/interfaces/qrcode";
 import { useToast } from "@/contexts/ToastContext";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 // Helper function to check if two filters are equal
 const areFiltersEqual = (
@@ -27,6 +28,9 @@ const areFiltersEqual = (
  * @returns QR Code data and loading state
  */
 export const useQrCodes = (initialFilter?: QrCodeFilter) => {
+  // Conversion tracking hook
+  const { trackQrCodeDeletion } = useConversionTracking();
+
   const [qrCodes, setQrCodes] = useState<QrCode[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
@@ -148,11 +152,49 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
   /**
    * Delete a QR Code
    * @param id - ID of QR Code to delete
+   * @param deletionMethod - Method of deletion (manual or bulk)
+   * @param deletionReason - Optional reason for deletion
    */
-  const deleteQrCode = async (id: string | number) => {
+  const deleteQrCode = async (
+    id: string | number,
+    deletionMethod: "manual" | "bulk" = "manual",
+    deletionReason?: string
+  ) => {
+    // Get QR code data before deletion for tracking
+    const qrCodeToDelete = qrCodes.find(
+      (code) => String(code.id) === String(id)
+    );
+
     try {
       // Call the API to delete the QR code
       await deleteQrCodeById(id);
+
+      // Track QR code deletion conversion goal in PostHog
+      if (qrCodeToDelete) {
+        const qrCodeAgeDays = Math.floor(
+          (Date.now() - new Date(qrCodeToDelete.createdAt).getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+
+        trackQrCodeDeletion({
+          qr_code_id: qrCodeToDelete.id,
+          url_id: qrCodeToDelete.urlId,
+          qr_code_title: qrCodeToDelete.title || `QR Code ${qrCodeToDelete.id}`,
+          short_url: qrCodeToDelete.shortUrl || "",
+          customization_options: {
+            foreground_color:
+              qrCodeToDelete.customization?.foregroundColor || "#000000",
+            background_color:
+              qrCodeToDelete.customization?.backgroundColor || "#FFFFFF",
+            size: qrCodeToDelete.customization?.size || 300,
+          },
+          total_scans: qrCodeToDelete.scans || 0,
+          qr_code_age_days: qrCodeAgeDays,
+          deletion_method: deletionMethod,
+          deletion_reason: deletionReason,
+          success: true,
+        });
+      }
 
       // Update local state by removing the deleted QR code
       setQrCodes((prevCodes) =>
@@ -168,6 +210,34 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete QR Code";
       console.error(`Failed to delete QR Code ${id}:`, err);
+
+      // Track failed QR code deletion conversion goal in PostHog
+      if (qrCodeToDelete) {
+        const qrCodeAgeDays = Math.floor(
+          (Date.now() - new Date(qrCodeToDelete.createdAt).getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+
+        trackQrCodeDeletion({
+          qr_code_id: qrCodeToDelete.id,
+          url_id: qrCodeToDelete.urlId,
+          qr_code_title: qrCodeToDelete.title || `QR Code ${qrCodeToDelete.id}`,
+          short_url: qrCodeToDelete.shortUrl || "",
+          customization_options: {
+            foreground_color:
+              qrCodeToDelete.customization?.foregroundColor || "#000000",
+            background_color:
+              qrCodeToDelete.customization?.backgroundColor || "#FFFFFF",
+            size: qrCodeToDelete.customization?.size || 300,
+          },
+          total_scans: qrCodeToDelete.scans || 0,
+          qr_code_age_days: qrCodeAgeDays,
+          deletion_method: deletionMethod,
+          deletion_reason: errorMessage,
+          success: false,
+        });
+      }
+
       showToast(errorMessage, "error", 4000);
 
       return false;

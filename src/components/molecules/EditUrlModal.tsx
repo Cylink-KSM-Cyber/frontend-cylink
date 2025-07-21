@@ -2,12 +2,14 @@
 
 import Button from "@/components/atoms/Button";
 import Modal from "@/components/atoms/Modal";
+import InputWithCharacterCounter from "@/components/atoms/InputWithCharacterCounter";
 import { EditUrlFormData, Url } from "@/interfaces/url";
 import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { RiEditLine, RiLinkM } from "react-icons/ri";
 import { z } from "zod";
+import { URL_CUSTOM_CODE_LIMITS, URL_DISPLAY_CONFIG } from "@/config/urlLimits";
 
 /**
  * EditUrlModalProps interface
@@ -37,8 +39,8 @@ const EditUrlSchema = z.object({
       "Custom code must contain only letters, numbers, and hyphens"
     )
     .refine(
-      (value) => !value || value.length <= 50,
-      "Custom code must be 50 characters or less"
+      (value) => !value || value.length <= 30,
+      "Custom code must be 30 characters or less"
     ),
   expiryDate: z.string().min(1, "Expiry date is required"),
 });
@@ -94,6 +96,9 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
       expiryDate: "",
     },
   });
+
+  // Watch customCode value for character counter
+  const customCodeValue = watch("customCode");
 
   // Effect to populate form when URL changes or modal opens
   React.useEffect(() => {
@@ -304,24 +309,23 @@ const EditUrlModal: React.FC<EditUrlModalProps> = ({
             </label>
             <div className="flex">
               <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                cylink.co/
+                {URL_DISPLAY_CONFIG.SHORT_URL_DOMAIN}/
               </span>
-              <input
-                type="text"
-                id="customCode"
-                placeholder="custom-url"
-                {...register("customCode")}
-                className="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="flex-1">
+                <InputWithCharacterCounter
+                  id="customCode"
+                  placeholder={URL_DISPLAY_CONFIG.CUSTOM_CODE_PLACEHOLDER}
+                  maxLength={URL_CUSTOM_CODE_LIMITS.MAX_LENGTH}
+                  fieldName={URL_DISPLAY_CONFIG.CUSTOM_CODE_A11Y_DESCRIPTION}
+                  showCharacterCounter={true}
+                  counterPosition="bottom-right"
+                  error={errors.customCode?.message}
+                  value={customCodeValue || ""}
+                  className="rounded-l-none border-l-0"
+                  {...register("customCode")}
+                />
+              </div>
             </div>
-            <p className="mt-1 text-xs text-gray-600">
-              Use letters, numbers, and hyphens for your custom URL
-            </p>
-            {errors.customCode && (
-              <p className="mt-1 text-sm text-red-600">
-                {errors.customCode.message}
-              </p>
-            )}
           </div>
 
           <div>

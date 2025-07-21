@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { safeToFixed } from "@/utils/numberFormatting";
 
 interface MetricCardProps {
   title: string;
@@ -45,7 +46,7 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
     switch (format) {
       case "percentage":
-        return `${numVal.toFixed(2)}%`;
+        return `${safeToFixed(numVal, 2)}%`;
       case "currency":
         return `$${numVal.toLocaleString()}`;
       default:
@@ -91,7 +92,8 @@ const MetricCard: React.FC<MetricCardProps> = ({
             {changePercentage !== undefined && (
               <div className="flex items-center space-x-1">
                 <span className={`text-sm font-medium ${getChangeStyle()}`}>
-                  {getChangeArrow()} {Math.abs(changePercentage).toFixed(1)}%
+                  {getChangeArrow()}{" "}
+                  {safeToFixed(Math.abs(changePercentage), 1)}%
                 </span>
                 {previousValue && (
                   <span className="text-xs text-gray-500">

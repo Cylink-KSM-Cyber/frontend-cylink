@@ -83,8 +83,11 @@ export default function QrCodesPage() {
   } = useQrCodeFilter(updateFilter);
 
   // Bulk actions
-  const { handleBulkDeleteQrCodes, handleDownloadQrCode } =
-    useQrCodeBulkActions(deleteQrCode, refreshQrCodes, clearSelection);
+  const {
+    handleBulkDeleteQrCodes,
+    handleDownloadQrCode,
+    handleBulkDownloadQrCodes,
+  } = useQrCodeBulkActions(deleteQrCode, refreshQrCodes, clearSelection);
 
   // Individual QR code actions
   const {
@@ -125,6 +128,9 @@ export default function QrCodesPage() {
         onSelectQrCode={handleSelectQrCode}
         onSelectAllQrCodes={handleSelectAllQrCodes}
         onBulkDeleteQrCodes={() => handleBulkDeleteQrCodes(selectedQrCodes)}
+        onBulkDownloadQrCodes={(format) =>
+          handleBulkDownloadQrCodes(selectedQrCodes, format)
+        }
         onDownloadQrCode={handleDownloadQrCode}
       />
 

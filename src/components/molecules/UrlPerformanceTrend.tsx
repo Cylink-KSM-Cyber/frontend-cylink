@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
 import React, { useState, useMemo } from "react";
 import VisxLineChart from "@/components/atoms/VisxLineChart";
 import { useUrlTotalClicks } from "@/hooks/url/useUrlTotalClicks";
 import { UrlTotalClicksParams } from "@/interfaces/urlTotalClicks";
+import { safeFormatPercentage } from "@/utils/numberFormatting";
 
 interface UrlPerformanceTrendProps {
   className?: string;
@@ -31,7 +32,7 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
   );
 
   // Fetch total clicks data using our custom hook
-  const { timeSeriesData, data, isLoading, isError } =
+  const { timeSeriesData, data, isLoading, isError, error } =
     useUrlTotalClicks(apiParams);
 
   // Handle time period change
@@ -39,11 +40,17 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
     setTimePeriod(period);
   };
 
-  // Format change percentage with plus sign and rounding
-  const formatChangePercentage = (value: number | undefined) => {
-    if (value === undefined) return "—";
-    const formattedValue = value.toFixed(2);
-    return value > 0 ? `+${formattedValue}%` : `${formattedValue}%`;
+  // Format change percentage with plus sign and rounding using safe utility
+  const formatChangePercentage = (value: number | undefined | null) => {
+    return safeFormatPercentage(value);
+  };
+
+  // Determine error message based on error type
+  const getErrorMessage = () => {
+    if (error?.message.includes("Authentication")) {
+      return "Please log in to view performance data.";
+    }
+    return "Failed to load performance data. Please try again later.";
   };
 
   // Error state
@@ -54,7 +61,17 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
           URL Performance Trends
         </h2>
         <div className="flex items-center justify-center h-48 text-red-500">
-          <p>Failed to load performance data. Please try again later.</p>
+          <div className="text-center">
+            <p className="mb-2">{getErrorMessage()}</p>
+            {error?.message.includes("Authentication") && (
+              <button
+                onClick={() => (window.location.href = "/login")}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Go to Login
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -105,13 +122,14 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
               <p className="text-sm text-gray-500">
                 <span
                   className={
-                    data.summary.comparison.total_clicks.change_percentage > 0
+                    (data.summary.comparison?.total_clicks?.change_percentage ||
+                      0) > 0
                       ? "text-green-500"
                       : "text-red-500"
                   }
                 >
                   {formatChangePercentage(
-                    data.summary.comparison.total_clicks.change_percentage
+                    data.summary.comparison?.total_clicks?.change_percentage
                   )}
                 </span>{" "}
                 vs previous period
@@ -136,13 +154,14 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
               <p className="text-sm text-gray-500">
                 <span
                   className={
-                    data.summary.comparison.active_urls.change_percentage > 0
+                    (data.summary.comparison?.active_urls?.change_percentage ||
+                      0) > 0
                       ? "text-green-500"
                       : "text-red-500"
                   }
                 >
                   {formatChangePercentage(
-                    data.summary.comparison.active_urls.change_percentage
+                    data.summary.comparison?.active_urls?.change_percentage
                   )}
                 </span>{" "}
                 vs previous period
@@ -169,14 +188,15 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
               <p className="text-sm text-gray-500">
                 <span
                   className={
-                    data.summary.comparison.avg_clicks_per_url
-                      .change_percentage > 0
+                    (data.summary.comparison?.avg_clicks_per_url
+                      ?.change_percentage || 0) > 0
                       ? "text-green-500"
                       : "text-red-500"
                   }
                 >
                   {formatChangePercentage(
-                    data.summary.comparison.avg_clicks_per_url.change_percentage
+                    data.summary.comparison?.avg_clicks_per_url
+                      ?.change_percentage
                   )}
                 </span>{" "}
                 vs previous period

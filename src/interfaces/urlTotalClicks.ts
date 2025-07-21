@@ -41,7 +41,7 @@ export interface MetricComparison {
   current: number;
   previous: number;
   change: number;
-  change_percentage: number;
+  change_percentage: number | null;
 }
 
 /**

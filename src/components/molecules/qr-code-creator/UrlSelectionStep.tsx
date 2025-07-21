@@ -1,9 +1,28 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { QrCodeCreateFormSchema } from "@/hooks/useQrCodeCreation";
 import { Url } from "@/interfaces/url";
+import SearchInput from "@/components/atoms/SearchInput";
+import InputWithCharacterCounter from "@/components/atoms/InputWithCharacterCounter";
+import { URL_CUSTOM_CODE_LIMITS, URL_DISPLAY_CONFIG } from "@/config/urlLimits";
+import { formatDistanceToNow } from "date-fns";
+import {
+  RiLinkM,
+  RiCalendarLine,
+  RiEyeLine,
+  RiStarLine,
+  RiSearchLine,
+} from "react-icons/ri";
+import { truncateUrl } from "@/utils/urlFormatter";
+import {
+  RECENT_URLS_LIMIT,
+  POPULAR_URLS_LIMIT,
+  RECENT_SEARCHES_LIMIT,
+  MIN_SEARCH_TERM_LENGTH,
+  POPULAR_URL_CATEGORIES,
+} from "@/config/qrcode";
 
 /**
  * Props for URL Selection Step component
@@ -26,86 +45,176 @@ interface UrlSelectionStepProps {
 /**
  * URL Selection Step Component for QR Code Creation
  *
- * @description First step in QR code creation process that allows selecting an existing URL or creating a new one
+ * @description First step in QR code creation process with intuitive search interface and recent URL cards
  */
 const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
   form,
   existingUrls,
   isLoadingUrls,
 }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+
   const {
     register,
     watch,
+    setValue,
     formState: { errors },
   } = form;
 
-  const urlSource = watch("urlSource");
+  const selectedUrlId = watch("existingUrlId");
+  const customCodeValue = watch("customCode");
 
-  return (
-    <div className="space-y-4">
-      {/* URL Selection Method */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Select URL Source
-        </label>
-        <div className="flex gap-4 mb-4">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              value="existing"
-              {...register("urlSource")}
-              className="mr-2"
-            />
-            <span>Use Existing URL</span>
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              value="new"
-              {...register("urlSource")}
-              className="mr-2"
-            />
-            <span>Create New URL</span>
-          </label>
-        </div>
+  // Format date to relative time
+  const formatDate = (dateString: string) => {
+    try {
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+    } catch {
+      return "Unknown date";
+    }
+  };
+
+  // Get recent URLs (last 6 URLs)
+  const recentUrls = useMemo(() => {
+    return existingUrls
+      .sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      )
+      .slice(0, RECENT_URLS_LIMIT);
+  }, [existingUrls]);
+
+  // Get popular URLs (top 4 by clicks)
+  const popularUrls = useMemo(() => {
+    return existingUrls
+      .filter((url) => url.clicks > 0)
+      .sort((a, b) => b.clicks - a.clicks)
+      .slice(0, POPULAR_URLS_LIMIT);
+  }, [existingUrls]);
+
+  // Filter URLs based on search query
+  const filteredUrls = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+
+    const query = searchQuery.toLowerCase();
+    return existingUrls.filter(
+      (url) =>
+        url.title?.toLowerCase().includes(query) ||
+        url.original_url.toLowerCase().includes(query) ||
+        url.short_url.toLowerCase().includes(query)
+    );
+  }, [existingUrls, searchQuery]);
+
+  // Handle URL card selection
+  const handleUrlSelect = (url: Url) => {
+    setValue("urlSource", "existing");
+    setValue("existingUrlId", url.id);
+  };
+
+  // Handle search with recent search tracking
+  const handleSearch = useCallback(
+    (query: string) => {
+      setSearchQuery(query);
+
+      // Add to recent searches if it's a meaningful search (>2 chars)
+      if (
+        query.trim().length > MIN_SEARCH_TERM_LENGTH &&
+        !recentSearches.includes(query.trim())
+      ) {
+        setRecentSearches((prev) => [
+          query.trim(),
+          ...prev.slice(0, RECENT_SEARCHES_LIMIT - 1),
+        ]); // Keep last N searches
+      }
+    },
+    [recentSearches]
+  );
+
+  // Handle recent search selection
+  const handleRecentSearchClick = (search: string) => {
+    setSearchQuery(search);
+    handleSearch(search);
+  };
+
+  // Handle create new URL toggle
+  const handleCreateNew = () => {
+    setShowCreateForm(true);
+    setValue("urlSource", "new");
+    setValue("existingUrlId", null);
+  };
+
+  // Handle back to selection
+  const handleBackToSelection = () => {
+    setShowCreateForm(false);
+    setValue("urlSource", "existing");
+  };
+
+  // URL Card Component with enhanced visual states
+  const UrlCard: React.FC<{
+    url: Url;
+    isSelected: boolean;
+    showClickCount?: boolean;
+  }> = ({ url, isSelected, showClickCount = true }) => (
+    <div
+      onClick={() => handleUrlSelect(url)}
+      className={`group p-4 border rounded-lg cursor-pointer transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 motion-reduce:hover:transform-none ${
+        isSelected
+          ? "border-blue-500 bg-blue-50 ring-2 ring-blue-200 shadow-md"
+          : "border-gray-200 hover:border-blue-400 hover:border-2 hover:bg-blue-50/50 hover:shadow-md hover:ring-1 hover:ring-blue-200/50"
+      }`}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <h4 className="font-medium text-gray-900 truncate flex-1 mr-2 group-hover:text-blue-700 transition-colors">
+          {truncateUrl(url.title || `URL ${url.id}`, 30)}
+        </h4>
+        {showClickCount && (
+          <div className="flex items-center text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+            <RiEyeLine className="w-3 h-3 mr-1" />
+            {url.clicks.toLocaleString()}
+          </div>
+        )}
       </div>
 
-      {/* Existing URL Selection */}
-      {urlSource === "existing" && (
-        <div className="mb-4">
-          <label
-            htmlFor="existingUrlId"
-            className="block text-sm font-medium text-gray-700 mb-1"
+      <div className="space-y-2">
+        <div className="flex items-center text-sm text-gray-600 group-hover:text-gray-700 transition-colors min-w-0">
+          <RiLinkM className="w-3 h-3 mr-2 flex-shrink-0 text-gray-400" />
+          <span
+            className="truncate min-w-0 flex-1 break-all"
+            title={url.original_url}
           >
-            Select URL <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="existingUrlId"
-            {...register("existingUrlId", {
-              valueAsNumber: true,
-              required: urlSource === "existing",
-            })}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            disabled={isLoadingUrls}
-          >
-            <option value="">Select a URL</option>
-            {existingUrls.map((url) => (
-              <option key={url.id} value={url.id}>
-                {url.title} ({url.short_url})
-              </option>
-            ))}
-          </select>
-          {errors.existingUrlId && (
-            <p className="mt-1 text-sm text-red-600">Please select a URL</p>
-          )}
-          {isLoadingUrls && (
-            <p className="mt-1 text-sm text-gray-500">Loading URLs...</p>
-          )}
+            {truncateUrl(url.original_url, 45)}
+          </span>
         </div>
-      )}
 
-      {/* New URL Creation Form */}
-      {urlSource === "new" && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center text-xs text-gray-500">
+            <RiCalendarLine className="w-3 h-3 mr-1" />
+            <span>{formatDate(url.created_at)}</span>
+          </div>
+          <div className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded group-hover:bg-blue-100 transition-colors">
+            {url.short_url.replace("https://", "")}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Show create new URL form
+  if (showCreateForm) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-medium text-gray-900">Create New URL</h3>
+          <button
+            type="button"
+            onClick={handleBackToSelection}
+            className="text-sm text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            ← Back to selection
+          </button>
+        </div>
+
         <div className="space-y-4">
           <div>
             <label
@@ -119,7 +228,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
               id="title"
               placeholder="Enter a memorable title"
               {...register("title")}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">
@@ -140,7 +249,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
               id="originalUrl"
               placeholder="https://"
               {...register("originalUrl")}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
             {errors.originalUrl && (
               <p className="mt-1 text-sm text-red-600">
@@ -157,16 +266,23 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
               Custom Back-half (Optional)
             </label>
             <div className="flex">
-              <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
+              <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                 cylink.co/
               </span>
-              <input
-                type="text"
-                id="customCode"
-                placeholder="custom-url"
-                {...register("customCode")}
-                className="flex-1 p-2 border border-gray-300 rounded-r-md focus:ring-blue-500 focus:border-blue-500"
-              />
+              <div className="flex-1">
+                <InputWithCharacterCounter
+                  type="text"
+                  id="customCode"
+                  placeholder="custom-url"
+                  value={customCodeValue || ""}
+                  {...register("customCode", {
+                    maxLength: URL_CUSTOM_CODE_LIMITS.MAX_LENGTH,
+                  })}
+                  maxLength={URL_CUSTOM_CODE_LIMITS.MAX_LENGTH}
+                  fieldName={URL_DISPLAY_CONFIG.CUSTOM_CODE_A11Y_DESCRIPTION}
+                  className="rounded-l-none border-l-0"
+                />
+              </div>
             </div>
             {errors.customCode && (
               <p className="mt-1 text-sm text-red-600">
@@ -187,7 +303,7 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
               id="expiryDate"
               {...register("expiryDate")}
               min={new Date().toISOString().split("T")[0]}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
             {errors.expiryDate && (
               <p className="mt-1 text-sm text-red-600">
@@ -196,6 +312,166 @@ const UrlSelectionStep: React.FC<UrlSelectionStepProps> = ({
             )}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Search Interface */}
+      <div className="space-y-3">
+        <label className="block text-sm font-medium text-gray-700">
+          Search your links
+        </label>
+        <SearchInput
+          placeholder="Search your links..."
+          onSearch={handleSearch}
+          initialValue={searchQuery}
+          className="w-full"
+        />
+
+        {/* Recent Searches */}
+        {recentSearches.length > 0 && !searchQuery && (
+          <div className="space-y-2">
+            <div className="text-xs text-gray-500">Recent searches</div>
+            <div className="flex flex-wrap gap-2">
+              {recentSearches.map((search, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleRecentSearchClick(search)}
+                  className="flex items-center text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded-full transition-colors"
+                >
+                  <RiSearchLine className="w-3 h-3 mr-1" />
+                  {search}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Recent URLs Section */}
+      {!searchQuery && recentUrls.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-700">Recent URLs</h3>
+            <span className="text-xs text-gray-500">
+              {recentUrls.length} items
+            </span>
+          </div>
+
+          <div className="grid gap-3">
+            {recentUrls.map((url) => (
+              <UrlCard
+                key={url.id}
+                url={url}
+                isSelected={selectedUrlId === url.id}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Search Results */}
+      {searchQuery && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-medium text-gray-700">
+              Search Results
+            </h3>
+            <span className="text-xs text-gray-500">
+              {filteredUrls.length} results for &ldquo;{searchQuery}&rdquo;
+            </span>
+          </div>
+
+          {filteredUrls.length > 0 ? (
+            <div className="grid gap-3 max-h-80 overflow-y-auto">
+              {filteredUrls.map((url) => (
+                <UrlCard
+                  key={url.id}
+                  url={url}
+                  isSelected={selectedUrlId === url.id}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <RiSearchLine className="w-8 h-8 mx-auto mb-3 text-gray-300" />
+              <p className="text-gray-500 mb-4">
+                No URLs found matching &ldquo;{searchQuery}&rdquo;
+              </p>
+
+              {/* Suggest popular URLs if available */}
+              {popularUrls.length > 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-400">
+                    Try one of these popular URLs instead:
+                  </p>
+                  <div className="grid gap-2 max-w-md mx-auto">
+                    {popularUrls.slice(0, 2).map((url) => (
+                      <UrlCard
+                        key={url.id}
+                        url={url}
+                        isSelected={selectedUrlId === url.id}
+                        showClickCount={true}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isLoadingUrls && (
+        <div className="text-center py-8">
+          <div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500">Loading your URLs...</p>
+        </div>
+      )}
+
+      {/* Empty State - No URLs */}
+      {!isLoadingUrls && existingUrls.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          <RiLinkM className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No URLs yet
+          </h3>
+          <p className="mb-6">Create your first URL to generate QR codes</p>
+
+          {/* Suggestions for new users */}
+          <div className="max-w-sm mx-auto bg-blue-50 rounded-lg p-4">
+            <div className="flex items-center text-sm text-blue-700 mb-2">
+              <RiStarLine className="w-4 h-4 mr-2" />
+              <span className="font-medium">
+                Popular categories to start with:
+              </span>
+            </div>
+            <div className="text-xs text-blue-600 space-y-1">
+              {POPULAR_URL_CATEGORIES.map((category, index) => (
+                <div key={index}>• {category}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create New URL Link */}
+      <div className="pt-4 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={handleCreateNew}
+          className="text-sm text-blue-600 hover:text-blue-700 flex items-center transition-colors hover:underline"
+        >
+          <span>Create new URL instead</span>
+        </button>
+      </div>
+
+      {/* Validation Error */}
+      {errors.existingUrlId && (
+        <p className="text-sm text-red-600">Please select a URL to continue</p>
       )}
     </div>
   );
