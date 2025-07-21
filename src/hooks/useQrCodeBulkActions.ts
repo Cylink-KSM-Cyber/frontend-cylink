@@ -72,7 +72,8 @@ export const useQrCodeBulkActions = (
 
       const success = await qrCodeDownloadService.downloadQrCode(
         qrCode,
-        format
+        format,
+        "individual"
       );
 
       if (success) {

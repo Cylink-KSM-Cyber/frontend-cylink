@@ -1,6 +1,7 @@
 import { QrCode } from "@/interfaces/url";
 import QRCodeLib from "qrcode";
 import html2canvas from "html2canvas";
+import { trackQrCodeDownload } from "@/utils/qrCodeDownloadTracking";
 
 /**
  * Service for downloading QR codes as images (PNG, SVG)
@@ -311,10 +312,12 @@ class QrCodeDownloadService {
    * Download QR code as image
    * @param qrCode - QR code data
    * @param format - Image format (png or svg)
+   * @param downloadMethod - Method of download (individual or bulk)
    */
   async downloadQrCode(
     qrCode: QrCode,
-    format: "png" | "svg"
+    format: "png" | "svg",
+    downloadMethod: "individual" | "bulk" = "individual"
   ): Promise<boolean> {
     // Default download size is larger for better quality
     const downloadSize = 500;
@@ -350,9 +353,60 @@ class QrCodeDownloadService {
       // Clean up
       document.body.removeChild(link);
 
+      // Track QR code download conversion goal in PostHog
+      const qrCodeAgeDays = Math.floor(
+        (Date.now() - new Date(qrCode.createdAt).getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      trackQrCodeDownload({
+        qr_code_id: qrCode.id,
+        url_id: qrCode.urlId,
+        qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
+        short_url: qrCode.shortUrl || "",
+        customization_options: {
+          foreground_color: qrCode.customization?.foregroundColor || "#000000",
+          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
+          size: qrCode.customization?.size || 300,
+        },
+        download_format: format,
+        download_size: downloadSize,
+        includes_logo: qrCode.customization?.includeLogo || false,
+        total_scans: qrCode.scans || 0,
+        qr_code_age_days: qrCodeAgeDays,
+        download_method: downloadMethod,
+        success: true,
+      });
+
       return true;
     } catch (error) {
       console.error("QR code download failed", error);
+
+      // Track failed QR code download conversion goal in PostHog
+      const qrCodeAgeDays = Math.floor(
+        (Date.now() - new Date(qrCode.createdAt).getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      trackQrCodeDownload({
+        qr_code_id: qrCode.id,
+        url_id: qrCode.urlId,
+        qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
+        short_url: qrCode.shortUrl || "",
+        customization_options: {
+          foreground_color: qrCode.customization?.foregroundColor || "#000000",
+          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
+          size: qrCode.customization?.size || 300,
+        },
+        download_format: format,
+        download_size: downloadSize,
+        includes_logo: qrCode.customization?.includeLogo || false,
+        total_scans: qrCode.scans || 0,
+        qr_code_age_days: qrCodeAgeDays,
+        download_method: downloadMethod,
+        success: false,
+      });
+
       return false;
     }
   }

@@ -8,6 +8,7 @@ import QrCodePreview from "@/components/atoms/QrCodePreview";
 import { useQrCode } from "@/hooks/useQrCode";
 import { RiQrCodeLine, RiDownload2Line, RiShareLine } from "react-icons/ri";
 import { useRouter } from "next/navigation";
+import posthogClient from "@/utils/posthogClient";
 
 /**
  * QrCodeModal props
@@ -89,15 +90,29 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
 
   // Handle Download QR Code button click
   const handleDownloadClick = () => {
-    if (!generatedQrUrl) return;
+    if (!generatedQrUrl || !url) return;
 
     // Create a temporary anchor element
     const a = document.createElement("a");
     a.href = generatedQrUrl;
-    a.download = `qrcode-${url?.short_code || "link"}.png`;
+    a.download = `qrcode-${url.short_code || "link"}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+
+    // Track QR code download for newly generated QR codes
+    // Note: This is a simplified tracking since we don't have full QR code data
+    // In a real scenario, you might want to track this differently
+    posthogClient.captureEvent("qr_code_downloaded", {
+      url_id: url.id,
+      qr_code_title: url.title || `QR Code for ${url.short_code}`,
+      short_url: url.short_url,
+      download_format: "png",
+      download_size: qrSize,
+      includes_logo: includeLogoChecked,
+      download_method: "individual",
+      success: true,
+    });
   };
 
   // Handle Share QR Code button click
