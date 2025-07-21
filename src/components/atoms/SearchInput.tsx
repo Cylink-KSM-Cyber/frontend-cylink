@@ -50,7 +50,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
       setInputValue(initialValue);
       logger.debug("SearchInput initialValue changed", { initialValue });
     }
-  }, [initialValue]);
+  }, [initialValue, inputValue]);
 
   // Clear debounce timer on unmount
   useEffect(() => {

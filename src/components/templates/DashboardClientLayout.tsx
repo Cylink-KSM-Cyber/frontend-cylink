@@ -34,7 +34,7 @@ const DashboardClientLayout: React.FC<DashboardClientLayoutProps> = ({
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar
-        userName={user?.username || "User"}
+        userName={user?.name || "User"}
         userEmail={user?.email || "user@example.com"}
         onLogout={logout}
         onProfileClick={handleProfileClick}

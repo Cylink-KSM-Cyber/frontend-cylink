@@ -4,7 +4,15 @@ import React from "react";
 import { motion } from "framer-motion";
 import { FiAlertTriangle, FiClock, FiXCircle } from "react-icons/fi";
 import Button from "@/components/atoms/Button";
-import { TokenValidation } from "@/interfaces/auth";
+/**
+ * Token validation state type
+ */
+interface TokenValidation {
+  isValid: boolean;
+  isExpired: boolean;
+  errorCode?: "MISSING_TOKEN" | "INVALID_TOKEN" | "TOKEN_EXPIRED" | string;
+  message?: string;
+}
 import Link from "next/link";
 
 /**

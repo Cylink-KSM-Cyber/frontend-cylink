@@ -31,7 +31,7 @@ const TOAST_DURATION = NAVIGATION_DELAY + 500;
 const initialState: AuthContextType = {
   user: null,
   isAuthenticated: false,
-  setIsModalOpen: (open: boolean) => {},
+  setIsModalOpen: () => {},
   isModalOpen: false,
   isLoading: true,
   login: async () => {},
@@ -88,8 +88,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log("User data loaded from storage:", userData);
           } else {
             console.log("Token exists but no user data found - keeping tokens");
-            // Keep tokens even if user data is missing
-            // User data might be missing due to storage issues but tokens are still valid
+            // Keep tokens even if user data is missing due to storage issues but tokens are still valid
           }
         }
       } catch (error) {
@@ -281,15 +280,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Identify user in PostHog
       posthogClient.identifyUser(user.id.toString(), {
         email: user.email,
-        username: user.username,
+        name: user.name,
         created_at: user.created_at,
-        updated_at: user.updated_at
+        updated_at: user.updated_at,
       });
-      
+
       // Capture login event
-      posthogClient.captureEvent('user_logged_in', {
-        login_method: 'email',
-        remember_me: remember
+      posthogClient.captureEvent("user_logged_in", {
+        login_method: "email",
+        remember_me: remember,
       });
 
       // Show success toast with longer duration to ensure visibility before navigation
@@ -366,8 +365,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Capture logout event before resetting user
     if (user) {
-      posthogClient.captureEvent('user_logged_out', {
-        user_id: user.id
+      posthogClient.captureEvent("user_logged_out", {
+        user_id: user.id,
       });
     }
 

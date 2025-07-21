@@ -1,5 +1,3 @@
-import { PasswordStrength } from "@/interfaces/auth";
-
 /**
  * Password strength utility
  * @description Provides password strength analysis and validation
@@ -9,6 +7,22 @@ import { PasswordStrength } from "@/interfaces/auth";
  * Password strength level type
  */
 export type PasswordStrengthLevel = "weak" | "fair" | "good" | "strong";
+
+/**
+ * Password strength analysis type
+ */
+export interface PasswordStrength {
+  score: number;
+  level: PasswordStrengthLevel;
+  feedback: string[];
+  requirements: {
+    minLength: boolean;
+    hasUppercase: boolean;
+    hasLowercase: boolean;
+    hasNumber: boolean;
+    hasSpecialChar: boolean;
+  };
+}
 
 /**
  * Analyze password strength
