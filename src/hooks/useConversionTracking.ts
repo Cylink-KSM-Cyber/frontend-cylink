@@ -21,6 +21,7 @@ import { useTrackQrCodeDeletion } from "./conversionTrackings/useTrackQrCodeDele
 import { useTrackQrCodeDownload } from "./conversionTrackings/useTrackQrCodeDownload";
 import { useTrackQrCodeSharing } from "./conversionTrackings/useTrackQrCodeSharing";
 import { useTrackQrCodePreviewInteraction } from "./conversionTrackings/useTrackQrCodePreviewInteraction";
+import { useTrackQrCodeBulkOperation } from "./conversionTrackings/useTrackQrCodeBulkOperation";
 import { useTrackConversion } from "./conversionTrackings/useTrackConversion";
 import { useTrackFeatureUsage } from "./conversionTrackings/useTrackFeatureUsage";
 import { useTrackError } from "./conversionTrackings/useTrackError";
@@ -42,6 +43,7 @@ export const useConversionTracking = () => {
     ...useTrackQrCodeDownload(),
     ...useTrackQrCodeSharing(),
     ...useTrackQrCodePreviewInteraction(),
+    ...useTrackQrCodeBulkOperation(),
     ...useTrackConversion(),
     ...useTrackFeatureUsage(),
     ...useTrackError(),

@@ -17,4 +17,5 @@ export * from "./conversionTrackings/QrCodeDeletionProperties";
 export * from "./conversionTrackings/QrCodeDownloadProperties";
 export * from "./conversionTrackings/QrCodeSharingProperties";
 export * from "./conversionTrackings/QrCodePreviewInteractionProperties";
+export * from "./conversionTrackings/QrCodeBulkOperationProperties";
 export * from "./conversionTrackings/UseConversionTrackingReturn";
