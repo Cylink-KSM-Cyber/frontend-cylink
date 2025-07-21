@@ -16,6 +16,7 @@ import { useTrackUrlEdit } from "./conversionTrackings/useTrackUrlEdit";
 import { useTrackUrlDeletion } from "./conversionTrackings/useTrackUrlDeletion";
 import { useTrackUrlClick } from "./conversionTrackings/useTrackUrlClick";
 import { useTrackQrCodeGeneration } from "./conversionTrackings/useTrackQrCodeGeneration";
+import { useTrackQrCodeEdit } from "./conversionTrackings/useTrackQrCodeEdit";
 import { useTrackConversion } from "./conversionTrackings/useTrackConversion";
 import { useTrackFeatureUsage } from "./conversionTrackings/useTrackFeatureUsage";
 import { useTrackError } from "./conversionTrackings/useTrackError";
@@ -32,6 +33,7 @@ export const useConversionTracking = () => {
     ...useTrackUrlDeletion(),
     ...useTrackUrlClick(),
     ...useTrackQrCodeGeneration(),
+    ...useTrackQrCodeEdit(),
     ...useTrackConversion(),
     ...useTrackFeatureUsage(),
     ...useTrackError(),

@@ -10,6 +10,7 @@ import {
 import { fetchQrCodeColors, generateQrCode } from "@/services/qrcode";
 import { Url } from "@/interfaces/url";
 import { useToast } from "@/contexts/ToastContext";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 import {
   DEFAULT_QR_COLORS,
@@ -22,6 +23,9 @@ import {
  * @returns QR code state and management functions
  */
 export const useQrCode = () => {
+  // Conversion tracking hook
+  const { trackQrCodeEdit } = useConversionTracking();
+
   // State for colors
   const [foregroundColors, setForegroundColors] = useState<QrCodeColor[]>([]);
   const [backgroundColors, setBackgroundColors] = useState<QrCodeColor[]>([]);
@@ -278,11 +282,19 @@ export const useQrCode = () => {
    * Update an existing QR code
    * @param id QR code ID
    * @param editData QR code data to update
+   * @param previousCustomization Optional previous customization data for tracking
    * @returns Promise with updated QR code data or error
    */
   const updateQrCode = async (
     id: string | number,
-    editData: QrCodeEditRequest
+    editData: QrCodeEditRequest,
+    previousCustomization?: {
+      foreground_color: string;
+      background_color: string;
+      include_logo: boolean;
+      logo_size: number;
+      size: number;
+    }
   ): Promise<QrCodeUpdateResponse> => {
     setIsGenerating(true);
 
@@ -308,6 +320,48 @@ export const useQrCode = () => {
 
       const data = await res.json();
 
+      // Track QR code edit conversion goal in PostHog
+      if (previousCustomization) {
+        const fieldsModified = [];
+
+        // Determine which fields were modified
+        if (editData.color !== previousCustomization.foreground_color) {
+          fieldsModified.push("foreground_color");
+        }
+        if (
+          editData.background_color !== previousCustomization.background_color
+        ) {
+          fieldsModified.push("background_color");
+        }
+        if (editData.include_logo !== previousCustomization.include_logo) {
+          fieldsModified.push("include_logo");
+        }
+        if (editData.logo_size !== previousCustomization.logo_size) {
+          fieldsModified.push("logo_size");
+        }
+        if (editData.size !== previousCustomization.size) {
+          fieldsModified.push("size");
+        }
+
+        trackQrCodeEdit({
+          qr_code_id: Number(id),
+          url_id: data.data.url_id,
+          previous_customization: {
+            foreground_color: previousCustomization.foreground_color,
+            background_color: previousCustomization.background_color,
+            size: previousCustomization.size,
+          },
+          new_customization: {
+            foreground_color: editData.color,
+            background_color: editData.background_color,
+            size: editData.size,
+          },
+          fields_modified:
+            fieldsModified.length > 0 ? fieldsModified : ["unknown"],
+          success: true,
+        });
+      }
+
       // Show success toast
       showToast("QR Code updated successfully", "success", 4000);
 
@@ -319,6 +373,26 @@ export const useQrCode = () => {
 
       setError(err as Error);
       setIsGenerating(false);
+
+      // Track failed QR code edit conversion goal in PostHog
+      if (previousCustomization) {
+        trackQrCodeEdit({
+          qr_code_id: Number(id),
+          url_id: 0, // We don't have URL ID on error
+          previous_customization: {
+            foreground_color: previousCustomization.foreground_color,
+            background_color: previousCustomization.background_color,
+            size: previousCustomization.size,
+          },
+          new_customization: {
+            foreground_color: editData.color,
+            background_color: editData.background_color,
+            size: editData.size,
+          },
+          fields_modified: ["unknown"],
+          success: false,
+        });
+      }
 
       // Show error toast
       showToast(`Failed to update QR code: ${errorMessage}`, "error", 4000);
