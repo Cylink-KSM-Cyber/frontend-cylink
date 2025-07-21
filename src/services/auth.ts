@@ -31,12 +31,15 @@ const AuthService = {
    */
   signup: async (credentials: RegisterRequest): Promise<RegisterResponse> => {
     try {
-      console.log("Sending registration request:", {
-        email: credentials.email,
-        username: credentials.username,
-        passwordLength: credentials.password?.length,
-        password_confirmationLength: credentials.password_confirmation?.length,
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Sending registration request:", {
+          email: credentials.email,
+          username: credentials.username,
+          passwordLength: credentials.password?.length,
+          password_confirmationLength:
+            credentials.password_confirmation?.length,
+        });
+      }
 
       // Call API with registration data
       const response = await post<RegisterResponse>("/api/v1/auth/register", {
@@ -46,11 +49,15 @@ const AuthService = {
         password_confirmation: credentials.password_confirmation,
       });
 
-      console.log("Registration API response:", response);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Registration API response:", response);
+      }
 
       // Validate response structure (minimal)
       if (!response || typeof response !== "object") {
-        console.error("Invalid registration response structure:", response);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Invalid registration response structure:", response);
+        }
         throw new Error("Invalid response from server");
       }
 
@@ -101,16 +108,22 @@ const AuthService = {
         "/api/v1/auth/login",
         credentials
       );
-      console.log("Raw API response:", apiResponse);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Raw API response:", apiResponse);
+      }
 
       // Validate response structure (for the actual API response)
       if (!apiResponse?.data?.user || !apiResponse?.data?.token) {
-        console.error("Invalid login response structure:", apiResponse);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Invalid login response structure:", apiResponse);
+        }
         throw new Error("Invalid response from server");
       }
 
       if (!apiResponse.data.token.access || !apiResponse.data.token.refresh) {
-        console.error("Missing tokens in response:", apiResponse.data.token);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Missing tokens in response:", apiResponse.data.token);
+        }
         throw new Error("Authentication tokens missing in response");
       }
 
@@ -148,10 +161,12 @@ const AuthService = {
     if (typeof window === "undefined") return;
 
     if (!accessToken || !refreshToken) {
-      console.error("Attempting to save invalid tokens:", {
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Attempting to save invalid tokens:", {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+        });
+      }
       throw new Error("Cannot save invalid authentication tokens");
     }
 
@@ -180,13 +195,19 @@ const AuthService = {
     if (typeof window === "undefined") return;
 
     try {
-      console.log("Saving user data:", user);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Saving user data:", user);
+      }
       Cookies.set("userData", JSON.stringify(user));
-      console.log("User data saved successfully to cookies");
+      if (process.env.NODE_ENV !== "production") {
+        console.log("User data saved successfully to cookies");
+      }
 
       // Verify the data was saved correctly
       const savedData = Cookies.get("userData");
-      console.log("Verification - saved data:", savedData);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Verification - saved data:", savedData);
+      }
     } catch (error) {
       console.error("Error saving user data to Cookies:", error);
       throw new Error("Failed to save user data");
@@ -202,14 +223,20 @@ const AuthService = {
 
     try {
       const userData = Cookies.get("userData");
-      console.log("Retrieved raw user data from cookies:", userData);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Retrieved raw user data from cookies:", userData);
+      }
 
       if (userData) {
         const parsedData = JSON.parse(userData);
-        console.log("Parsed user data:", parsedData);
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Parsed user data:", parsedData);
+        }
         return parsedData;
       } else {
-        console.log("No user data found in cookies");
+        if (process.env.NODE_ENV !== "production") {
+          console.log("No user data found in cookies");
+        }
         return null;
       }
     } catch (error) {

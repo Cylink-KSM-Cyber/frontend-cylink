@@ -146,16 +146,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Track user register conversion goal in PostHog
       if (response && response.data && response.data.user) {
-        console.log(
-          "[Tracking] Akan mengirim event user_registered ke PostHog",
-          {
-            user_id: response.data.user.id,
-            email: response.data.user.email,
-            username: response.data.user.name,
-            is_verified: !!response.data.user.is_verified,
-            registration_success: true,
-          }
-        );
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            "[Tracking] Akan mengirim event user_registered ke PostHog",
+            {
+              user_id: response.data.user.id,
+              email: response.data.user.email,
+              username: response.data.user.name,
+              is_verified: !!response.data.user.is_verified,
+              registration_success: true,
+            }
+          );
+        }
         trackUserRegister({
           user_id: response.data.user.id,
           email: response.data.user.email,
@@ -164,11 +166,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           registration_success: true,
         });
         await new Promise((resolve) => setTimeout(resolve, 200));
-        console.log("[Tracking] Event user_registered sudah dipanggil");
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[Tracking] Event user_registered sudah dipanggil");
+        }
       } else {
-        console.error(
-          "[Tracking] Tidak ada data user pada response register, event tidak dikirim"
-        );
+        if (process.env.NODE_ENV !== "production") {
+          console.error(
+            "[Tracking] Tidak ada data user pada response register, event tidak dikirim"
+          );
+        }
       }
 
       // Show success toast with longer duration to ensure visibility before navigation

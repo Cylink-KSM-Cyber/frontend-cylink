@@ -15,15 +15,21 @@ export const useTrackUserRegister = () => {
   const trackUserRegister = useCallback(
     (properties: UserRegisterProperties) => {
       if (!properties.user_id || properties.user_id <= 0) {
-        console.warn("Invalid user_id provided to trackUserRegister");
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("Invalid user_id provided to trackUserRegister");
+        }
         return;
       }
       if (!properties.email || properties.email.trim().length === 0) {
-        console.warn("Invalid email provided to trackUserRegister");
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("Invalid email provided to trackUserRegister");
+        }
         return;
       }
       if (!properties.username || properties.username.trim().length === 0) {
-        console.warn("Invalid username provided to trackUserRegister");
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("Invalid username provided to trackUserRegister");
+        }
         return;
       }
       const eventProperties: PostHogEventProperties = {
