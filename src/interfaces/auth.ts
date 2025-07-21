@@ -25,7 +25,7 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
-  retype_password: string;
+  password_confirmation: string;
   username: string;
 }
 
@@ -114,6 +114,7 @@ export interface ResetPasswordResponse {
 export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isModalOpen: boolean;
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginRequest, remember?: boolean) => Promise<void>;

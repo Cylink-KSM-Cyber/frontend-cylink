@@ -1,14 +1,15 @@
 "use client";
 
+import Button from "@/components/atoms/Button";
+import Input from "@/components/atoms/Input";
+import { useAuth } from "@/contexts/AuthContext";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { motion } from "framer-motion";
+import Link from "next/link";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "framer-motion";
-import Input from "@/components/atoms/Input";
-import Button from "@/components/atoms/Button";
-import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import RegisterSuccessModal from "./RegisterSuccessModal";
 
 /**
  * Register form schema validation
@@ -26,7 +27,7 @@ const registerSchema = z.object({
     .string()
     .min(1, { message: "Password is required" })
     .min(8, { message: "Password must be at least 8 characters" }),
-  retype_password: z
+  password_confirmation: z
     .string()
     .min(1, { message: "Confirm password is required" })
     .min(8, { message: "Confirm password must be at least 8 characters" }),
@@ -53,19 +54,20 @@ interface RegisterFormProps {
  * @returns Register form component
  */
 const RegisterForm: React.FC<RegisterFormProps> = ({ className = "" }) => {
-  const { signup, isLoading } = useAuth();
+  const { signup, isLoading, isModalOpen } = useAuth();
 
   // Form validation with react-hook-form and zod
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       email: "",
       password: "",
-      retype_password: "",
+      password_confirmation: "",
       username: "",
     },
   });
@@ -78,9 +80,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ className = "" }) => {
     await signup({
       email: data.email,
       password: data.password,
-      retype_password: data.retype_password,
+      password_confirmation: data.password_confirmation,
       username: data.username,
     });
+  };
+
+  const handleClose = () => {
+    reset();
   };
 
   return (
@@ -135,10 +141,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ className = "" }) => {
             label="Confirm Password"
             type="password"
             fullWidth
-            error={errors.retype_password?.message}
+            error={errors.password_confirmation?.message}
             showPasswordToggle
             autoComplete="retype-password"
-            {...register("retype_password")}
+            {...register("password_confirmation")}
           />
         </div>
 
@@ -163,6 +169,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ className = "" }) => {
           </Link>
         </div>
       </form>
+      <RegisterSuccessModal isOpen={isModalOpen} onClose={handleClose} />
     </motion.div>
   );
 };

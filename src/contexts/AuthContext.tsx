@@ -30,6 +30,7 @@ const TOAST_DURATION = NAVIGATION_DELAY + 500;
 const initialState: AuthContextType = {
   user: null,
   isAuthenticated: false,
+  isModalOpen: false,
   isLoading: true,
   login: async () => {},
   signup: async () => {},
@@ -62,6 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { showToast, clearAllToasts } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
@@ -130,7 +132,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email: credentials.email,
         username: credentials.username,
         passwordLength: credentials.password?.length,
-        retype_passwordLength: credentials.retype_password?.length,
+        retype_passwordLength: credentials.password_confirmation?.length,
       });
 
       const response = await AuthService.signup(credentials);
@@ -149,6 +151,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Set isLoading to false before navigation
       setIsLoading(false);
+      setIsModalOpen(true);
 
       // Navigate to login page after a delay to ensure toast is visible
       navigateWithDelay("/login");
@@ -359,6 +362,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         isAuthenticated: !!user,
         isLoading,
+        isModalOpen,
         error,
         login,
         signup,

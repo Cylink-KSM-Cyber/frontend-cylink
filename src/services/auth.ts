@@ -29,7 +29,7 @@ const AuthService = {
         email: credentials.email,
         username: credentials.username,
         passwordLength: credentials.password?.length,
-        retype_passwordLength: credentials.retype_password?.length,
+        password_confirmationLength: credentials.password_confirmation?.length,
       });
 
       // Call API with registration data
@@ -37,7 +37,7 @@ const AuthService = {
         email: credentials.email,
         password: credentials.password,
         username: credentials.username,
-        retype_password: credentials.retype_password,
+        password_confirmation: credentials.password_confirmation,
       });
 
       console.log("Registration API response:", {
