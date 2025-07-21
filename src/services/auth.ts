@@ -56,8 +56,33 @@ const AuthService = {
 
       // No longer expect user or verification_token fields
       // Optionally, normalize data here if needed by frontend
-
-      return response;
+      // Normalisasi agar data.user selalu ada
+      let normalizedResponse = response;
+      if (
+        response &&
+        response.data &&
+        // Gunakan optional chaining dan cek jika response.data.id ada, bukan response.data.user
+        !("user" in response.data) &&
+        "id" in response.data
+      ) {
+        const data: Record<string, unknown> = response.data;
+        normalizedResponse = {
+          ...response,
+          data: {
+            user: {
+              id: data.id as number,
+              email: data.email as string,
+              name: (data.username as string) || (data.name as string) || "",
+              email_verified_at: (data.email_verified_at as string) || null,
+              created_at: (data.created_at as string) || "",
+              updated_at: (data.updated_at as string) || "",
+              is_verified: (data.is_verified as boolean) || false,
+            },
+            verification_token: (data.verification_token as string) || "",
+          },
+        };
+      }
+      return normalizedResponse;
     } catch (error) {
       console.error("Registration service error:", error);
       throw error;
