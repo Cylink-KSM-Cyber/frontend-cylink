@@ -31,20 +31,13 @@ export interface RegisterRequest {
 
 /**
  * Register response interface
- *
- * Represents the response structure for user registration as returned by the backend API. The data field contains the user object directly, matching the backend response.
- *
- * @module interfaces/auth
  */
 export interface RegisterResponse {
   status: number;
   message: string;
   data: {
-    id: number;
-    username: string;
-    email: string;
-    created_at: string;
-    updated_at: string;
+    user: User;
+    verification_token: string;
   };
 }
 
@@ -122,6 +115,7 @@ export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isModalOpen: boolean;
+  setIsModalOpen: (open: boolean) => void;
   isLoading: boolean;
   error: string | null;
   login: (credentials: LoginRequest, remember?: boolean) => Promise<void>;

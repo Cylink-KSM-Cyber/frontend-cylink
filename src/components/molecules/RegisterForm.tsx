@@ -54,13 +54,12 @@ interface RegisterFormProps {
  * @returns Register form component
  */
 const RegisterForm: React.FC<RegisterFormProps> = ({ className = "" }) => {
-  const { signup, isLoading, isModalOpen } = useAuth();
+  const { signup, isLoading, isModalOpen, setIsModalOpen } = useAuth();
 
   // Form validation with react-hook-form and zod
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -86,7 +85,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ className = "" }) => {
   };
 
   const handleClose = () => {
-    reset();
+    setIsModalOpen(false);
   };
 
   return (

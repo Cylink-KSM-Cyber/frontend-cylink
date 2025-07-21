@@ -30,6 +30,7 @@ const TOAST_DURATION = NAVIGATION_DELAY + 500;
 const initialState: AuthContextType = {
   user: null,
   isAuthenticated: false,
+  setIsModalOpen: (open: boolean) => {},
   isModalOpen: false,
   isLoading: true,
   login: async () => {},
@@ -151,10 +152,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Set isLoading to false before navigation
       setIsLoading(false);
+
       setIsModalOpen(true);
 
       // Navigate to login page after a delay to ensure toast is visible
-      navigateWithDelay("/login");
+      // navigateWithDelay("/login");
     } catch (err) {
       console.error("Registration error details:", err);
 
@@ -208,6 +210,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       setError(errorMessage);
+
+      setIsModalOpen(false);
 
       // Show error toast with longer duration
       showToast(errorMessage, errorType, 6000);
@@ -363,6 +367,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         isAuthenticated: !!user,
         isLoading,
         isModalOpen,
+        setIsModalOpen,
         error,
         login,
         signup,
