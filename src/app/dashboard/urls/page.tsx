@@ -21,6 +21,10 @@ import { ONBOARDING_STEPS } from "@/config/onboardingConfig";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatShortUrl } from "@/utils/urlFormatter";
+import {
+  createOnNextClickHandler,
+  createOnDoneClickHandler,
+} from "@/utils/onboardingDriverCallbacks";
 
 /**
  * Dashboard page
@@ -310,45 +314,13 @@ export default function UrlsPage() {
   const onboardingOptions = {
     showProgress: true,
     progressText: "Step {{current}} of " + totalSteps,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onNextClick: (_el: unknown, _step: unknown, options: unknown) => {
-      // Type narrowing for options
-      if (
-        typeof options === "object" &&
-        options !== null &&
-        "state" in options &&
-        typeof (options as Record<string, unknown>).state === "object"
-      ) {
-        const state = (options as Record<string, unknown>).state as {
-          activeIndex?: number;
-        };
-        if (state.activeIndex === 10) {
-          if (typeof window !== "undefined") {
-            window.location.href = "/dashboard/qr-codes?onboardingStep=12";
-          }
-        } else if (
-          "driver" in options &&
-          typeof (options as Record<string, unknown>).driver === "object" &&
-          typeof (
-            (options as Record<string, unknown>).driver as {
-              moveNext?: () => void;
-            }
-          ).moveNext === "function"
-        ) {
-          (
-            (options as Record<string, unknown>).driver as {
-              moveNext: () => void;
-            }
-          ).moveNext();
-        }
-      }
-    },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onDoneClick: (_el: unknown, _step: unknown, _options: unknown) => {
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard/qr-codes?onboardingStep=12";
-      }
-    },
+    onNextClick: createOnNextClickHandler(
+      10,
+      "/dashboard/qr-codes?onboardingStep=12"
+    ),
+    onDoneClick: createOnDoneClickHandler(
+      "/dashboard/qr-codes?onboardingStep=12"
+    ),
   };
 
   // Default stats if none are available

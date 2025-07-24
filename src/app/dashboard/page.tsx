@@ -11,6 +11,10 @@ import "@/styles/analyticsDashboard.css";
 import OnboardingTour from "@/components/molecules/OnboardingTour";
 import { ONBOARDING_STEPS } from "@/config/onboardingConfig";
 import { useOnboarding } from "@/contexts/OnboardingContext";
+import {
+  createOnNextClickHandler,
+  createOnDoneClickHandler,
+} from "@/utils/onboardingDriverCallbacks";
 
 /**
  * Dashboard page
@@ -53,44 +57,11 @@ export default function DashboardPage() {
   const onboardingOptions = {
     showProgress: true,
     progressText: "Step {{current}} of " + totalSteps,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onNextClick: (_el: unknown, _step: unknown, options: unknown) => {
-      if (
-        typeof options === "object" &&
-        options !== null &&
-        "state" in options &&
-        typeof (options as Record<string, unknown>).state === "object"
-      ) {
-        const state = (options as Record<string, unknown>).state as {
-          activeIndex?: number;
-        };
-        if (state.activeIndex === transitionStepIndex) {
-          if (typeof window !== "undefined") {
-            window.location.href = "/dashboard/urls?onboardingStep=5";
-          }
-        } else if (
-          "driver" in options &&
-          typeof (options as Record<string, unknown>).driver === "object" &&
-          typeof (
-            (options as Record<string, unknown>).driver as {
-              moveNext?: () => void;
-            }
-          ).moveNext === "function"
-        ) {
-          (
-            (options as Record<string, unknown>).driver as {
-              moveNext: () => void;
-            }
-          ).moveNext();
-        }
-      }
-    },
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    onDoneClick: (_el: unknown, _step: unknown, _options: unknown) => {
-      if (typeof window !== "undefined") {
-        window.location.href = "/dashboard/urls?onboardingStep=5";
-      }
-    },
+    onNextClick: createOnNextClickHandler(
+      transitionStepIndex,
+      "/dashboard/urls?onboardingStep=5"
+    ),
+    onDoneClick: createOnDoneClickHandler("/dashboard/urls?onboardingStep=5"),
     nextBtnText: "Next",
     doneBtnText: "Finish",
   };
