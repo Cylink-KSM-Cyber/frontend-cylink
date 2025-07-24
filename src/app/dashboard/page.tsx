@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { useToast } from "@/contexts/ToastContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
@@ -10,6 +10,7 @@ import { formatShortUrl } from "@/utils/urlFormatter";
 import "@/styles/analyticsDashboard.css";
 import OnboardingTour from "@/components/molecules/OnboardingTour";
 import { ONBOARDING_STEPS } from "@/config/onboardingConfig";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 
 /**
  * Dashboard page
@@ -23,6 +24,9 @@ export default function DashboardPage() {
   // Get toast context for notifications
   const { showToast } = useToast();
 
+  // Get onboarding context
+  const { showOnboarding, setShowOnboarding } = useOnboarding();
+
   // Set the active sidebar item
   useEffect(() => {
     setActiveItemId("dashboard");
@@ -30,18 +34,6 @@ export default function DashboardPage() {
 
   // Get dashboard analytics data
   const dashboardData = useDashboardAnalytics();
-
-  // Onboarding state: only show for new users (localStorage)
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const hasSeen = localStorage.getItem("cylink_onboarding_dashboard");
-      if (!hasSeen) {
-        setShowOnboarding(true);
-        localStorage.setItem("cylink_onboarding_dashboard", "1");
-      }
-    }
-  }, []);
 
   // Pass seluruh step global ke OnboardingTour
   const onboardingSteps = ONBOARDING_STEPS.map((s) => ({

@@ -20,6 +20,7 @@ import { useToast } from "@/contexts/ToastContext";
 import { ToastType } from "@/components/atoms/Toast";
 import posthogClient from "@/utils/posthogClient";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 
 // Navigation delay to allow toast to be visible
 const NAVIGATION_DELAY = 2000;
@@ -69,6 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const { trackUserRegister } = useConversionTracking();
+  const { triggerOnboarding } = useOnboarding();
 
   /**
    * Initialize auth state from localStorage on mount
@@ -282,7 +284,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         hasTokens: !!response.data?.tokens,
       });
 
-      const { user, tokens } = response.data;
+      const { user, tokens, first_login } = response.data;
 
       if (!user || !tokens) {
         console.error("Invalid response structure:", {
@@ -328,15 +330,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Show success toast with longer duration to ensure visibility before navigation
       showToast("Successfully logged in", "success", TOAST_DURATION);
       console.log("Success toast shown, will navigate after delay");
-
-      // Set isLoading to false before navigation
       setIsLoading(false);
-
-      // For development: always show onboarding after login
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("cylink_onboarding_dashboard");
-      }
-
+      // Trigger onboarding logic based on environment and first_login
+      triggerOnboarding(!!first_login);
       // Navigate to dashboard after a delay to ensure toast is visible
       navigateWithDelay("/dashboard");
     } catch (err) {
