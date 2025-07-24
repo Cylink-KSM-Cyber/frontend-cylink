@@ -31,12 +31,13 @@ interface SearchInputProps {
  * SearchInput Component
  * @description A search input with debounce functionality
  */
-const SearchInput: React.FC<SearchInputProps> = ({
+const SearchInput: React.FC<SearchInputProps & { "data-tour-id"?: string }> = ({
   placeholder = "Search...",
   onSearch,
   initialValue = "",
   debounceMs = 300,
   className = "",
+  "data-tour-id": dataTourId,
 }) => {
   const [inputValue, setInputValue] = useState(initialValue);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -132,7 +133,11 @@ const SearchInput: React.FC<SearchInputProps> = ({
   `;
 
   return (
-    <form className={`relative ${className}`} onSubmit={handleSubmit}>
+    <form
+      className={`relative ${className}`}
+      onSubmit={handleSubmit}
+      {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
+    >
       {/* Add style tag to hide native clear button */}
       <style>{searchInputStyles}</style>
 

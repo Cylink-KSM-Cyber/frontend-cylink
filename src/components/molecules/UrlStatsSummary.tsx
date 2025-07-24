@@ -34,10 +34,13 @@ interface UrlStatsSummaryProps {
  * StatsSummary Component
  * @description Displays summary statistics for the dashboard in a grid of cards
  */
-const UrlStatsSummary: React.FC<UrlStatsSummaryProps> = ({
+const UrlStatsSummary: React.FC<
+  UrlStatsSummaryProps & { "data-tour-id"?: string }
+> = ({
   stats,
   isLoading = false,
   className = "",
+  "data-tour-id": dataTourId,
 }) => {
   const { urls } = useUrlStats();
   const { ctrStats } = useCtrStats();
@@ -84,6 +87,7 @@ const UrlStatsSummary: React.FC<UrlStatsSummaryProps> = ({
   return (
     <div
       className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}
+      {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
     >
       <StatCard
         title="Active URLs"

@@ -79,7 +79,7 @@ interface UrlsTableProps {
  * UrlsTable Component
  * @description Displays URL data in a sortable and interactive table
  */
-const UrlsTable: React.FC<UrlsTableProps> = ({
+const UrlsTable: React.FC<UrlsTableProps & { "data-tour-id"?: string }> = ({
   urls,
   isLoading = false,
   sortBy = "created_at",
@@ -91,6 +91,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   onDelete,
   className = "",
   onViewDetail,
+  "data-tour-id": dataTourId,
 }) => {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const router = useRouter();
@@ -177,6 +178,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
     return (
       <div
         className={`bg-white rounded-lg shadow-sm overflow-hidden ${className}`}
+        {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
       >
         <div className="animate-pulse">
           <div className="h-14 bg-gray-100 border-b"></div>
@@ -209,6 +211,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
     return (
       <div
         className={`bg-white rounded-lg shadow-sm p-8 text-center ${className}`}
+        {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
       >
         <div className="py-6">
           <RiLink className="w-12 h-12 mx-auto text-gray-300 mb-4" />
@@ -235,6 +238,7 @@ const UrlsTable: React.FC<UrlsTableProps> = ({
   return (
     <div
       className={`bg-white rounded-lg shadow-sm overflow-hidden ${className}`}
+      {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
     >
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">

@@ -8,9 +8,8 @@ import AnalyticsDashboardTemplate from "@/components/templates/AnalyticsDashboar
 import { Url } from "@/interfaces/url";
 import { formatShortUrl } from "@/utils/urlFormatter";
 import "@/styles/analyticsDashboard.css";
-import OnboardingTour, {
-  OnboardingStep,
-} from "@/components/molecules/OnboardingTour";
+import OnboardingTour from "@/components/molecules/OnboardingTour";
+import { OnboardingStep } from "@/interfaces/onboardingTour";
 
 /**
  * Dashboard page
@@ -84,6 +83,25 @@ export default function DashboardPage() {
     },
   ];
 
+  // Custom onNextClick: pada step 3 (index 3), redirect ke /dashboard/urls?onboardingStep=5
+  const onboardingOptions = {
+    showProgress: true,
+    progressText: "Step {{current}} of 11",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onNextClick: (_el: any, _step: any, options: any) => {
+      if (options.state.activeIndex === 3) {
+        if (typeof window !== "undefined") {
+          window.location.href = "/dashboard/urls?onboardingStep=5";
+        }
+      } else {
+        // Penting: lanjutkan ke step berikutnya jika bukan step 4
+        options.driver.moveNext();
+      }
+    },
+    nextBtnText: "Next",
+    doneBtnText: "Finish",
+  };
+
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
     const fullUrl = formatShortUrl(url.short_url);
@@ -101,6 +119,7 @@ export default function DashboardPage() {
         steps={onboardingSteps}
         show={showOnboarding}
         onClose={() => setShowOnboarding(false)}
+        options={onboardingOptions}
       />
     </>
   );

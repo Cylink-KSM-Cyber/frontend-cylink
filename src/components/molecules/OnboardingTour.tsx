@@ -10,12 +10,9 @@ import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
 import type { OnboardingTourProps } from "@/interfaces/onboardingTour";
 
-const OnboardingTour: React.FC<OnboardingTourProps> = ({
-  steps,
-  show,
-  onClose,
-  options = {},
-}) => {
+const OnboardingTour: React.FC<
+  OnboardingTourProps & { startStep?: number }
+> = ({ steps, show, onClose, options = {}, startStep }) => {
   useEffect(() => {
     if (!show || !steps || steps.length === 0) return;
 
@@ -34,6 +31,7 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
       prevBtnText: "Back",
       doneBtnText: "Finish",
       ...options,
+      // step: typeof startStep === 'number' ? startStep : 0, // REMOVE, not supported
       onDestroyed: () => {
         onClose?.();
       },
@@ -41,13 +39,17 @@ const OnboardingTour: React.FC<OnboardingTourProps> = ({
         onClose?.();
       },
     });
-    d.drive();
+    if (typeof startStep === "number" && startStep > 0) {
+      d.drive(startStep);
+    } else {
+      d.drive();
+    }
 
     return () => {
       d.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [show, JSON.stringify(steps)]);
+  }, [show, JSON.stringify(steps), startStep]);
 
   return null; // No visible UI
 };
