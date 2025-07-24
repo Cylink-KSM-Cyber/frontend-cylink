@@ -5,7 +5,7 @@
  * Each step defines the page, global step number, selector, copywriting, and popover position.
  * This enables maintainable, scalable, and consistent onboarding flows.
  *
- * @module onboarding/onboardingConfig
+ * @module config/onboardingConfig
  */
 
 export interface OnboardingStepConfig {

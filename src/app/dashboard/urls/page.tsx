@@ -17,7 +17,7 @@ import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import OnboardingTour from "@/components/molecules/OnboardingTour";
-import { ONBOARDING_STEPS } from "@/onboarding/onboardingConfig";
+import { ONBOARDING_STEPS } from "@/config/onboardingConfig";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatShortUrl } from "@/utils/urlFormatter";

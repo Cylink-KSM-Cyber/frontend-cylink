@@ -9,7 +9,7 @@ import { Url } from "@/interfaces/url";
 import { formatShortUrl } from "@/utils/urlFormatter";
 import "@/styles/analyticsDashboard.css";
 import OnboardingTour from "@/components/molecules/OnboardingTour";
-import { ONBOARDING_STEPS } from "@/onboarding/onboardingConfig";
+import { ONBOARDING_STEPS } from "@/config/onboardingConfig";
 
 /**
  * Dashboard page
