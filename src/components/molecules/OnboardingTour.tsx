@@ -8,22 +8,7 @@
 import React, { useEffect } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-
-export interface OnboardingStep {
-  element: string; // CSS selector or [data-tour-id] attribute
-  popover: {
-    title: string;
-    description: string;
-    position?: "top" | "bottom" | "left" | "right" | "auto";
-  };
-}
-
-export interface OnboardingTourProps {
-  steps: OnboardingStep[];
-  show: boolean;
-  onClose?: () => void;
-  options?: Record<string, any>;
-}
+import type { OnboardingTourProps } from "@/interfaces/onboardingTour";
 
 const OnboardingTour: React.FC<OnboardingTourProps> = ({
   steps,
