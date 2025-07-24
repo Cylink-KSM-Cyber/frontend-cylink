@@ -137,6 +137,7 @@ const AuthService = {
             access_token: apiResponse.data.token.access,
             refresh_token: apiResponse.data.token.refresh,
           },
+          first_login: apiResponse.data.first_login,
         },
       };
 

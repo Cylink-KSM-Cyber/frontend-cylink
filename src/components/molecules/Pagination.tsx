@@ -31,7 +31,8 @@ const Pagination = ({
   totalPages,
   onPageChange,
   className,
-}: PaginationProps) => {
+  "data-tour-id": dataTourId,
+}: PaginationProps & { "data-tour-id"?: string }) => {
   // Generate simple page range for small pagination
   const getSimpleRange = (total: number) => {
     const pageNumbers = [];
@@ -102,7 +103,10 @@ const Pagination = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div className={`flex justify-center mt-8 ${className ?? ""}`}>
+    <div
+      className={`flex justify-center mt-8 ${className ?? ""}`}
+      {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
+    >
       <nav className="flex items-center space-x-1">
         <button
           onClick={() => onPageChange(currentPage - 1)}

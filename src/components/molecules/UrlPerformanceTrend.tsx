@@ -78,7 +78,10 @@ const UrlPerformanceTrend: React.FC<UrlPerformanceTrendProps> = ({
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
+    <div
+      className={`bg-white rounded-lg shadow-sm p-4 ${className}`}
+      data-tour-id="dashboard-performance-trend"
+    >
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium text-gray-900">
           URL Performance Trends

@@ -4,6 +4,7 @@ import React, { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { SidebarProvider } from "@/contexts/SidebarContext";
+import { OnboardingProvider } from "@/contexts/OnboardingContext";
 
 /**
  * Provider properties
@@ -23,11 +24,13 @@ interface ProvidersProps {
 const Providers: React.FC<ProvidersProps> = ({ children }) => {
   return (
     <ToastProvider>
-      <AuthProvider>
-        <Suspense fallback={<div>Loading...</div>}>
-          <SidebarProvider>{children}</SidebarProvider>
-        </Suspense>
-      </AuthProvider>
+      <OnboardingProvider>
+        <AuthProvider>
+          <Suspense fallback={<div>Loading...</div>}>
+            <SidebarProvider>{children}</SidebarProvider>
+          </Suspense>
+        </AuthProvider>
+      </OnboardingProvider>
     </ToastProvider>
   );
 };

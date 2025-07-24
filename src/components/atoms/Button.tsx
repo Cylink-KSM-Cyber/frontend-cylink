@@ -56,7 +56,7 @@ interface ButtonProps {
  * Button Component
  * @description A versatile button component with multiple variants and states
  */
-const Button: React.FC<ButtonProps> = ({
+const Button: React.FC<ButtonProps & { "data-tour-id"?: string }> = ({
   children,
   onClick,
   variant = "primary",
@@ -68,6 +68,7 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   className = "",
+  "data-tour-id": dataTourId,
 }) => {
   // Determine size classes
   const getSizeClasses = () => {
@@ -137,6 +138,7 @@ const Button: React.FC<ButtonProps> = ({
         ${disabled || loading ? "opacity-50 cursor-not-allowed" : ""}
         ${className}
       `}
+      {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
     >
       {loading && <LoadingSpinner />}
       {!loading && startIcon && <span className="mr-2">{startIcon}</span>}

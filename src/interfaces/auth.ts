@@ -53,6 +53,7 @@ export interface ApiLoginResponse {
       access: string;
       refresh: string;
     };
+    first_login: boolean;
   };
 }
 
@@ -68,6 +69,7 @@ export interface LoginResponse {
       access_token: string;
       refresh_token: string;
     };
+    first_login: boolean;
   };
 }
 

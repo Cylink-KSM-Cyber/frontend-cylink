@@ -143,7 +143,10 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
   return (
     <div className="container mx-auto px-4 py-6">
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+      <div
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6"
+        data-tour-id="qrcodes-header"
+      >
         <div className="flex items-center mb-4 sm:mb-0">
           <RiQrCodeLine className="text-primary-600 text-2xl mr-2" />
           <h1 className="text-2xl font-semibold text-gray-800">
@@ -160,6 +163,7 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
           variant="primary"
           startIcon={<RiAddLine />}
           className="whitespace-nowrap"
+          data-tour-id="qrcodes-create-btn"
         >
           Create QR Code
         </Button>
@@ -175,11 +179,15 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
               initialValue={searchTerm}
               onSearch={onSearch}
               className="w-full"
+              data-tour-id="qrcodes-search"
             />
           </div>
 
           {/* View Controls */}
-          <div className="flex items-center space-x-2">
+          <div
+            className="flex items-center space-x-2"
+            data-tour-id="qrcodes-view-toggle"
+          >
             <div className="flex border rounded-md overflow-hidden">
               <button
                 onClick={() => onViewModeChange("grid")}
@@ -212,6 +220,7 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
           onFilterChange={onFilterChange}
           onSortChange={onSortChange}
           className="mt-4"
+          data-tour-id="qrcodes-filter-controls"
         />
 
         {/* Bulk Actions */}
@@ -239,7 +248,7 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
       </div>
 
       {/* Content Section */}
-      <div className="mb-6">
+      <div className="mb-6" data-tour-id="qrcodes-grid-list">
         {viewMode === "grid" ? (
           <QrCodeGrid
             qrCodes={qrCodes}
@@ -299,6 +308,7 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
             currentPage={pagination.page}
             totalPages={pagination.total_pages}
             onPageChange={onPageChange}
+            data-tour-id="qrcodes-pagination"
           />
         </div>
       )}
