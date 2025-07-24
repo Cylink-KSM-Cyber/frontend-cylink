@@ -155,7 +155,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
   },
   {
     page: "/dashboard/qr-codes",
-    step: 18,
+    step: 17,
     element: '[data-tour-id="qrcodes-grid-list"]',
     title: "QR Code Grid/List",
     description: "View, edit, delete, or download your QR codes here.",
@@ -163,7 +163,7 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
   },
   {
     page: "/dashboard/qr-codes",
-    step: 19,
+    step: 18,
     element: '[data-tour-id="qrcodes-pagination"]',
     title: "Pagination",
     description: "Navigate between pages of your QR codes.",
