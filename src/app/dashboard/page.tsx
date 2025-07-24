@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useToast } from "@/contexts/ToastContext";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { useDashboardAnalytics } from "@/hooks/useDashboardAnalytics";
@@ -8,6 +8,9 @@ import AnalyticsDashboardTemplate from "@/components/templates/AnalyticsDashboar
 import { Url } from "@/interfaces/url";
 import { formatShortUrl } from "@/utils/urlFormatter";
 import "@/styles/analyticsDashboard.css";
+import OnboardingTour, {
+  OnboardingStep,
+} from "@/components/molecules/OnboardingTour";
 
 /**
  * Dashboard page
@@ -29,6 +32,58 @@ export default function DashboardPage() {
   // Get dashboard analytics data
   const dashboardData = useDashboardAnalytics();
 
+  // Onboarding state: only show for new users (localStorage)
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasSeen = localStorage.getItem("cylink_onboarding_dashboard");
+      if (!hasSeen) {
+        setShowOnboarding(true);
+        localStorage.setItem("cylink_onboarding_dashboard", "1");
+      }
+    }
+  }, []);
+
+  // Onboarding steps for dashboard
+  const onboardingSteps: OnboardingStep[] = [
+    {
+      element: '[data-tour-id="dashboard-header"]',
+      popover: {
+        title: "Welcome to Your Dashboard!",
+        description:
+          "This is your analytics dashboard. Here you can monitor your link and QR code performance at a glance.",
+        position: "bottom",
+      },
+    },
+    {
+      element: '[data-tour-id="dashboard-kpi-cards"]',
+      popover: {
+        title: "Key Metrics",
+        description:
+          "Quickly view your total URLs, total clicks, average CTR, and top performer stats.",
+        position: "bottom",
+      },
+    },
+    {
+      element: '[data-tour-id="dashboard-performance-trend"]',
+      popover: {
+        title: "Performance Trends",
+        description:
+          "Analyze your URL performance trends over time with this interactive chart.",
+        position: "bottom",
+      },
+    },
+    {
+      element: '[data-tour-id="dashboard-top-urls"]',
+      popover: {
+        title: "Top Performing URLs",
+        description:
+          "See which of your links are performing best and copy them for easy sharing.",
+        position: "bottom",
+      },
+    },
+  ];
+
   // Handle URL copy
   const handleCopyUrl = (url: Url) => {
     const fullUrl = formatShortUrl(url.short_url);
@@ -37,9 +92,16 @@ export default function DashboardPage() {
   };
 
   return (
-    <AnalyticsDashboardTemplate
-      dashboardData={dashboardData}
-      onCopyUrl={handleCopyUrl}
-    />
+    <>
+      <AnalyticsDashboardTemplate
+        dashboardData={dashboardData}
+        onCopyUrl={handleCopyUrl}
+      />
+      <OnboardingTour
+        steps={onboardingSteps}
+        show={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
+    </>
   );
 }

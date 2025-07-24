@@ -332,6 +332,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Set isLoading to false before navigation
       setIsLoading(false);
 
+      // For development: always show onboarding after login
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("cylink_onboarding_dashboard");
+      }
+
       // Navigate to dashboard after a delay to ensure toast is visible
       navigateWithDelay("/dashboard");
     } catch (err) {

@@ -100,7 +100,10 @@ const TopPerformingUrls: React.FC<TopPerformingUrlsProps> = ({
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
+    <div
+      className={`bg-white rounded-lg shadow-sm p-4 ${className}`}
+      data-tour-id="dashboard-top-urls"
+    >
       <h2 className="text-lg font-medium text-gray-900 mb-4">
         Top Performing URLs
       </h2>
