@@ -35,7 +35,7 @@ export default function DashboardPage() {
   // Get dashboard analytics data
   const dashboardData = useDashboardAnalytics();
 
-  // Pass seluruh step global ke OnboardingTour
+  // Pass all global steps to OnboardingTour
   const onboardingSteps = ONBOARDING_STEPS.map((s) => ({
     element: s.element,
     popover: {
@@ -53,18 +53,40 @@ export default function DashboardPage() {
   const onboardingOptions = {
     showProgress: true,
     progressText: "Step {{current}} of " + totalSteps,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onNextClick: (_el: any, _step: any, options: any) => {
-      if (options.state.activeIndex === transitionStepIndex) {
-        if (typeof window !== "undefined") {
-          window.location.href = "/dashboard/urls?onboardingStep=5";
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onNextClick: (_el: unknown, _step: unknown, options: unknown) => {
+      if (
+        typeof options === "object" &&
+        options !== null &&
+        "state" in options &&
+        typeof (options as Record<string, unknown>).state === "object"
+      ) {
+        const state = (options as Record<string, unknown>).state as {
+          activeIndex?: number;
+        };
+        if (state.activeIndex === transitionStepIndex) {
+          if (typeof window !== "undefined") {
+            window.location.href = "/dashboard/urls?onboardingStep=5";
+          }
+        } else if (
+          "driver" in options &&
+          typeof (options as Record<string, unknown>).driver === "object" &&
+          typeof (
+            (options as Record<string, unknown>).driver as {
+              moveNext?: () => void;
+            }
+          ).moveNext === "function"
+        ) {
+          (
+            (options as Record<string, unknown>).driver as {
+              moveNext: () => void;
+            }
+          ).moveNext();
         }
-      } else {
-        options.driver.moveNext();
       }
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    onDoneClick: (_el: any, _step: any, _options: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onDoneClick: (_el: unknown, _step: unknown, _options: unknown) => {
       if (typeof window !== "undefined") {
         window.location.href = "/dashboard/urls?onboardingStep=5";
       }

@@ -31,7 +31,6 @@ const OnboardingTour: React.FC<
       prevBtnText: "Back",
       doneBtnText: "Finish",
       ...options,
-      // step: typeof startStep === 'number' ? startStep : 0, // REMOVE, not supported
       onDestroyed: () => {
         onClose?.();
       },

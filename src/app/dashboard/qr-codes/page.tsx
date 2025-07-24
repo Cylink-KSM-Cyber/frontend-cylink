@@ -111,17 +111,22 @@ export default function QrCodesPage() {
     },
   }));
   const totalSteps = ONBOARDING_STEPS.length;
-  // Cari startStep dari query param onboardingStep (default: 11 untuk step 12)
-  const onboardingStepParam =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("onboardingStep")
-      : undefined;
-  const startStep = onboardingStepParam
-    ? parseInt(onboardingStepParam, 10) - 1
-    : 11;
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(
-    !!onboardingStepParam
-  );
+
+  // State for onboarding step param and start step
+  const [startStep, setStartStep] = useState<number>(11);
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(false);
+
+  // Hydration-safe: get onboardingStepParam and startStep from window.location in useEffect
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const param = new URLSearchParams(window.location.search).get(
+        "onboardingStep"
+      );
+      setStartStep(param ? parseInt(param, 10) - 1 : 11);
+      setShowOnboarding(!!param);
+    }
+  }, []);
+
   // OnboardingTour close handler: remove onboardingStep from URL
   const handleOnboardingClose = () => {
     setShowOnboarding(false);

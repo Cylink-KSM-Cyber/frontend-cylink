@@ -283,7 +283,7 @@ export default function UrlsPage() {
     },
   }));
   const totalSteps = ONBOARDING_STEPS.length;
-  // Cari startStep dari query param onboardingStep (default: 4 untuk step 5)
+  // Find startStep from onboardingStep query param (default: 4 for step 5)
   const onboardingStepParam = searchParams?.get("onboardingStep");
   const startStep = onboardingStepParam
     ? parseInt(onboardingStepParam, 10) - 1
@@ -310,18 +310,41 @@ export default function UrlsPage() {
   const onboardingOptions = {
     showProgress: true,
     progressText: "Step {{current}} of " + totalSteps,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onNextClick: (_el: any, _step: any, options: any) => {
-      if (options.state.activeIndex === 10) {
-        if (typeof window !== "undefined") {
-          window.location.href = "/dashboard/qr-codes?onboardingStep=12";
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onNextClick: (_el: unknown, _step: unknown, options: unknown) => {
+      // Type narrowing for options
+      if (
+        typeof options === "object" &&
+        options !== null &&
+        "state" in options &&
+        typeof (options as Record<string, unknown>).state === "object"
+      ) {
+        const state = (options as Record<string, unknown>).state as {
+          activeIndex?: number;
+        };
+        if (state.activeIndex === 10) {
+          if (typeof window !== "undefined") {
+            window.location.href = "/dashboard/qr-codes?onboardingStep=12";
+          }
+        } else if (
+          "driver" in options &&
+          typeof (options as Record<string, unknown>).driver === "object" &&
+          typeof (
+            (options as Record<string, unknown>).driver as {
+              moveNext?: () => void;
+            }
+          ).moveNext === "function"
+        ) {
+          (
+            (options as Record<string, unknown>).driver as {
+              moveNext: () => void;
+            }
+          ).moveNext();
         }
-      } else {
-        options.driver.moveNext();
       }
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    onDoneClick: (_el: any, _step: any, _options: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    onDoneClick: (_el: unknown, _step: unknown, _options: unknown) => {
       if (typeof window !== "undefined") {
         window.location.href = "/dashboard/qr-codes?onboardingStep=12";
       }
