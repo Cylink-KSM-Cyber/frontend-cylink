@@ -19,6 +19,8 @@ import { useQrCodeFilter } from "@/hooks/useQrCodeFilter";
 import { useQrCodeBulkActions } from "@/hooks/useQrCodeBulkActions";
 import { useQrCodeActions } from "@/hooks/useQrCodeActions";
 import "@/styles/qrcodesPage.css";
+import { ONBOARDING_STEPS } from "@/config/onboardingConfig";
+import OnboardingTour from "@/components/molecules/OnboardingTour";
 
 /**
  * QrCodesPage Component
@@ -98,6 +100,41 @@ export default function QrCodesPage() {
   useEffect(() => {
     setActiveItemId("qrcodes");
   }, [setActiveItemId]);
+
+  // Onboarding integration
+  const onboardingSteps = ONBOARDING_STEPS.map((s) => ({
+    element: s.element,
+    popover: {
+      title: s.title,
+      description: s.description,
+      position: s.position || "auto",
+    },
+  }));
+  const totalSteps = ONBOARDING_STEPS.length;
+  // Cari startStep dari query param onboardingStep (default: 11 untuk step 12)
+  const onboardingStepParam =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("onboardingStep")
+      : undefined;
+  const startStep = onboardingStepParam
+    ? parseInt(onboardingStepParam, 10) - 1
+    : 11;
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(
+    !!onboardingStepParam
+  );
+  // OnboardingTour close handler: remove onboardingStep from URL
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("onboardingStep");
+      window.history.replaceState(
+        {},
+        document.title,
+        url.pathname + url.search
+      );
+    }
+  };
 
   // When view mode changes, update the view mode state
   const onViewModeChange = (mode: "grid" | "list") => {
@@ -195,6 +232,18 @@ export default function QrCodesPage() {
           isDeleting={isDeletingQrCode}
         />
       )}
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        steps={onboardingSteps}
+        show={showOnboarding}
+        onClose={handleOnboardingClose}
+        startStep={startStep}
+        options={{
+          showProgress: true,
+          progressText: "Step {{current}} of " + totalSteps,
+        }}
+      />
     </>
   );
 }

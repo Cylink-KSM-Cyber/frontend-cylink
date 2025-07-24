@@ -306,6 +306,28 @@ export default function UrlsPage() {
     }
   };
 
+  // Handler transisi ke QR Codes
+  const onboardingOptions = {
+    showProgress: true,
+    progressText: "Step {{current}} of " + totalSteps,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onNextClick: (_el: any, _step: any, options: any) => {
+      if (options.state.activeIndex === 10) {
+        if (typeof window !== "undefined") {
+          window.location.href = "/dashboard/qr-codes?onboardingStep=12";
+        }
+      } else {
+        options.driver.moveNext();
+      }
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    onDoneClick: (_el: any, _step: any, _options: any) => {
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard/qr-codes?onboardingStep=12";
+      }
+    },
+  };
+
   // Default stats if none are available
   const urlStats = stats || {
     totalUrls: 0,
@@ -346,10 +368,7 @@ export default function UrlsPage() {
         show={showOnboarding}
         onClose={handleOnboardingClose}
         startStep={startStep}
-        options={{
-          showProgress: true,
-          progressText: "Step {{current}} of " + totalSteps,
-        }}
+        options={onboardingOptions}
       />
       {/* Create URL Modal */}
       <CreateUrlModal
