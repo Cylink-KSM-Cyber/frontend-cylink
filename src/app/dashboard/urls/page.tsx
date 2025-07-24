@@ -17,7 +17,7 @@ import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
 import OnboardingTour from "@/components/molecules/OnboardingTour";
-import { OnboardingStep } from "@/interfaces/onboardingTour";
+import { ONBOARDING_STEPS } from "@/onboarding/onboardingConfig";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatShortUrl } from "@/utils/urlFormatter";
@@ -273,75 +273,24 @@ export default function UrlsPage() {
     }
   }, [tabParam, setActiveItemId]);
 
-  // Onboarding: detect onboardingStep from query param
+  // Pass seluruh step global ke OnboardingTour
+  const onboardingSteps = ONBOARDING_STEPS.map((s) => ({
+    element: s.element,
+    popover: {
+      title: s.title,
+      description: s.description,
+      position: s.position || "auto",
+    },
+  }));
+  const totalSteps = ONBOARDING_STEPS.length;
+  // Cari startStep dari query param onboardingStep (default: 4 untuk step 5)
   const onboardingStepParam = searchParams?.get("onboardingStep");
-  const onboardingStartStep = onboardingStepParam
-    ? parseInt(onboardingStepParam, 10) - 5
-    : undefined;
+  const startStep = onboardingStepParam
+    ? parseInt(onboardingStepParam, 10) - 1
+    : 4;
   const [showOnboarding, setShowOnboarding] = useState<boolean>(
     !!onboardingStepParam
   );
-
-  // Onboarding steps for URLs page (step 5-11)
-  const onboardingSteps: OnboardingStep[] = [
-    {
-      element: '[data-tour-id="urls-header"]',
-      popover: {
-        title: "Manage Your Links",
-        description: "Manage all your short links in one place.",
-        position: "bottom",
-      },
-    },
-    {
-      element: '[data-tour-id="urls-stats"]',
-      popover: {
-        title: "Stats Summary",
-        description: "Monitor key statistics across all your links.",
-        position: "bottom",
-      },
-    },
-    {
-      element: '[data-tour-id="urls-search"]',
-      popover: {
-        title: "Search Bar",
-        description: "Quickly find links using keywords.",
-        position: "bottom",
-      },
-    },
-    {
-      element: '[data-tour-id="urls-filter"]',
-      popover: {
-        title: "Filter & Sort",
-        description: "Filter and sort links as needed.",
-        position: "bottom",
-      },
-    },
-    {
-      element: '[data-tour-id="urls-create-btn"]',
-      popover: {
-        title: "Create New URL",
-        description: "Click here to create a new short link.",
-        position: "bottom",
-      },
-    },
-    {
-      element: '[data-tour-id="urls-table"]',
-      popover: {
-        title: "URLs Table",
-        description:
-          "Easily view, edit, delete, or copy your links from this table.",
-        position: "top",
-      },
-    },
-    {
-      element: '[data-tour-id="urls-pagination"]',
-      popover: {
-        title: "Pagination",
-        description: "Navigate between your link pages here.",
-        position: "top",
-      },
-    },
-  ];
 
   // OnboardingTour close handler: remove onboardingStep from URL
   const handleOnboardingClose = () => {
@@ -396,10 +345,10 @@ export default function UrlsPage() {
         steps={onboardingSteps}
         show={showOnboarding}
         onClose={handleOnboardingClose}
-        startStep={onboardingStartStep}
+        startStep={startStep}
         options={{
           showProgress: true,
-          progressText: "Step {{current}} of 11",
+          progressText: "Step {{current}} of " + totalSteps,
         }}
       />
       {/* Create URL Modal */}

@@ -9,7 +9,7 @@ import { Url } from "@/interfaces/url";
 import { formatShortUrl } from "@/utils/urlFormatter";
 import "@/styles/analyticsDashboard.css";
 import OnboardingTour from "@/components/molecules/OnboardingTour";
-import { OnboardingStep } from "@/interfaces/onboardingTour";
+import { ONBOARDING_STEPS } from "@/onboarding/onboardingConfig";
 
 /**
  * Dashboard page
@@ -43,59 +43,38 @@ export default function DashboardPage() {
     }
   }, []);
 
-  // Onboarding steps for dashboard
-  const onboardingSteps: OnboardingStep[] = [
-    {
-      element: '[data-tour-id="dashboard-header"]',
-      popover: {
-        title: "Welcome to Your Dashboard!",
-        description:
-          "This is your analytics dashboard. Here you can monitor your link and QR code performance at a glance.",
-        position: "bottom",
-      },
+  // Pass seluruh step global ke OnboardingTour
+  const onboardingSteps = ONBOARDING_STEPS.map((s) => ({
+    element: s.element,
+    popover: {
+      title: s.title,
+      description: s.description,
+      position: s.position || "auto",
     },
-    {
-      element: '[data-tour-id="dashboard-kpi-cards"]',
-      popover: {
-        title: "Key Metrics",
-        description:
-          "Quickly view your total URLs, total clicks, average CTR, and top performer stats.",
-        position: "bottom",
-      },
-    },
-    {
-      element: '[data-tour-id="dashboard-performance-trend"]',
-      popover: {
-        title: "Performance Trends",
-        description:
-          "Analyze your URL performance trends over time with this interactive chart.",
-        position: "bottom",
-      },
-    },
-    {
-      element: '[data-tour-id="dashboard-top-urls"]',
-      popover: {
-        title: "Top Performing URLs",
-        description:
-          "See which of your links are performing best and copy them for easy sharing.",
-        position: "bottom",
-      },
-    },
-  ];
+  }));
+  const totalSteps = ONBOARDING_STEPS.length;
+  // Dashboard selalu mulai dari step 0
+  const startStep = 0;
+  // Step transisi: step 4 (index 3)
+  const transitionStepIndex = 3;
 
-  // Custom onNextClick: pada step 3 (index 3), redirect ke /dashboard/urls?onboardingStep=5
   const onboardingOptions = {
     showProgress: true,
-    progressText: "Step {{current}} of 11",
+    progressText: "Step {{current}} of " + totalSteps,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onNextClick: (_el: any, _step: any, options: any) => {
-      if (options.state.activeIndex === 3) {
+      if (options.state.activeIndex === transitionStepIndex) {
         if (typeof window !== "undefined") {
           window.location.href = "/dashboard/urls?onboardingStep=5";
         }
       } else {
-        // Penting: lanjutkan ke step berikutnya jika bukan step 4
         options.driver.moveNext();
+      }
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+    onDoneClick: (_el: any, _step: any, _options: any) => {
+      if (typeof window !== "undefined") {
+        window.location.href = "/dashboard/urls?onboardingStep=5";
       }
     },
     nextBtnText: "Next",
@@ -119,6 +98,7 @@ export default function DashboardPage() {
         steps={onboardingSteps}
         show={showOnboarding}
         onClose={() => setShowOnboarding(false)}
+        startStep={startStep}
         options={onboardingOptions}
       />
     </>
