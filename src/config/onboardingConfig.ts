@@ -155,14 +155,6 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
   },
   {
     page: "/dashboard/qr-codes",
-    step: 17,
-    element: '[data-tour-id="qrcodes-bulk-actions"]',
-    title: "Bulk Actions",
-    description: "Select multiple QR codes at once for mass actions.",
-    position: "bottom",
-  },
-  {
-    page: "/dashboard/qr-codes",
     step: 18,
     element: '[data-tour-id="qrcodes-grid-list"]',
     title: "QR Code Grid/List",

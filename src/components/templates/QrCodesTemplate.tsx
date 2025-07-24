@@ -225,10 +225,7 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
 
         {/* Bulk Actions */}
         {hasSelection && (
-          <div
-            className="flex items-center mt-4 p-2 bg-gray-50 rounded-md"
-            data-tour-id="qrcodes-bulk-actions"
-          >
+          <div className="flex items-center mt-4 p-2 bg-gray-50 rounded-md">
             <div className="flex items-center">
               <input
                 type="checkbox"
