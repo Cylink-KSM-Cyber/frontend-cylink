@@ -18,6 +18,10 @@ interface QrCodeFilterControlsProps {
    * Optional CSS classes to apply
    */
   className?: string;
+  /**
+   * Optional data-tour-id for onboarding
+   */
+  "data-tour-id"?: string;
 }
 
 /**
@@ -28,6 +32,7 @@ const QrCodeFilterControls: React.FC<QrCodeFilterControlsProps> = ({
   onFilterChange,
   onSortChange,
   className = "",
+  "data-tour-id": dataTourId,
 }) => {
   // Track active filters
   const [includeLogo, setIncludeLogo] = useState<boolean | undefined>(
@@ -114,7 +119,10 @@ const QrCodeFilterControls: React.FC<QrCodeFilterControlsProps> = ({
   };
 
   return (
-    <div className={`flex flex-wrap gap-4 ${className}`}>
+    <div
+      className={`flex flex-wrap gap-4 ${className}`}
+      {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
+    >
       {/* Filter Section */}
       <div className="flex-shrink-0">
         <div className="relative inline-block text-left">

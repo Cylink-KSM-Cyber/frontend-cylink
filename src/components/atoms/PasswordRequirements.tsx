@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { PasswordStrength } from "@/interfaces/auth";
+import type { PasswordStrength } from "@/utils/passwordStrength";
 import { FiCheck, FiX } from "react-icons/fi";
 
 /**

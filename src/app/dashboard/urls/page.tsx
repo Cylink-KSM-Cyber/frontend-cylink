@@ -16,9 +16,15 @@ import type { CreateUrlFormData, EditUrlFormData, Url } from "@/interfaces/url";
 import "@/styles/dashboard.css";
 import "@/styles/statsSummary.css";
 import "@/styles/totalClicks.css";
+import OnboardingTour from "@/components/molecules/OnboardingTour";
+import { ONBOARDING_STEPS } from "@/config/onboardingConfig";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { formatShortUrl } from "@/utils/urlFormatter";
+import {
+  createOnNextClickHandler,
+  createOnDoneClickHandler,
+} from "@/utils/onboardingDriverCallbacks";
 
 /**
  * Dashboard page
@@ -271,6 +277,52 @@ export default function UrlsPage() {
     }
   }, [tabParam, setActiveItemId]);
 
+  // Pass seluruh step global ke OnboardingTour
+  const onboardingSteps = ONBOARDING_STEPS.map((s) => ({
+    element: s.element,
+    popover: {
+      title: s.title,
+      description: s.description,
+      position: s.position || "auto",
+    },
+  }));
+  const totalSteps = ONBOARDING_STEPS.length;
+  // Find startStep from onboardingStep query param (default: 4 for step 5)
+  const onboardingStepParam = searchParams?.get("onboardingStep");
+  const startStep = onboardingStepParam
+    ? parseInt(onboardingStepParam, 10) - 1
+    : 4;
+  const [showOnboarding, setShowOnboarding] = useState<boolean>(
+    !!onboardingStepParam
+  );
+
+  // OnboardingTour close handler: remove onboardingStep from URL
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("onboardingStep");
+      window.history.replaceState(
+        {},
+        document.title,
+        url.pathname + url.search
+      );
+    }
+  };
+
+  // Handler transisi ke QR Codes
+  const onboardingOptions = {
+    showProgress: true,
+    progressText: "Step {{current}} of " + totalSteps,
+    onNextClick: createOnNextClickHandler(
+      10,
+      "/dashboard/qr-codes?onboardingStep=12"
+    ),
+    onDoneClick: createOnDoneClickHandler(
+      "/dashboard/qr-codes?onboardingStep=12"
+    ),
+  };
+
   // Default stats if none are available
   const urlStats = stats || {
     totalUrls: 0,
@@ -305,7 +357,14 @@ export default function UrlsPage() {
         urlFilters={urlFilters}
         onUrlFilterChange={handleFilterChange}
       />
-
+      {/* OnboardingTour for URLs page */}
+      <OnboardingTour
+        steps={onboardingSteps}
+        show={showOnboarding}
+        onClose={handleOnboardingClose}
+        startStep={startStep}
+        options={onboardingOptions}
+      />
       {/* Create URL Modal */}
       <CreateUrlModal
         isOpen={createModalOpen}

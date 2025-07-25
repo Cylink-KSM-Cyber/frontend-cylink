@@ -25,6 +25,7 @@ import { useTrackQrCodeBulkOperation } from "./conversionTrackings/useTrackQrCod
 import { useTrackConversion } from "./conversionTrackings/useTrackConversion";
 import { useTrackFeatureUsage } from "./conversionTrackings/useTrackFeatureUsage";
 import { useTrackError } from "./conversionTrackings/useTrackError";
+import { useTrackUserRegister } from "./conversionTrackings/useTrackUserRegister";
 
 /**
  * Custom hook for PostHog conversion tracking
@@ -47,6 +48,7 @@ export const useConversionTracking = () => {
     ...useTrackConversion(),
     ...useTrackFeatureUsage(),
     ...useTrackError(),
+    ...useTrackUserRegister(),
   };
 };
 

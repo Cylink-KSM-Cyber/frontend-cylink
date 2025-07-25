@@ -1,7 +1,17 @@
 import { useState, useCallback, useEffect } from "react";
 import AuthService from "@/services/auth";
-import { ResetPasswordRequest, TokenValidation } from "@/interfaces/auth";
+import { ResetPasswordRequest } from "@/interfaces/auth";
 import { AxiosError } from "axios";
+
+/**
+ * Token validation state type
+ */
+interface TokenValidation {
+  isValid: boolean;
+  isExpired: boolean;
+  errorCode?: "MISSING_TOKEN" | "INVALID_TOKEN" | "TOKEN_EXPIRED" | string;
+  message?: string;
+}
 
 /**
  * Custom hook for reset password functionality

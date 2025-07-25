@@ -16,7 +16,10 @@ const KpiCardsSection: React.FC<KpiCardsSectionProps> = ({
   className = "",
 }) => {
   return (
-    <section className={`w-full ${className}`}>
+    <section
+      className={`w-full ${className}`}
+      data-tour-id="dashboard-kpi-cards"
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard {...kpiData.totalUrls} color="blue" />
         <KpiCard {...kpiData.totalClicks} color="green" />

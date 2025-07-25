@@ -7,13 +7,20 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { User, LoginRequest, AuthContextType } from "@/interfaces/auth";
+import {
+  User,
+  LoginRequest,
+  RegisterRequest,
+  AuthContextType,
+} from "@/interfaces/auth";
 import AuthService from "@/services/auth";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
 import { useToast } from "@/contexts/ToastContext";
 import { ToastType } from "@/components/atoms/Toast";
 import posthogClient from "@/utils/posthogClient";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useOnboarding } from "@/contexts/OnboardingContext";
 
 // Navigation delay to allow toast to be visible
 const NAVIGATION_DELAY = 2000;
@@ -26,8 +33,11 @@ const TOAST_DURATION = NAVIGATION_DELAY + 500;
 const initialState: AuthContextType = {
   user: null,
   isAuthenticated: false,
+  setIsModalOpen: () => {},
+  isModalOpen: false,
   isLoading: true,
   login: async () => {},
+  signup: async () => {},
   logout: () => {},
   error: null,
 };
@@ -57,7 +67,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { showToast, clearAllToasts } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { trackUserRegister } = useConversionTracking();
+  const { triggerOnboarding } = useOnboarding();
 
   /**
    * Initialize auth state from localStorage on mount
@@ -79,8 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.log("User data loaded from storage:", userData);
           } else {
             console.log("Token exists but no user data found - keeping tokens");
-            // Keep tokens even if user data is missing
-            // User data might be missing due to storage issues but tokens are still valid
+            // Keep tokens even if user data is missing due to storage issues but tokens are still valid
           }
         }
       } catch (error) {
@@ -106,6 +118,141 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setTimeout(() => {
       router.push(path);
     }, delay);
+  };
+
+  /**
+   * Register handler
+   * @description Registers a new user with provided credentials
+   * @param credentials - Registration credentials
+   */
+  const signup = async (credentials: RegisterRequest) => {
+    // Clear any existing toasts
+    clearAllToasts();
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log("Attempting registration with credentials:", {
+        email: credentials.email,
+        username: credentials.username,
+        passwordLength: credentials.password?.length,
+        retype_passwordLength: credentials.password_confirmation?.length,
+      });
+
+      const response = await AuthService.signup(credentials);
+      console.log("Registration response received:", {
+        status: "success",
+        message: response.message,
+      });
+
+      // Track user register conversion goal in PostHog
+      if (response && response.data && response.data.user) {
+        if (process.env.NODE_ENV !== "production") {
+          console.log(
+            "[Tracking] Akan mengirim event user_registered ke PostHog",
+            {
+              user_id: response.data.user.id,
+              email: response.data.user.email,
+              username: response.data.user.name,
+              is_verified: !!response.data.user.is_verified,
+              registration_success: true,
+            }
+          );
+        }
+        trackUserRegister({
+          user_id: response.data.user.id,
+          email: response.data.user.email,
+          username: response.data.user.name,
+          is_verified: !!response.data.user.is_verified,
+          registration_success: true,
+        });
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[Tracking] Event user_registered sudah dipanggil");
+        }
+      } else {
+        if (process.env.NODE_ENV !== "production") {
+          console.error(
+            "[Tracking] Tidak ada data user pada response register, event tidak dikirim"
+          );
+        }
+      }
+
+      // Show success toast with longer duration to ensure visibility before navigation
+      showToast(
+        "Registration successful! Please check your email to verify your account.",
+        "success",
+        TOAST_DURATION
+      );
+      console.log("Success toast shown, will navigate after delay");
+
+      // Set isLoading to false before navigation
+      setIsLoading(false);
+      setIsModalOpen(true);
+
+      // Navigate to login page after a delay to ensure toast is visible
+      // navigateWithDelay("/login");
+    } catch (err) {
+      console.error("Registration error details:", err);
+
+      // Handle different error cases
+      let errorMessage =
+        "An error occurred during registration. Please try again later.";
+      const errorType: ToastType = "error";
+
+      if (err instanceof AxiosError) {
+        const error = err as AxiosError;
+
+        if (error.response) {
+          console.log("Error response status:", error.response.status);
+          console.log("Error response data:", error.response.data);
+
+          switch (error.response.status) {
+            case 400:
+              errorMessage =
+                "Invalid registration data. Please check all fields and try again.";
+              break;
+            case 409:
+              errorMessage =
+                "An account with this email already exists. Please try logging in instead.";
+              break;
+            case 422:
+              errorMessage =
+                "Please check that your password meets the requirements and all fields are filled correctly.";
+              break;
+            default:
+              // Try to get error message from response
+              if (error.message) {
+                errorMessage = error.message;
+              }
+          }
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.log("No response received from server");
+          errorMessage = "Server did not respond. Please try again later.";
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.log("Error setting up request:", error.message);
+          errorMessage =
+            "Failed to connect to the server. Please check your connection.";
+        }
+      } else {
+        // Not an Axios error
+        console.log("Non-Axios error:", err);
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        }
+      }
+
+      setError(errorMessage);
+
+      setIsModalOpen(false);
+
+      // Show error toast with longer duration
+      showToast(errorMessage, errorType, 6000);
+      setIsLoading(false);
+    }
   };
 
   /**
@@ -137,7 +284,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         hasTokens: !!response.data?.tokens,
       });
 
-      const { user, tokens } = response.data;
+      const { user, tokens, first_login } = response.data;
 
       if (!user || !tokens) {
         console.error("Invalid response structure:", {
@@ -169,24 +316,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Identify user in PostHog
       posthogClient.identifyUser(user.id.toString(), {
         email: user.email,
-        username: user.username,
+        name: user.name,
         created_at: user.created_at,
-        updated_at: user.updated_at
+        updated_at: user.updated_at,
       });
-      
+
       // Capture login event
-      posthogClient.captureEvent('user_logged_in', {
-        login_method: 'email',
-        remember_me: remember
+      posthogClient.captureEvent("user_logged_in", {
+        login_method: "email",
+        remember_me: remember,
       });
 
       // Show success toast with longer duration to ensure visibility before navigation
       showToast("Successfully logged in", "success", TOAST_DURATION);
       console.log("Success toast shown, will navigate after delay");
-
-      // Set isLoading to false before navigation
       setIsLoading(false);
-
+      // Trigger onboarding logic based on environment and first_login
+      triggerOnboarding(!!first_login);
       // Navigate to dashboard after a delay to ensure toast is visible
       navigateWithDelay("/dashboard");
     } catch (err) {
@@ -254,8 +400,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Capture logout event before resetting user
     if (user) {
-      posthogClient.captureEvent('user_logged_out', {
-        user_id: user.id
+      posthogClient.captureEvent("user_logged_out", {
+        user_id: user.id,
       });
     }
 
@@ -279,8 +425,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         isAuthenticated: !!user,
         isLoading,
+        isModalOpen,
+        setIsModalOpen,
         error,
         login,
+        signup,
         logout,
       }}
     >

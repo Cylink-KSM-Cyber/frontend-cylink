@@ -120,31 +120,38 @@ const UrlTemplate: React.FC<UrlTemplateProps> = ({
     <div className="bg-transparent">
       <div className="container mx-auto px-2 sm:px-4 gap-6">
         {/* Header Section */}
-        <UrlHeader className="mb-6" />
+        <UrlHeader className="mb-6" data-tour-id="urls-header" />
 
         {/* Stats Summary */}
         <UrlStatsSummary
           stats={stats}
           isLoading={isStatsLoading}
           className="mb-6"
+          data-tour-id="urls-stats"
         />
 
         <div className="flex flex-col gap-6 sm:flex-row lg:justify-between">
           {onSearch && (
             <div className="w-full lg:w-[50%] ">
-              <SearchInput placeholder="Search URLs..." onSearch={onSearch} />
+              <SearchInput
+                placeholder="Search URLs..."
+                onSearch={onSearch}
+                data-tour-id="urls-search"
+              />
             </div>
           )}
           <div>
             <UrlFilter
               filters={urlFilters}
               onFilterChange={onUrlFilterChange}
+              data-tour-id="urls-filter"
             />
           </div>
           <Button
             variant="primary"
             onClick={() => onCreateUrl()}
             startIcon={<RiAddLine className="max-h-4 max-w-4 cursor-pointer" />}
+            data-tour-id="urls-create-btn"
           >
             Create New URL
           </Button>
@@ -161,6 +168,7 @@ const UrlTemplate: React.FC<UrlTemplateProps> = ({
             onEdit={onEditUrl}
             onDelete={onDeleteUrl}
             className="mb-6"
+            data-tour-id="urls-table"
           />
         </div>
 
@@ -169,6 +177,7 @@ const UrlTemplate: React.FC<UrlTemplateProps> = ({
           totalPages={totalUrlPages}
           onPageChange={onUrlPageChange}
           className="mt-6"
+          data-tour-id="urls-pagination"
         />
       </div>
     </div>

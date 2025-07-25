@@ -33,7 +33,11 @@ interface UrlFilterProps {
  * URL Filter Component
  * @description A component that provides filtering and sorting controls for URLs with enhanced styling
  */
-const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
+const UrlFilter: React.FC<UrlFilterProps & { "data-tour-id"?: string }> = ({
+  filters,
+  onFilterChange,
+  "data-tour-id": dataTourId,
+}) => {
   const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
     onFilterChange("status", value);
@@ -45,7 +49,10 @@ const UrlFilter: React.FC<UrlFilterProps> = ({ filters, onFilterChange }) => {
   };
 
   return (
-    <div className="flex flex-wrap gap-3 items-center">
+    <div
+      className="flex flex-wrap gap-3 items-center"
+      {...(dataTourId ? { "data-tour-id": dataTourId } : {})}
+    >
       {/* Status Filter */}
       <div className="relative flex items-center">
         <div className="absolute left-3 pointer-events-none text-blue-500">

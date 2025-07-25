@@ -19,7 +19,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   className = "",
 }) => {
   return (
-    <header className={`w-full ${className}`}>
+    <header className={`w-full ${className}`} data-tour-id="dashboard-header">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
           {title}

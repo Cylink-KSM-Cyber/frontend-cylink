@@ -3,6 +3,8 @@ import {
   LoginRequest,
   ApiLoginResponse,
   LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   ResetPasswordRequest,
@@ -12,10 +14,88 @@ import {
 import Cookies from "js-cookie";
 
 /**
- * Authentication service for login, registration, and other auth operations
- * @description Provides methods for authentication-related API calls
+ * Authentication Service
+ *
+ * Provides methods for authentication-related API calls such as login, registration, password reset, and token management. This service acts as an abstraction layer between the frontend and backend authentication endpoints, ensuring consistent and robust handling of authentication logic throughout the application.
+ *
+ * @module services/auth
  */
 const AuthService = {
+  /**
+   * Register a new user
+   *
+   * Registers a new user with the provided credentials. Handles response validation and ensures the frontend receives a consistent structure. Now matches backend response structure directly.
+   *
+   * @param credentials - User registration data containing email, password, and username
+   * @returns Promise with registration response data
+   */
+  signup: async (credentials: RegisterRequest): Promise<RegisterResponse> => {
+    try {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Sending registration request:", {
+          email: credentials.email,
+          username: credentials.username,
+          passwordLength: credentials.password?.length,
+          password_confirmationLength:
+            credentials.password_confirmation?.length,
+        });
+      }
+
+      // Call API with registration data
+      const response = await post<RegisterResponse>("/api/v1/auth/register", {
+        email: credentials.email,
+        password: credentials.password,
+        username: credentials.username,
+        password_confirmation: credentials.password_confirmation,
+      });
+
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Registration API response:", response);
+      }
+
+      // Validate response structure (minimal)
+      if (!response || typeof response !== "object") {
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Invalid registration response structure:", response);
+        }
+        throw new Error("Invalid response from server");
+      }
+
+      // No longer expect user or verification_token fields
+      // Optionally, normalize data here if needed by frontend
+      // Normalisasi agar data.user selalu ada
+      let normalizedResponse = response;
+      if (
+        response &&
+        response.data &&
+        // Gunakan optional chaining dan cek jika response.data.id ada, bukan response.data.user
+        !("user" in response.data) &&
+        "id" in response.data
+      ) {
+        const data: Record<string, unknown> = response.data;
+        normalizedResponse = {
+          ...response,
+          data: {
+            user: {
+              id: data.id as number,
+              email: data.email as string,
+              name: (data.username as string) || (data.name as string) || "",
+              email_verified_at: (data.email_verified_at as string) || null,
+              created_at: (data.created_at as string) || "",
+              updated_at: (data.updated_at as string) || "",
+              is_verified: (data.is_verified as boolean) || false,
+            },
+            verification_token: (data.verification_token as string) || "",
+          },
+        };
+      }
+      return normalizedResponse;
+    } catch (error) {
+      console.error("Registration service error:", error);
+      throw error;
+    }
+  },
+
   /**
    * Login user with email and password
    * @param credentials - User credentials containing email and password
@@ -28,16 +108,22 @@ const AuthService = {
         "/api/v1/auth/login",
         credentials
       );
-      console.log("Raw API response:", apiResponse);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Raw API response:", apiResponse);
+      }
 
       // Validate response structure (for the actual API response)
       if (!apiResponse?.data?.user || !apiResponse?.data?.token) {
-        console.error("Invalid login response structure:", apiResponse);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Invalid login response structure:", apiResponse);
+        }
         throw new Error("Invalid response from server");
       }
 
       if (!apiResponse.data.token.access || !apiResponse.data.token.refresh) {
-        console.error("Missing tokens in response:", apiResponse.data.token);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("Missing tokens in response:", apiResponse.data.token);
+        }
         throw new Error("Authentication tokens missing in response");
       }
 
@@ -51,6 +137,7 @@ const AuthService = {
             access_token: apiResponse.data.token.access,
             refresh_token: apiResponse.data.token.refresh,
           },
+          first_login: apiResponse.data.first_login,
         },
       };
 
@@ -75,10 +162,12 @@ const AuthService = {
     if (typeof window === "undefined") return;
 
     if (!accessToken || !refreshToken) {
-      console.error("Attempting to save invalid tokens:", {
-        hasAccessToken: !!accessToken,
-        hasRefreshToken: !!refreshToken,
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Attempting to save invalid tokens:", {
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
+        });
+      }
       throw new Error("Cannot save invalid authentication tokens");
     }
 
@@ -107,13 +196,19 @@ const AuthService = {
     if (typeof window === "undefined") return;
 
     try {
-      console.log("Saving user data:", user);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Saving user data:", user);
+      }
       Cookies.set("userData", JSON.stringify(user));
-      console.log("User data saved successfully to cookies");
+      if (process.env.NODE_ENV !== "production") {
+        console.log("User data saved successfully to cookies");
+      }
 
       // Verify the data was saved correctly
       const savedData = Cookies.get("userData");
-      console.log("Verification - saved data:", savedData);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Verification - saved data:", savedData);
+      }
     } catch (error) {
       console.error("Error saving user data to Cookies:", error);
       throw new Error("Failed to save user data");
@@ -129,14 +224,20 @@ const AuthService = {
 
     try {
       const userData = Cookies.get("userData");
-      console.log("Retrieved raw user data from cookies:", userData);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Retrieved raw user data from cookies:", userData);
+      }
 
       if (userData) {
         const parsedData = JSON.parse(userData);
-        console.log("Parsed user data:", parsedData);
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Parsed user data:", parsedData);
+        }
         return parsedData;
       } else {
-        console.log("No user data found in cookies");
+        if (process.env.NODE_ENV !== "production") {
+          console.log("No user data found in cookies");
+        }
         return null;
       }
     } catch (error) {
