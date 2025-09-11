@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import logger from "@/utils/logger";
 
 /**
  * Prop types for SearchInput component
@@ -50,16 +49,13 @@ const SearchInput: React.FC<SearchInputProps & { "data-tour-id"?: string }> = ({
     setInputValue(initialValue);
     // Keep lastSearchValueRef consistent with external initial value
     lastSearchValueRef.current = initialValue;
-    logger.debug("SearchInput initialValue changed", { initialValue });
   }, [initialValue]);
 
   // Clear debounce timer on unmount
   useEffect(() => {
-    logger.debug("SearchInput component mounted");
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
-        logger.debug("SearchInput component unmounted and timer cleared");
       }
     };
   }, []);
@@ -81,9 +77,6 @@ const SearchInput: React.FC<SearchInputProps & { "data-tour-id"?: string }> = ({
       if (newValue !== lastSearchValueRef.current) {
         lastSearchValueRef.current = newValue;
         onSearch(newValue);
-        logger.debug("SearchInput debounce triggered search", {
-          value: newValue,
-        });
       }
     }, debounceMs);
   };
@@ -102,7 +95,6 @@ const SearchInput: React.FC<SearchInputProps & { "data-tour-id"?: string }> = ({
     if (lastSearchValueRef.current !== "") {
       lastSearchValueRef.current = "";
       onSearch("");
-      logger.info("SearchInput clear button clicked");
     }
   };
 
@@ -114,7 +106,6 @@ const SearchInput: React.FC<SearchInputProps & { "data-tour-id"?: string }> = ({
     if (inputValue !== lastSearchValueRef.current) {
       lastSearchValueRef.current = inputValue;
       onSearch(inputValue);
-      logger.info("SearchInput form submitted", { value: inputValue });
     }
   };
 
@@ -174,9 +165,6 @@ const SearchInput: React.FC<SearchInputProps & { "data-tour-id"?: string }> = ({
             if (inputValue !== lastSearchValueRef.current) {
               lastSearchValueRef.current = inputValue;
               onSearch(inputValue);
-              logger.info("SearchInput enter key pressed", {
-                value: inputValue,
-              });
             }
           }
         }}
