@@ -45,13 +45,13 @@ const SearchInput: React.FC<SearchInputProps & { "data-tour-id"?: string }> = ({
   // Keep track of last search value to avoid unnecessary callbacks
   const lastSearchValueRef = useRef<string>(initialValue);
 
-  // Set initial value when it changes from parent
+  // Sync local state only when initialValue prop changes
   useEffect(() => {
-    if (initialValue !== inputValue) {
-      setInputValue(initialValue);
-      logger.debug("SearchInput initialValue changed", { initialValue });
-    }
-  }, [initialValue, inputValue]);
+    setInputValue(initialValue);
+    // Keep lastSearchValueRef consistent with external initial value
+    lastSearchValueRef.current = initialValue;
+    logger.debug("SearchInput initialValue changed", { initialValue });
+  }, [initialValue]);
 
   // Clear debounce timer on unmount
   useEffect(() => {
