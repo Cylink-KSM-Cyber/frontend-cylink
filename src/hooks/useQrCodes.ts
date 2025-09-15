@@ -64,6 +64,35 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
   // Get toast context
   const { showToast } = useToast();
 
+  /**
+   * Build tracking payload for QR code deletion
+   * @param qr QR code being deleted
+   * @param deletionMethod Method of deletion (manual or bulk)
+   * @param deletionReason Optional reason or error message
+   * @param success Whether the deletion succeeded
+   */
+  const buildDeletionTrackingPayload = (
+    qr: QrCode,
+    deletionMethod: "manual" | "bulk",
+    deletionReason: string | undefined,
+    success: boolean
+  ) => ({
+    qr_code_id: qr.id,
+    url_id: qr.urlId,
+    qr_code_title: qr.title || `QR Code ${qr.id}`,
+    short_url: qr.shortUrl || "",
+    customization_options: {
+      foreground_color: qr.customization?.foregroundColor || "#000000",
+      background_color: qr.customization?.backgroundColor || "#FFFFFF",
+      size: qr.customization?.size || 300,
+    },
+    total_scans: qr.scans || 0,
+    qr_code_age_days: computeQrCodeAgeDays(qr.createdAt),
+    deletion_method: deletionMethod,
+    deletion_reason: deletionReason,
+    success,
+  });
+
   useEffect(() => {
     const fetchQrCodesList = async () => {
       // Skip if a fetch is already in progress
@@ -150,26 +179,14 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
 
       // Track QR code deletion conversion goal in PostHog
       if (qrCodeToDelete) {
-        const qrCodeAgeDays = computeQrCodeAgeDays(qrCodeToDelete.createdAt);
-
-        trackQrCodeDeletion({
-          qr_code_id: qrCodeToDelete.id,
-          url_id: qrCodeToDelete.urlId,
-          qr_code_title: qrCodeToDelete.title || `QR Code ${qrCodeToDelete.id}`,
-          short_url: qrCodeToDelete.shortUrl || "",
-          customization_options: {
-            foreground_color:
-              qrCodeToDelete.customization?.foregroundColor || "#000000",
-            background_color:
-              qrCodeToDelete.customization?.backgroundColor || "#FFFFFF",
-            size: qrCodeToDelete.customization?.size || 300,
-          },
-          total_scans: qrCodeToDelete.scans || 0,
-          qr_code_age_days: qrCodeAgeDays,
-          deletion_method: deletionMethod,
-          deletion_reason: deletionReason,
-          success: true,
-        });
+        trackQrCodeDeletion(
+          buildDeletionTrackingPayload(
+            qrCodeToDelete,
+            deletionMethod,
+            deletionReason,
+            true
+          )
+        );
       }
 
       // Update local state by removing the deleted QR code
@@ -189,26 +206,14 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
 
       // Track failed QR code deletion conversion goal in PostHog
       if (qrCodeToDelete) {
-        const qrCodeAgeDays = computeQrCodeAgeDays(qrCodeToDelete.createdAt);
-
-        trackQrCodeDeletion({
-          qr_code_id: qrCodeToDelete.id,
-          url_id: qrCodeToDelete.urlId,
-          qr_code_title: qrCodeToDelete.title || `QR Code ${qrCodeToDelete.id}`,
-          short_url: qrCodeToDelete.shortUrl || "",
-          customization_options: {
-            foreground_color:
-              qrCodeToDelete.customization?.foregroundColor || "#000000",
-            background_color:
-              qrCodeToDelete.customization?.backgroundColor || "#FFFFFF",
-            size: qrCodeToDelete.customization?.size || 300,
-          },
-          total_scans: qrCodeToDelete.scans || 0,
-          qr_code_age_days: qrCodeAgeDays,
-          deletion_method: deletionMethod,
-          deletion_reason: errorMessage,
-          success: false,
-        });
+        trackQrCodeDeletion(
+          buildDeletionTrackingPayload(
+            qrCodeToDelete,
+            deletionMethod,
+            errorMessage,
+            false
+          )
+        );
       }
 
       showToast(errorMessage, "error", 4000);
