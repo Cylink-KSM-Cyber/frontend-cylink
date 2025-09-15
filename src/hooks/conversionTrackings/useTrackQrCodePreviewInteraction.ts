@@ -7,9 +7,9 @@
  * @module src/hooks/conversionTrackings/useTrackQrCodePreviewInteraction
  */
 import { useCallback } from "react";
-import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
+import posthogClient from "@/utils/posthogClient";
 import { QrCodePreviewInteractionProperties } from "@/interfaces/conversionTrackings/QrCodePreviewInteractionProperties";
-import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
+import { buildQrCodePreviewInteractionEvent } from "@/utils/qrCodePreviewInteractionEvent";
 
 export const useTrackQrCodePreviewInteraction = () => {
   const trackQrCodePreviewInteraction = useCallback(
@@ -78,23 +78,9 @@ export const useTrackQrCodePreviewInteraction = () => {
         return;
       }
 
-      const sanitizedProperties = {
-        ...properties,
-        qr_code_title: properties.qr_code_title?.substring(0, 100),
-        short_url: properties.short_url?.substring(0, 200),
-        customization_options: JSON.stringify(properties.customization_options),
-        error_message: properties.error_message?.substring(0, 200),
-      };
-
-      const eventProperties: PostHogEventProperties = {
-        ...getBaseEventProperties(),
-        ...sanitizedProperties,
-      };
-
-      posthogClient.captureEvent(
-        "qr_code_preview_interaction",
-        eventProperties
-      );
+      const built = buildQrCodePreviewInteractionEvent(properties);
+      posthogClient.captureEvent("qr_code_preview_interaction", built.event);
+      return true;
     },
     []
   );
