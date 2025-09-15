@@ -8,6 +8,9 @@ import QrCodePreview from "@/components/atoms/QrCodePreview";
 import { useQrCode } from "@/hooks/useQrCode";
 import { RiQrCodeLine, RiDownload2Line, RiShareLine } from "react-icons/ri";
 import { useRouter } from "next/navigation";
+import posthogClient from "@/utils/posthogClient";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useToast } from "@/contexts/ToastContext";
 
 /**
  * QrCodeModal props
@@ -39,6 +42,8 @@ const ERROR_CORRECTION_OPTIONS = [
 const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
   const router = useRouter();
   const qrGeneratedRef = useRef(false);
+  const { trackQrCodeSharing } = useConversionTracking();
+  const { showToast } = useToast();
 
   const {
     foregroundColors,
@@ -89,20 +94,72 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
 
   // Handle Download QR Code button click
   const handleDownloadClick = () => {
-    if (!generatedQrUrl) return;
+    if (!generatedQrUrl || !url) return;
 
     // Create a temporary anchor element
     const a = document.createElement("a");
     a.href = generatedQrUrl;
-    a.download = `qrcode-${url?.short_code || "link"}.png`;
+    a.download = `qrcode-${url.short_code || "link"}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+
+    // Track QR code download for newly generated QR codes
+    // Note: This is a simplified tracking since we don't have full QR code data
+    // In a real scenario, you might want to track this differently
+    posthogClient.captureEvent("qr_code_downloaded", {
+      url_id: url.id,
+      qr_code_title: url.title || `QR Code for ${url.short_code}`,
+      short_url: url.short_url,
+      download_format: "png",
+      download_size: qrSize,
+      includes_logo: includeLogoChecked,
+      download_method: "individual",
+      success: true,
+    });
   };
 
   // Handle Share QR Code button click
   const handleShareClick = async () => {
     if (!generatedQrUrl || !url) return;
+
+    // Determine sharing platform
+    const isMobile =
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+    const sharingPlatform = isMobile ? "mobile" : "desktop";
+
+    /**
+     * Build and send QR share tracking event
+     * @param method sharing method identifier ("web_share_api" | "clipboard")
+     * @param success whether the share action succeeded
+     * @param error optional error message when failed
+     */
+    const trackShare = (
+      method: "web_share_api" | "clipboard",
+      success: boolean,
+      error?: string
+    ) => {
+      trackQrCodeSharing({
+        qr_code_id: url.id,
+        url_id: url.id,
+        qr_code_title: url.title || `QR Code for ${url.short_code}`,
+        short_url: url.short_url,
+        customization_options: {
+          foreground_color: selectedForegroundColor?.hex || "#000000",
+          background_color: selectedBackgroundColor?.hex || "#FFFFFF",
+          size: qrSize,
+        },
+        sharing_method: method,
+        sharing_platform: sharingPlatform,
+        includes_logo: includeLogoChecked,
+        total_scans: 0,
+        qr_code_age_days: 0,
+        success,
+        ...(success ? {} : { error_message: error || "Unknown error" }),
+      });
+    };
 
     // Use Web Share API if available
     if (navigator.share) {
@@ -112,13 +169,24 @@ const QrCodeModal: React.FC<QrCodeModalProps> = ({ url, isOpen, onClose }) => {
           text: `Scan this QR code to visit ${url.short_url}`,
           url: url.short_url,
         });
+        showToast("QR code shared successfully", "success", 2000);
+        trackShare("web_share_api", true);
       } catch (err) {
-        console.error("Error sharing:", err);
+        const message = err instanceof Error ? err.message : "Unknown error";
+        showToast(`Failed to share QR code: ${message}`, "error", 3000);
+        trackShare("web_share_api", false, message);
       }
     } else {
       // Fallback to clipboard
-      navigator.clipboard.writeText(url.short_url);
-      alert("URL copied to clipboard!");
+      try {
+        await navigator.clipboard.writeText(url.short_url);
+        showToast("URL copied to clipboard", "success", 2000);
+        trackShare("clipboard", true);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        showToast(`Failed to copy URL: ${message}`, "error", 3000);
+        trackShare("clipboard", false, message);
+      }
     }
   };
 

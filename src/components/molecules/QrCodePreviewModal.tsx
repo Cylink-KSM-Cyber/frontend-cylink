@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { QrCode } from "@/interfaces/url";
 import Modal from "@/components/atoms/Modal";
 import QrCodePreview from "@/components/atoms/QrCodePreview";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 /**
  * QR Code Preview Modal props
@@ -27,6 +28,39 @@ const QrCodePreviewModal: React.FC<QrCodePreviewModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const { trackQrCodePreviewEvent } = useConversionTracking();
+  const previewStartTimeRef = useRef<number | null>(null);
+
+  // Track preview open
+  useEffect(() => {
+    if (isOpen && qrCode) {
+      previewStartTimeRef.current = Date.now();
+
+      trackQrCodePreviewEvent({
+        qrCode,
+        interactionType: "open_preview",
+        previewSource: "direct_link",
+      });
+    }
+  }, [isOpen, qrCode, trackQrCodePreviewEvent]);
+
+  // Track preview close
+  useEffect(() => {
+    if (!isOpen && qrCode && previewStartTimeRef.current) {
+      const previewDuration = Math.floor(
+        (Date.now() - previewStartTimeRef.current) / 1000
+      );
+      previewStartTimeRef.current = null;
+
+      trackQrCodePreviewEvent({
+        qrCode,
+        interactionType: "close_preview",
+        previewSource: "direct_link",
+        previewDurationSeconds: previewDuration,
+      });
+    }
+  }, [isOpen, qrCode, trackQrCodePreviewEvent]);
+
   // Format date for display
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

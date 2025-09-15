@@ -1,11 +1,105 @@
 import { QrCode } from "@/interfaces/url";
 import QRCodeLib from "qrcode";
 import html2canvas from "html2canvas";
+import { trackQrCodeDownload } from "@/utils/qrCodeDownloadTracking";
+import { trackQrCodeBulkOperation } from "@/utils/qrCodeBulkOperationTracking";
+import { computeQrCodeAgeDays } from "@/utils/qrcodeMapping";
 
 /**
  * Service for downloading QR codes as images (PNG, SVG)
  */
 class QrCodeDownloadService {
+  /**
+   * Build and send single download tracking event
+   * Returns boolean to indicate whether tracking was sent successfully
+   */
+  private trackSingleDownload(
+    qrCode: QrCode,
+    format: "png" | "svg",
+    downloadSize: number,
+    downloadMethod: "individual" | "bulk",
+    success: boolean
+  ): boolean {
+    const qrCodeAgeDays = computeQrCodeAgeDays(qrCode.createdAt);
+
+    return trackQrCodeDownload({
+      qr_code_id: qrCode.id,
+      url_id: qrCode.urlId,
+      qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
+      short_url: qrCode.shortUrl || "",
+      customization_options: {
+        foreground_color: qrCode.customization?.foregroundColor || "#000000",
+        background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
+        size: qrCode.customization?.size || 300,
+      },
+      download_format: format,
+      download_size: downloadSize,
+      includes_logo: qrCode.customization?.includeLogo || false,
+      total_scans: qrCode.scans || 0,
+      qr_code_age_days: qrCodeAgeDays,
+      download_method: downloadMethod,
+      success,
+    });
+  }
+
+  /**
+   * Build and send bulk operation tracking event
+   */
+  private trackBulkDownload(
+    qrCodes: QrCode[],
+    format: "png" | "svg",
+    startTime: number,
+    uiSource: "list_view" | "grid_view" | "bulk_actions_panel",
+    success: boolean,
+    successCount: number,
+    failedCount: number,
+    errorMessage?: string
+  ): void {
+    const operationDuration = Date.now() - startTime;
+    const totalScans = qrCodes.reduce(
+      (sum, qrCode) => sum + (qrCode.scans || 0),
+      0
+    );
+    const averageAge =
+      qrCodes.reduce(
+        (sum, qrCode) => sum + computeQrCodeAgeDays(qrCode.createdAt),
+        0
+      ) / qrCodes.length;
+    const qrCodesWithLogos = qrCodes.filter(
+      (qrCode) => qrCode.customization?.includeLogo
+    ).length;
+
+    trackQrCodeBulkOperation({
+      operation_type: "bulk_download",
+      qr_codes_count: qrCodes.length,
+      qr_code_ids: qrCodes.map((qrCode) => qrCode.id),
+      url_ids: qrCodes.map((qrCode) => qrCode.urlId),
+      qr_code_titles: qrCodes.map(
+        (qrCode) => qrCode.title || `QR Code ${qrCode.id}`
+      ),
+      short_urls: qrCodes.map((qrCode) => qrCode.shortUrl || ""),
+      download_format: format,
+      download_method: "individual", // current implementation downloads individually
+      customization_options: qrCodes.map((qrCode) => ({
+        foreground_color: qrCode.customization?.foregroundColor || "#000000",
+        background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
+        size: qrCode.customization?.size || 300,
+      })),
+      total_scans: totalScans,
+      average_qr_code_age_days: Math.round(averageAge),
+      qr_codes_with_logos: qrCodesWithLogos,
+      success,
+      success_count: success ? successCount : 0,
+      failed_count: success ? failedCount : qrCodes.length,
+      ...(success
+        ? { operation_duration_ms: operationDuration }
+        : {
+            error_message: errorMessage || "Unknown error",
+            operation_duration_ms: operationDuration,
+          }),
+      ui_source: uiSource,
+    });
+  }
   /**
    * Convert a SVG string to a PNG Data URL using canvas
    * @param svgString - SVG content as string
@@ -311,10 +405,12 @@ class QrCodeDownloadService {
    * Download QR code as image
    * @param qrCode - QR code data
    * @param format - Image format (png or svg)
+   * @param downloadMethod - Method of download (individual or bulk)
    */
   async downloadQrCode(
     qrCode: QrCode,
-    format: "png" | "svg"
+    format: "png" | "svg",
+    downloadMethod: "individual" | "bulk" = "individual"
   ): Promise<boolean> {
     // Default download size is larger for better quality
     const downloadSize = 500;
@@ -350,9 +446,126 @@ class QrCodeDownloadService {
       // Clean up
       document.body.removeChild(link);
 
+      // Track QR code download conversion goal in PostHog
+      this.trackSingleDownload(
+        qrCode,
+        format,
+        downloadSize,
+        downloadMethod,
+        true
+      );
+
       return true;
     } catch (error) {
       console.error("QR code download failed", error);
+
+      // Track failed QR code download conversion goal in PostHog
+      this.trackSingleDownload(
+        qrCode,
+        format,
+        downloadSize,
+        downloadMethod,
+        false
+      );
+
+      return false;
+    }
+  }
+
+  /**
+   * Download multiple QR codes as a zip file
+   * @param qrCodes - Array of QR codes to download
+   * @param format - Image format (png or svg)
+   * @param uiSource - UI source where the bulk download was initiated
+   */
+  async downloadBulkQrCodes(
+    qrCodes: QrCode[],
+    format: "png" | "svg",
+    uiSource:
+      | "list_view"
+      | "grid_view"
+      | "bulk_actions_panel" = "bulk_actions_panel"
+  ): Promise<boolean> {
+    if (qrCodes.length === 0) {
+      console.warn("No QR codes provided for bulk download");
+      return false;
+    }
+
+    const startTime = Date.now();
+    let successCount = 0;
+    let failedCount = 0;
+
+    try {
+      // Process in batches to avoid overwhelming the browser and provide better performance
+      const BATCH_SIZE = 5; // Process 5 QR codes at a time
+      const batches = [];
+
+      for (let i = 0; i < qrCodes.length; i += BATCH_SIZE) {
+        batches.push(qrCodes.slice(i, i + BATCH_SIZE));
+      }
+
+      for (const batch of batches) {
+        // Process each batch in parallel
+        const batchPromises = batch.map(async (qrCode) => {
+          try {
+            const success = await this.downloadQrCode(qrCode, format, "bulk");
+            return { success, qrCodeId: qrCode.id, error: null };
+          } catch (error) {
+            console.error(`Failed to download QR code ${qrCode.id}:`, error);
+            return { success: false, qrCodeId: qrCode.id, error };
+          }
+        });
+
+        // Wait for all downloads in the current batch to complete
+        const batchResults = await Promise.allSettled(batchPromises);
+
+        // Process batch results
+        batchResults.forEach((result) => {
+          if (result.status === "fulfilled") {
+            if (result.value.success) {
+              successCount++;
+            } else {
+              failedCount++;
+            }
+          } else {
+            failedCount++;
+            console.error("Batch promise rejected:", result.reason);
+          }
+        });
+
+        // Add a small delay between batches to prevent overwhelming the browser
+        if (batches.length > 1) {
+          await new Promise((resolve) => setTimeout(resolve, 100));
+        }
+      }
+
+      // Track bulk download operation
+      this.trackBulkDownload(
+        qrCodes,
+        format,
+        startTime,
+        uiSource,
+        successCount > 0,
+        successCount,
+        failedCount
+      );
+
+      return successCount > 0;
+    } catch (error) {
+      console.error("Bulk QR code download failed", error);
+
+      // Track failed bulk download operation
+      this.trackBulkDownload(
+        qrCodes,
+        format,
+        startTime,
+        uiSource,
+        false,
+        0,
+        qrCodes.length,
+        error instanceof Error ? error.message : "Unknown error"
+      );
+
       return false;
     }
   }

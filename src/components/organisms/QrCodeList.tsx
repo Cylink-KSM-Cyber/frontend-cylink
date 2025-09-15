@@ -302,7 +302,13 @@ const QrCodeList: React.FC<QrCodeListProps> = ({
                 {/* QR Code Preview */}
                 <div
                   className="col-span-2"
-                  onClick={() => onPreview && onPreview(qrCode)}
+                  onClick={() => {
+                    if (onPreview) {
+                      // Track preview interaction from list view
+                      // The actual tracking is handled in the modal
+                      onPreview(qrCode);
+                    }
+                  }}
                 >
                   <div className="h-16 w-16 cursor-pointer hover:scale-105 transition-transform duration-150">
                     <QrCodePreview

@@ -144,9 +144,18 @@ const QrCodeEditModal: React.FC<QrCodeEditModalProps> = ({
       size: qrSize || 300,
     };
 
+    // Prepare previous customization data for tracking
+    const previousCustomization = {
+      foreground_color: qrCode.customization?.foregroundColor || "#000000",
+      background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
+      include_logo: qrCode.customization?.includeLogo || false,
+      logo_size: Math.round((qrCode.customization?.logoSize || 0.25) * 100),
+      size: qrCode.customization?.size || 300,
+    };
+
     try {
-      // Update QR code
-      await updateQrCode(qrCode.id, editData);
+      // Update QR code with tracking
+      await updateQrCode(qrCode.id, editData, previousCustomization);
       qrUpdatedRef.current = true;
 
       // Close modal after a short delay to show success

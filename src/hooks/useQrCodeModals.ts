@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { QrCode, Url } from "@/interfaces/url";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
 
 /**
  * Modal states and handlers for QR codes
@@ -62,6 +63,8 @@ interface QrCodeModalsActions {
  * @returns Object containing modal states and handlers
  */
 export const useQrCodeModals = (): [QrCodeModalsState, QrCodeModalsActions] => {
+  const { trackQrCodePreviewEvent } = useConversionTracking();
+
   // Selected QR code for operations
   const [selectedQrCode, setSelectedQrCode] = useState<QrCode | null>(null);
 
@@ -89,6 +92,14 @@ export const useQrCodeModals = (): [QrCodeModalsState, QrCodeModalsActions] => {
   const openPreviewModal = (qrCode: QrCode) => {
     setSelectedQrCode(qrCode);
     setPreviewModalOpen(true);
+
+    // Track preview interaction when modal is opened via shared helper
+    // Source remains context-specific: list view
+    trackQrCodePreviewEvent({
+      qrCode,
+      interactionType: "open_preview",
+      previewSource: "list_view",
+    });
   };
   const closePreviewModal = () => setPreviewModalOpen(false);
 

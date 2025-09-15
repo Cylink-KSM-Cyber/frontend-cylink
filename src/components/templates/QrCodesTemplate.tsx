@@ -98,6 +98,10 @@ interface QrCodesTemplateProps {
    */
   onBulkDeleteQrCodes: () => void;
   /**
+   * Function to call when bulk download is requested
+   */
+  onBulkDownloadQrCodes: (format: "png" | "svg") => void;
+  /**
    * Function to call when download is requested
    */
   onDownloadQrCode: (qrCode: QrCode, format: "png" | "svg") => void;
@@ -126,6 +130,7 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
   onSelectQrCode,
   onSelectAllQrCodes,
   onBulkDeleteQrCodes,
+  onBulkDownloadQrCodes,
   onDownloadQrCode,
 }) => {
   // Calculate if any QR codes are selected
@@ -241,7 +246,20 @@ const QrCodesTemplate: React.FC<QrCodesTemplateProps> = ({
               <Button onClick={onBulkDeleteQrCodes} variant="danger" size="sm">
                 Delete Selected
               </Button>
-              {/* Additional bulk actions can be added here */}
+              <Button
+                onClick={() => onBulkDownloadQrCodes("png")}
+                variant="primary"
+                size="sm"
+              >
+                Download PNG
+              </Button>
+              <Button
+                onClick={() => onBulkDownloadQrCodes("svg")}
+                variant="primary"
+                size="sm"
+              >
+                Download SVG
+              </Button>
             </div>
           </div>
         )}
