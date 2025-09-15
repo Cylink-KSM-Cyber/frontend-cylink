@@ -63,7 +63,7 @@ interface QrCodeModalsActions {
  * @returns Object containing modal states and handlers
  */
 export const useQrCodeModals = (): [QrCodeModalsState, QrCodeModalsActions] => {
-  const { trackQrCodePreviewInteraction } = useConversionTracking();
+  const { trackQrCodePreviewEvent } = useConversionTracking();
 
   // Selected QR code for operations
   const [selectedQrCode, setSelectedQrCode] = useState<QrCode | null>(null);
@@ -93,28 +93,12 @@ export const useQrCodeModals = (): [QrCodeModalsState, QrCodeModalsActions] => {
     setSelectedQrCode(qrCode);
     setPreviewModalOpen(true);
 
-    // Track preview interaction when modal is opened
-    const qrCodeAgeDays = Math.floor(
-      (Date.now() - new Date(qrCode.createdAt).getTime()) /
-        (1000 * 60 * 60 * 24)
-    );
-
-    trackQrCodePreviewInteraction({
-      qr_code_id: qrCode.id,
-      url_id: qrCode.urlId,
-      qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
-      short_url: qrCode.shortUrl || "",
-      customization_options: {
-        foreground_color: qrCode.customization?.foregroundColor || "#000000",
-        background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
-        size: qrCode.customization?.size || 300,
-      },
-      interaction_type: "open_preview",
-      preview_source: "list_view", // This will be overridden by the actual source
-      includes_logo: qrCode.customization?.includeLogo || false,
-      total_scans: qrCode.scans || 0,
-      qr_code_age_days: qrCodeAgeDays,
-      success: true,
+    // Track preview interaction when modal is opened via shared helper
+    // Source remains context-specific: list view
+    trackQrCodePreviewEvent({
+      qrCode,
+      interactionType: "open_preview",
+      previewSource: "list_view",
     });
   };
   const closePreviewModal = () => setPreviewModalOpen(false);

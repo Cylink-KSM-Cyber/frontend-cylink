@@ -28,7 +28,7 @@ const QrCodePreviewModal: React.FC<QrCodePreviewModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const { trackQrCodePreviewInteraction } = useConversionTracking();
+  const { trackQrCodePreviewEvent } = useConversionTracking();
   const previewStartTimeRef = useRef<number | null>(null);
 
   // Track preview open
@@ -36,30 +36,13 @@ const QrCodePreviewModal: React.FC<QrCodePreviewModalProps> = ({
     if (isOpen && qrCode) {
       previewStartTimeRef.current = Date.now();
 
-      const qrCodeAgeDays = Math.floor(
-        (Date.now() - new Date(qrCode.createdAt).getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-
-      trackQrCodePreviewInteraction({
-        qr_code_id: qrCode.id,
-        url_id: qrCode.urlId,
-        qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
-        short_url: qrCode.shortUrl || "",
-        customization_options: {
-          foreground_color: qrCode.customization?.foregroundColor || "#000000",
-          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
-          size: qrCode.customization?.size || 300,
-        },
-        interaction_type: "open_preview",
-        preview_source: "direct_link", // This modal is typically opened from list/grid
-        includes_logo: qrCode.customization?.includeLogo || false,
-        total_scans: qrCode.scans || 0,
-        qr_code_age_days: qrCodeAgeDays,
-        success: true,
+      trackQrCodePreviewEvent({
+        qrCode,
+        interactionType: "open_preview",
+        previewSource: "direct_link",
       });
     }
-  }, [isOpen, qrCode, trackQrCodePreviewInteraction]);
+  }, [isOpen, qrCode, trackQrCodePreviewEvent]);
 
   // Track preview close
   useEffect(() => {
@@ -69,31 +52,14 @@ const QrCodePreviewModal: React.FC<QrCodePreviewModalProps> = ({
       );
       previewStartTimeRef.current = null;
 
-      const qrCodeAgeDays = Math.floor(
-        (Date.now() - new Date(qrCode.createdAt).getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-
-      trackQrCodePreviewInteraction({
-        qr_code_id: qrCode.id,
-        url_id: qrCode.urlId,
-        qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
-        short_url: qrCode.shortUrl || "",
-        customization_options: {
-          foreground_color: qrCode.customization?.foregroundColor || "#000000",
-          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
-          size: qrCode.customization?.size || 300,
-        },
-        interaction_type: "close_preview",
-        preview_source: "direct_link",
-        preview_duration_seconds: previewDuration,
-        includes_logo: qrCode.customization?.includeLogo || false,
-        total_scans: qrCode.scans || 0,
-        qr_code_age_days: qrCodeAgeDays,
-        success: true,
+      trackQrCodePreviewEvent({
+        qrCode,
+        interactionType: "close_preview",
+        previewSource: "direct_link",
+        previewDurationSeconds: previewDuration,
       });
     }
-  }, [isOpen, qrCode, trackQrCodePreviewInteraction]);
+  }, [isOpen, qrCode, trackQrCodePreviewEvent]);
 
   // Format date for display
   const formatDate = (dateString: string) => {

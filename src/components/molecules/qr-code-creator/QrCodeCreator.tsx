@@ -9,6 +9,7 @@ import QrCodeCustomizationStep from "./QrCodeCustomizationStep";
 import QrCodeModalFooter from "./QrCodeModalFooter";
 import { Url } from "@/interfaces/url";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useToast } from "@/contexts/ToastContext";
 
 /**
  * Props for QrCodeCreator component
@@ -56,6 +57,7 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
   // Use the custom hook to manage QR code creation
   const qrCodeCreation = useQrCodeCreation(createUrl, onCreated);
   const { trackQrCodeGeneration, trackQrCodeSharing } = useConversionTracking();
+  const { showToast } = useToast();
 
   // Track if modal has been initialized
   const hasInitializedRef = useRef(false);
@@ -192,6 +194,39 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
       );
     const sharingPlatform = isMobile ? "mobile" : "desktop";
 
+    /**
+     * Build and send QR share tracking event
+     * @param method sharing method identifier (e.g., "web_share_api" | "clipboard")
+     * @param success whether the share action succeeded
+     * @param error optional error message when failed
+     */
+    const trackShare = (
+      method: "web_share_api" | "clipboard",
+      success: boolean,
+      error?: string
+    ) => {
+      trackQrCodeSharing({
+        qr_code_id: selectedUrlForQrCode.id,
+        url_id: selectedUrlForQrCode.id,
+        qr_code_title:
+          selectedUrlForQrCode.title ||
+          `QR Code for ${selectedUrlForQrCode.short_code}`,
+        short_url: previewUrl,
+        customization_options: {
+          foreground_color: selectedForegroundColor?.hex || "#000000",
+          background_color: selectedBackgroundColor?.hex || "#FFFFFF",
+          size: qrSize,
+        },
+        sharing_method: method,
+        sharing_platform: sharingPlatform,
+        includes_logo: includeLogoChecked,
+        total_scans: 0,
+        qr_code_age_days: 0,
+        success,
+        ...(success ? {} : { error_message: error || "Unknown error" }),
+      });
+    };
+
     // Use Web Share API if available
     if (navigator.share) {
       try {
@@ -200,102 +235,23 @@ const QrCodeCreator: React.FC<QrCodeCreatorProps> = ({
           text: `Scan this QR code to visit ${previewUrl}`,
           url: previewUrl,
         });
-
-        // Track successful QR code sharing via Web Share API
-        trackQrCodeSharing({
-          qr_code_id: selectedUrlForQrCode.id, // Using URL ID as QR code ID for this context
-          url_id: selectedUrlForQrCode.id,
-          qr_code_title:
-            selectedUrlForQrCode.title ||
-            `QR Code for ${selectedUrlForQrCode.short_code}`,
-          short_url: previewUrl,
-          customization_options: {
-            foreground_color: selectedForegroundColor?.hex || "#000000",
-            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
-            size: qrSize,
-          },
-          sharing_method: "web_share_api",
-          sharing_platform: sharingPlatform,
-          includes_logo: includeLogoChecked,
-          total_scans: 0, // Not available in this context
-          qr_code_age_days: 0, // Not available in this context
-          success: true,
-        });
+        showToast("QR code shared successfully", "success", 2000);
+        trackShare("web_share_api", true);
       } catch (err) {
-        console.error("Error sharing:", err);
-
-        // Track failed QR code sharing
-        trackQrCodeSharing({
-          qr_code_id: selectedUrlForQrCode.id,
-          url_id: selectedUrlForQrCode.id,
-          qr_code_title:
-            selectedUrlForQrCode.title ||
-            `QR Code for ${selectedUrlForQrCode.short_code}`,
-          short_url: previewUrl,
-          customization_options: {
-            foreground_color: selectedForegroundColor?.hex || "#000000",
-            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
-            size: qrSize,
-          },
-          sharing_method: "web_share_api",
-          sharing_platform: sharingPlatform,
-          includes_logo: includeLogoChecked,
-          total_scans: 0,
-          qr_code_age_days: 0,
-          success: false,
-          error_message: err instanceof Error ? err.message : "Unknown error",
-        });
+        const message = err instanceof Error ? err.message : "Unknown error";
+        showToast(`Failed to share QR code: ${message}`, "error", 3000);
+        trackShare("web_share_api", false, message);
       }
     } else {
       // Fallback to clipboard
       try {
         await navigator.clipboard.writeText(previewUrl);
-        alert("URL copied to clipboard!");
-
-        // Track successful QR code sharing via clipboard
-        trackQrCodeSharing({
-          qr_code_id: selectedUrlForQrCode.id,
-          url_id: selectedUrlForQrCode.id,
-          qr_code_title:
-            selectedUrlForQrCode.title ||
-            `QR Code for ${selectedUrlForQrCode.short_code}`,
-          short_url: previewUrl,
-          customization_options: {
-            foreground_color: selectedForegroundColor?.hex || "#000000",
-            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
-            size: qrSize,
-          },
-          sharing_method: "clipboard",
-          sharing_platform: sharingPlatform,
-          includes_logo: includeLogoChecked,
-          total_scans: 0,
-          qr_code_age_days: 0,
-          success: true,
-        });
+        showToast("URL copied to clipboard", "success", 2000);
+        trackShare("clipboard", true);
       } catch (err) {
-        console.error("Error copying to clipboard:", err);
-
-        // Track failed clipboard sharing
-        trackQrCodeSharing({
-          qr_code_id: selectedUrlForQrCode.id,
-          url_id: selectedUrlForQrCode.id,
-          qr_code_title:
-            selectedUrlForQrCode.title ||
-            `QR Code for ${selectedUrlForQrCode.short_code}`,
-          short_url: previewUrl,
-          customization_options: {
-            foreground_color: selectedForegroundColor?.hex || "#000000",
-            background_color: selectedBackgroundColor?.hex || "#FFFFFF",
-            size: qrSize,
-          },
-          sharing_method: "clipboard",
-          sharing_platform: sharingPlatform,
-          includes_logo: includeLogoChecked,
-          total_scans: 0,
-          qr_code_age_days: 0,
-          success: false,
-          error_message: err instanceof Error ? err.message : "Unknown error",
-        });
+        const message = err instanceof Error ? err.message : "Unknown error";
+        showToast(`Failed to copy URL: ${message}`, "error", 3000);
+        trackShare("clipboard", false, message);
       }
     }
   };
