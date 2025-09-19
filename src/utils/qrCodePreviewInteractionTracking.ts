@@ -6,8 +6,8 @@
  *
  * @module src/utils/qrCodePreviewInteractionTracking
  */
-import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
-import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
+import posthogClient from "@/utils/posthogClient";
+import { buildQrCodePreviewInteractionEvent } from "@/utils/qrCodePreviewInteractionEvent";
 import { QrCodePreviewInteractionProperties } from "@/interfaces/conversionTrackings/QrCodePreviewInteractionProperties";
 
 /**
@@ -16,16 +16,16 @@ import { QrCodePreviewInteractionProperties } from "@/interfaces/conversionTrack
  */
 export const trackQrCodePreviewInteraction = (
   properties: QrCodePreviewInteractionProperties
-): void => {
+): boolean => {
   if (!properties.qr_code_id || properties.qr_code_id <= 0) {
     console.warn(
       "Invalid qr_code_id provided to trackQrCodePreviewInteraction"
     );
-    return;
+    return false;
   }
   if (!properties.url_id || properties.url_id <= 0) {
     console.warn("Invalid url_id provided to trackQrCodePreviewInteraction");
-    return;
+    return false;
   }
   if (
     !properties.qr_code_title ||
@@ -34,11 +34,11 @@ export const trackQrCodePreviewInteraction = (
     console.warn(
       "Invalid qr_code_title provided to trackQrCodePreviewInteraction"
     );
-    return;
+    return false;
   }
   if (!properties.short_url || properties.short_url.trim().length === 0) {
     console.warn("Invalid short_url provided to trackQrCodePreviewInteraction");
-    return;
+    return false;
   }
   if (
     !properties.customization_options ||
@@ -47,7 +47,7 @@ export const trackQrCodePreviewInteraction = (
     console.warn(
       "Invalid customization_options provided to trackQrCodePreviewInteraction"
     );
-    return;
+    return false;
   }
   if (
     ![
@@ -60,7 +60,7 @@ export const trackQrCodePreviewInteraction = (
     console.warn(
       "Invalid interaction_type provided to trackQrCodePreviewInteraction"
     );
-    return;
+    return false;
   }
   if (
     ![
@@ -74,21 +74,10 @@ export const trackQrCodePreviewInteraction = (
     console.warn(
       "Invalid preview_source provided to trackQrCodePreviewInteraction"
     );
-    return;
+    return false;
   }
 
-  const sanitizedProperties = {
-    ...properties,
-    qr_code_title: properties.qr_code_title?.substring(0, 100),
-    short_url: properties.short_url?.substring(0, 200),
-    customization_options: JSON.stringify(properties.customization_options),
-    error_message: properties.error_message?.substring(0, 200),
-  };
-
-  const eventProperties: PostHogEventProperties = {
-    ...getBaseEventProperties(),
-    ...sanitizedProperties,
-  };
-
-  posthogClient.captureEvent("qr_code_preview_interaction", eventProperties);
+  const built = buildQrCodePreviewInteractionEvent(properties);
+  posthogClient.captureEvent("qr_code_preview_interaction", built.event);
+  return true;
 };

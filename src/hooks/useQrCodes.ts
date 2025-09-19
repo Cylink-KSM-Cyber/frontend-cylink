@@ -4,6 +4,10 @@ import { fetchQrCodes, deleteQrCodeById } from "@/services/qrcode";
 import { QrCodeFilter } from "@/interfaces/qrcode";
 import { useToast } from "@/contexts/ToastContext";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
+import {
+  mapApiListToQrCodes,
+  computeQrCodeAgeDays,
+} from "@/utils/qrcodeMapping";
 
 // Helper function to check if two filters are equal
 const areFiltersEqual = (
@@ -60,6 +64,35 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
   // Get toast context
   const { showToast } = useToast();
 
+  /**
+   * Build tracking payload for QR code deletion
+   * @param qr QR code being deleted
+   * @param deletionMethod Method of deletion (manual or bulk)
+   * @param deletionReason Optional reason or error message
+   * @param success Whether the deletion succeeded
+   */
+  const buildDeletionTrackingPayload = (
+    qr: QrCode,
+    deletionMethod: "manual" | "bulk",
+    deletionReason: string | undefined,
+    success: boolean
+  ) => ({
+    qr_code_id: qr.id,
+    url_id: qr.urlId,
+    qr_code_title: qr.title || `QR Code ${qr.id}`,
+    short_url: qr.shortUrl || "",
+    customization_options: {
+      foreground_color: qr.customization?.foregroundColor || "#000000",
+      background_color: qr.customization?.backgroundColor || "#FFFFFF",
+      size: qr.customization?.size || 300,
+    },
+    total_scans: qr.scans || 0,
+    qr_code_age_days: computeQrCodeAgeDays(qr.createdAt),
+    deletion_method: deletionMethod,
+    deletion_reason: deletionReason,
+    success,
+  });
+
   useEffect(() => {
     const fetchQrCodesList = async () => {
       // Skip if a fetch is already in progress
@@ -88,32 +121,7 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
         const response = await fetchQrCodes(filter);
 
         // Map API response to our internal QrCode type
-        const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
-          return {
-            id: qrCode.id,
-            urlId: qrCode.url_id,
-            shortCode: qrCode.short_code,
-            shortUrl: qrCode.short_url,
-            // We're not going to use these image URLs anymore since they don't work
-            imageUrl: undefined,
-            pngUrl: undefined,
-            svgUrl: undefined,
-            createdAt: qrCode.created_at,
-            updatedAt: qrCode.updated_at,
-            scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
-            title: qrCode.url?.title || qrCode.short_code,
-            description: qrCode.url?.original_url,
-            customization: {
-              foregroundColor: qrCode.color || "#000000",
-              backgroundColor: qrCode.background_color || "#FFFFFF",
-              includeLogo: qrCode.include_logo,
-              logoSize: qrCode.logo_size || 0.25, // Default to 25% if not provided
-              size: qrCode.size || 300, // Default size if not provided
-              logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
-              cornerRadius: 0, // Not supported by API yet
-            },
-          };
-        });
+        const mappedQrCodes: QrCode[] = mapApiListToQrCodes(response.data);
 
         // Update state with mapped QR codes and pagination info
         setQrCodes(mappedQrCodes);
@@ -171,29 +179,14 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
 
       // Track QR code deletion conversion goal in PostHog
       if (qrCodeToDelete) {
-        const qrCodeAgeDays = Math.floor(
-          (Date.now() - new Date(qrCodeToDelete.createdAt).getTime()) /
-            (1000 * 60 * 60 * 24)
+        trackQrCodeDeletion(
+          buildDeletionTrackingPayload(
+            qrCodeToDelete,
+            deletionMethod,
+            deletionReason,
+            true
+          )
         );
-
-        trackQrCodeDeletion({
-          qr_code_id: qrCodeToDelete.id,
-          url_id: qrCodeToDelete.urlId,
-          qr_code_title: qrCodeToDelete.title || `QR Code ${qrCodeToDelete.id}`,
-          short_url: qrCodeToDelete.shortUrl || "",
-          customization_options: {
-            foreground_color:
-              qrCodeToDelete.customization?.foregroundColor || "#000000",
-            background_color:
-              qrCodeToDelete.customization?.backgroundColor || "#FFFFFF",
-            size: qrCodeToDelete.customization?.size || 300,
-          },
-          total_scans: qrCodeToDelete.scans || 0,
-          qr_code_age_days: qrCodeAgeDays,
-          deletion_method: deletionMethod,
-          deletion_reason: deletionReason,
-          success: true,
-        });
       }
 
       // Update local state by removing the deleted QR code
@@ -213,29 +206,14 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
 
       // Track failed QR code deletion conversion goal in PostHog
       if (qrCodeToDelete) {
-        const qrCodeAgeDays = Math.floor(
-          (Date.now() - new Date(qrCodeToDelete.createdAt).getTime()) /
-            (1000 * 60 * 60 * 24)
+        trackQrCodeDeletion(
+          buildDeletionTrackingPayload(
+            qrCodeToDelete,
+            deletionMethod,
+            errorMessage,
+            false
+          )
         );
-
-        trackQrCodeDeletion({
-          qr_code_id: qrCodeToDelete.id,
-          url_id: qrCodeToDelete.urlId,
-          qr_code_title: qrCodeToDelete.title || `QR Code ${qrCodeToDelete.id}`,
-          short_url: qrCodeToDelete.shortUrl || "",
-          customization_options: {
-            foreground_color:
-              qrCodeToDelete.customization?.foregroundColor || "#000000",
-            background_color:
-              qrCodeToDelete.customization?.backgroundColor || "#FFFFFF",
-            size: qrCodeToDelete.customization?.size || 300,
-          },
-          total_scans: qrCodeToDelete.scans || 0,
-          qr_code_age_days: qrCodeAgeDays,
-          deletion_method: deletionMethod,
-          deletion_reason: errorMessage,
-          success: false,
-        });
       }
 
       showToast(errorMessage, "error", 4000);
@@ -296,32 +274,7 @@ export const useQrCodes = (initialFilter?: QrCodeFilter) => {
       const response = await fetchQrCodes(filter);
 
       // Map API response to our internal QrCode type
-      const mappedQrCodes: QrCode[] = response.data.map((qrCode) => {
-        return {
-          id: qrCode.id,
-          urlId: qrCode.url_id,
-          shortCode: qrCode.short_code,
-          shortUrl: qrCode.short_url,
-          // We're not going to use these image URLs anymore since they don't work
-          imageUrl: undefined,
-          pngUrl: undefined,
-          svgUrl: undefined,
-          createdAt: qrCode.created_at,
-          updatedAt: qrCode.updated_at,
-          scans: qrCode.url?.clicks || 0, // Use URL clicks as scans count
-          title: qrCode.url?.title || qrCode.short_code,
-          description: qrCode.url?.original_url,
-          customization: {
-            foregroundColor: qrCode.color || "#000000",
-            backgroundColor: qrCode.background_color || "#FFFFFF",
-            includeLogo: qrCode.include_logo,
-            logoSize: qrCode.logo_size || 0.25, // Default to 25% if not provided
-            size: qrCode.size || 300, // Default size if not provided
-            logoUrl: qrCode.include_logo ? "/logo/logo-ksm.svg" : undefined,
-            cornerRadius: 0, // Not supported by API yet
-          },
-        };
-      });
+      const mappedQrCodes: QrCode[] = mapApiListToQrCodes(response.data);
 
       // Update state with mapped QR codes and pagination info
       setQrCodes(mappedQrCodes);

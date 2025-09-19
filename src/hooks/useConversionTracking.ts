@@ -21,6 +21,7 @@ import { useTrackQrCodeDeletion } from "./conversionTrackings/useTrackQrCodeDele
 import { useTrackQrCodeDownload } from "./conversionTrackings/useTrackQrCodeDownload";
 import { useTrackQrCodeSharing } from "./conversionTrackings/useTrackQrCodeSharing";
 import { useTrackQrCodePreviewInteraction } from "./conversionTrackings/useTrackQrCodePreviewInteraction";
+import { useTrackQrCodePreviewEvent } from "./conversionTrackings/useTrackQrCodePreviewEvent";
 import { useTrackQrCodeBulkOperation } from "./conversionTrackings/useTrackQrCodeBulkOperation";
 import { useTrackConversion } from "./conversionTrackings/useTrackConversion";
 import { useTrackFeatureUsage } from "./conversionTrackings/useTrackFeatureUsage";
@@ -33,22 +34,43 @@ import { useTrackUserRegister } from "./conversionTrackings/useTrackUserRegister
  * @returns Object with conversion tracking methods
  */
 export const useConversionTracking = () => {
+  // Instantiate individual trackers once to enable cross-calls
+  const urlCreation = useTrackUrlCreation();
+  const urlEdit = useTrackUrlEdit();
+  const urlDeletion = useTrackUrlDeletion();
+  const urlClick = useTrackUrlClick();
+  const qrGeneration = useTrackQrCodeGeneration();
+  const qrEdit = useTrackQrCodeEdit();
+  const qrDeletion = useTrackQrCodeDeletion();
+  const qrDownload = useTrackQrCodeDownload();
+  const qrSharing = useTrackQrCodeSharing();
+  const qrPreview = useTrackQrCodePreviewInteraction();
+  const { trackQrCodePreviewEvent } = useTrackQrCodePreviewEvent();
+  const qrBulk = useTrackQrCodeBulkOperation();
+  const conversion = useTrackConversion();
+  const featureUsage = useTrackFeatureUsage();
+  const error = useTrackError();
+  const userRegister = useTrackUserRegister();
+
+  // trackQrCodePreviewEvent is now provided by useTrackQrCodePreviewEvent
+
   return {
-    ...useTrackUrlCreation(),
-    ...useTrackUrlEdit(),
-    ...useTrackUrlDeletion(),
-    ...useTrackUrlClick(),
-    ...useTrackQrCodeGeneration(),
-    ...useTrackQrCodeEdit(),
-    ...useTrackQrCodeDeletion(),
-    ...useTrackQrCodeDownload(),
-    ...useTrackQrCodeSharing(),
-    ...useTrackQrCodePreviewInteraction(),
-    ...useTrackQrCodeBulkOperation(),
-    ...useTrackConversion(),
-    ...useTrackFeatureUsage(),
-    ...useTrackError(),
-    ...useTrackUserRegister(),
+    ...urlCreation,
+    ...urlEdit,
+    ...urlDeletion,
+    ...urlClick,
+    ...qrGeneration,
+    ...qrEdit,
+    ...qrDeletion,
+    ...qrDownload,
+    ...qrSharing,
+    ...qrPreview,
+    trackQrCodePreviewEvent,
+    ...qrBulk,
+    ...conversion,
+    ...featureUsage,
+    ...error,
+    ...userRegister,
   };
 };
 

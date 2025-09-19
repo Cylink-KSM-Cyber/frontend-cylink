@@ -3,11 +3,103 @@ import QRCodeLib from "qrcode";
 import html2canvas from "html2canvas";
 import { trackQrCodeDownload } from "@/utils/qrCodeDownloadTracking";
 import { trackQrCodeBulkOperation } from "@/utils/qrCodeBulkOperationTracking";
+import { computeQrCodeAgeDays } from "@/utils/qrcodeMapping";
 
 /**
  * Service for downloading QR codes as images (PNG, SVG)
  */
 class QrCodeDownloadService {
+  /**
+   * Build and send single download tracking event
+   * Returns boolean to indicate whether tracking was sent successfully
+   */
+  private trackSingleDownload(
+    qrCode: QrCode,
+    format: "png" | "svg",
+    downloadSize: number,
+    downloadMethod: "individual" | "bulk",
+    success: boolean
+  ): boolean {
+    const qrCodeAgeDays = computeQrCodeAgeDays(qrCode.createdAt);
+
+    return trackQrCodeDownload({
+      qr_code_id: qrCode.id,
+      url_id: qrCode.urlId,
+      qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
+      short_url: qrCode.shortUrl || "",
+      customization_options: {
+        foreground_color: qrCode.customization?.foregroundColor || "#000000",
+        background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
+        size: qrCode.customization?.size || 300,
+      },
+      download_format: format,
+      download_size: downloadSize,
+      includes_logo: qrCode.customization?.includeLogo || false,
+      total_scans: qrCode.scans || 0,
+      qr_code_age_days: qrCodeAgeDays,
+      download_method: downloadMethod,
+      success,
+    });
+  }
+
+  /**
+   * Build and send bulk operation tracking event
+   */
+  private trackBulkDownload(
+    qrCodes: QrCode[],
+    format: "png" | "svg",
+    startTime: number,
+    uiSource: "list_view" | "grid_view" | "bulk_actions_panel",
+    success: boolean,
+    successCount: number,
+    failedCount: number,
+    errorMessage?: string
+  ): void {
+    const operationDuration = Date.now() - startTime;
+    const totalScans = qrCodes.reduce(
+      (sum, qrCode) => sum + (qrCode.scans || 0),
+      0
+    );
+    const averageAge =
+      qrCodes.reduce(
+        (sum, qrCode) => sum + computeQrCodeAgeDays(qrCode.createdAt),
+        0
+      ) / qrCodes.length;
+    const qrCodesWithLogos = qrCodes.filter(
+      (qrCode) => qrCode.customization?.includeLogo
+    ).length;
+
+    trackQrCodeBulkOperation({
+      operation_type: "bulk_download",
+      qr_codes_count: qrCodes.length,
+      qr_code_ids: qrCodes.map((qrCode) => qrCode.id),
+      url_ids: qrCodes.map((qrCode) => qrCode.urlId),
+      qr_code_titles: qrCodes.map(
+        (qrCode) => qrCode.title || `QR Code ${qrCode.id}`
+      ),
+      short_urls: qrCodes.map((qrCode) => qrCode.shortUrl || ""),
+      download_format: format,
+      download_method: "individual", // current implementation downloads individually
+      customization_options: qrCodes.map((qrCode) => ({
+        foreground_color: qrCode.customization?.foregroundColor || "#000000",
+        background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
+        size: qrCode.customization?.size || 300,
+      })),
+      total_scans: totalScans,
+      average_qr_code_age_days: Math.round(averageAge),
+      qr_codes_with_logos: qrCodesWithLogos,
+      success,
+      success_count: success ? successCount : 0,
+      failed_count: success ? failedCount : qrCodes.length,
+      ...(success
+        ? { operation_duration_ms: operationDuration }
+        : {
+            error_message: errorMessage || "Unknown error",
+            operation_duration_ms: operationDuration,
+          }),
+      ui_source: uiSource,
+    });
+  }
   /**
    * Convert a SVG string to a PNG Data URL using canvas
    * @param svgString - SVG content as string
@@ -355,58 +447,26 @@ class QrCodeDownloadService {
       document.body.removeChild(link);
 
       // Track QR code download conversion goal in PostHog
-      const qrCodeAgeDays = Math.floor(
-        (Date.now() - new Date(qrCode.createdAt).getTime()) /
-          (1000 * 60 * 60 * 24)
+      this.trackSingleDownload(
+        qrCode,
+        format,
+        downloadSize,
+        downloadMethod,
+        true
       );
-
-      trackQrCodeDownload({
-        qr_code_id: qrCode.id,
-        url_id: qrCode.urlId,
-        qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
-        short_url: qrCode.shortUrl || "",
-        customization_options: {
-          foreground_color: qrCode.customization?.foregroundColor || "#000000",
-          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
-          size: qrCode.customization?.size || 300,
-        },
-        download_format: format,
-        download_size: downloadSize,
-        includes_logo: qrCode.customization?.includeLogo || false,
-        total_scans: qrCode.scans || 0,
-        qr_code_age_days: qrCodeAgeDays,
-        download_method: downloadMethod,
-        success: true,
-      });
 
       return true;
     } catch (error) {
       console.error("QR code download failed", error);
 
       // Track failed QR code download conversion goal in PostHog
-      const qrCodeAgeDays = Math.floor(
-        (Date.now() - new Date(qrCode.createdAt).getTime()) /
-          (1000 * 60 * 60 * 24)
+      this.trackSingleDownload(
+        qrCode,
+        format,
+        downloadSize,
+        downloadMethod,
+        false
       );
-
-      trackQrCodeDownload({
-        qr_code_id: qrCode.id,
-        url_id: qrCode.urlId,
-        qr_code_title: qrCode.title || `QR Code ${qrCode.id}`,
-        short_url: qrCode.shortUrl || "",
-        customization_options: {
-          foreground_color: qrCode.customization?.foregroundColor || "#000000",
-          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
-          size: qrCode.customization?.size || 300,
-        },
-        download_format: format,
-        download_size: downloadSize,
-        includes_logo: qrCode.customization?.includeLogo || false,
-        total_scans: qrCode.scans || 0,
-        qr_code_age_days: qrCodeAgeDays,
-        download_method: downloadMethod,
-        success: false,
-      });
 
       return false;
     }
@@ -479,98 +539,32 @@ class QrCodeDownloadService {
         }
       }
 
-      // Calculate operation metrics
-      const operationDuration = Date.now() - startTime;
-      const totalScans = qrCodes.reduce(
-        (sum, qrCode) => sum + (qrCode.scans || 0),
-        0
-      );
-      const averageAge =
-        qrCodes.reduce((sum, qrCode) => {
-          const age = Math.floor(
-            (Date.now() - new Date(qrCode.createdAt).getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-          return sum + age;
-        }, 0) / qrCodes.length;
-      const qrCodesWithLogos = qrCodes.filter(
-        (qrCode) => qrCode.customization?.includeLogo
-      ).length;
-
       // Track bulk download operation
-      trackQrCodeBulkOperation({
-        operation_type: "bulk_download",
-        qr_codes_count: qrCodes.length,
-        qr_code_ids: qrCodes.map((qrCode) => qrCode.id),
-        url_ids: qrCodes.map((qrCode) => qrCode.urlId),
-        qr_code_titles: qrCodes.map(
-          (qrCode) => qrCode.title || `QR Code ${qrCode.id}`
-        ),
-        short_urls: qrCodes.map((qrCode) => qrCode.shortUrl || ""),
-        download_format: format,
-        download_method: "individual", // Since we're downloading individually for now
-        customization_options: qrCodes.map((qrCode) => ({
-          foreground_color: qrCode.customization?.foregroundColor || "#000000",
-          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
-          size: qrCode.customization?.size || 300,
-        })),
-        total_scans: totalScans,
-        average_qr_code_age_days: Math.round(averageAge),
-        qr_codes_with_logos: qrCodesWithLogos,
-        success: successCount > 0,
-        success_count: successCount,
-        failed_count: failedCount,
-        operation_duration_ms: operationDuration,
-        ui_source: uiSource,
-      });
+      this.trackBulkDownload(
+        qrCodes,
+        format,
+        startTime,
+        uiSource,
+        successCount > 0,
+        successCount,
+        failedCount
+      );
 
       return successCount > 0;
     } catch (error) {
       console.error("Bulk QR code download failed", error);
 
       // Track failed bulk download operation
-      const totalScans = qrCodes.reduce(
-        (sum, qrCode) => sum + (qrCode.scans || 0),
-        0
+      this.trackBulkDownload(
+        qrCodes,
+        format,
+        startTime,
+        uiSource,
+        false,
+        0,
+        qrCodes.length,
+        error instanceof Error ? error.message : "Unknown error"
       );
-      const averageAge =
-        qrCodes.reduce((sum, qrCode) => {
-          const age = Math.floor(
-            (Date.now() - new Date(qrCode.createdAt).getTime()) /
-              (1000 * 60 * 60 * 24)
-          );
-          return sum + age;
-        }, 0) / qrCodes.length;
-      const qrCodesWithLogos = qrCodes.filter(
-        (qrCode) => qrCode.customization?.includeLogo
-      ).length;
-
-      trackQrCodeBulkOperation({
-        operation_type: "bulk_download",
-        qr_codes_count: qrCodes.length,
-        qr_code_ids: qrCodes.map((qrCode) => qrCode.id),
-        url_ids: qrCodes.map((qrCode) => qrCode.urlId),
-        qr_code_titles: qrCodes.map(
-          (qrCode) => qrCode.title || `QR Code ${qrCode.id}`
-        ),
-        short_urls: qrCodes.map((qrCode) => qrCode.shortUrl || ""),
-        download_format: format,
-        download_method: "individual",
-        customization_options: qrCodes.map((qrCode) => ({
-          foreground_color: qrCode.customization?.foregroundColor || "#000000",
-          background_color: qrCode.customization?.backgroundColor || "#FFFFFF",
-          size: qrCode.customization?.size || 300,
-        })),
-        total_scans: totalScans,
-        average_qr_code_age_days: Math.round(averageAge),
-        qr_codes_with_logos: qrCodesWithLogos,
-        success: false,
-        success_count: 0,
-        failed_count: qrCodes.length,
-        error_message: error instanceof Error ? error.message : "Unknown error",
-        operation_duration_ms: Date.now() - startTime,
-        ui_source: uiSource,
-      });
 
       return false;
     }

@@ -7,9 +7,9 @@
  * @module src/hooks/conversionTrackings/useTrackQrCodeBulkOperation
  */
 import { useCallback } from "react";
-import posthogClient, { PostHogEventProperties } from "@/utils/posthogClient";
+import posthogClient from "@/utils/posthogClient";
 import { QrCodeBulkOperationProperties } from "@/interfaces/conversionTrackings/QrCodeBulkOperationProperties";
-import { getBaseEventProperties } from "@/utils/conversionTrackingEventUtils";
+import { buildQrCodeBulkOperationEvent } from "@/utils/qrCodeBulkOperationEvent";
 
 export const useTrackQrCodeBulkOperation = () => {
   const trackQrCodeBulkOperation = useCallback(
@@ -147,31 +147,9 @@ export const useTrackQrCodeBulkOperation = () => {
         }
       }
 
-      const sanitizedProperties = {
-        ...properties,
-        qr_code_ids: JSON.stringify(properties.qr_code_ids),
-        url_ids: JSON.stringify(properties.url_ids),
-        qr_code_titles: JSON.stringify(
-          properties.qr_code_titles.map((title) => title?.substring(0, 100))
-        ),
-        short_urls: JSON.stringify(
-          properties.short_urls.map((url) => url?.substring(0, 200))
-        ),
-        customization_options: JSON.stringify(
-          properties.customization_options.map((options) =>
-            JSON.stringify(options)
-          )
-        ),
-        deletion_reason: properties.deletion_reason?.substring(0, 200),
-        error_message: properties.error_message?.substring(0, 200),
-      };
-
-      const eventProperties: PostHogEventProperties = {
-        ...getBaseEventProperties(),
-        ...sanitizedProperties,
-      };
-
-      posthogClient.captureEvent("qr_code_bulk_operation", eventProperties);
+      const built = buildQrCodeBulkOperationEvent(properties);
+      posthogClient.captureEvent("qr_code_bulk_operation", built.event);
+      return true;
     },
     []
   );
