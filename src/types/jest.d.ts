@@ -12,7 +12,7 @@ declare global {
       toHaveValue(value: string | string[] | number): R
       toBeChecked(): R
       toBePartiallyChecked(): R
-      toHaveFormValues(expectedValues: Record<string, any>): R
+      toHaveFormValues(expectedValues: Record<string, unknown>): R
       toHaveDisplayValue(value: string | RegExp | (string | RegExp)[]): R
       toHaveAccessibleDescription(text?: string | RegExp): R
       toHaveAccessibleName(text?: string | RegExp): R
@@ -24,7 +24,7 @@ declare global {
       toContainElement(element: HTMLElement | null): R
       toContainHTML(htmlText: string): R
       toHaveAccessibleErrorMessage(text?: string | RegExp): R
-      toHaveStyle(css: string | Record<string, any>): R
+      toHaveStyle(css: string | Record<string, unknown>): R
       toHaveValue(value: string | string[] | number): R
     }
   }
