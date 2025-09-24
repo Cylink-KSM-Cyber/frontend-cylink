@@ -1,0 +1,19 @@
+{
+  "testUrls": [
+    {
+      "title": "Google",
+      "originalUrl": "https://google.com",
+      "shortUrl": "goog123"
+    },
+    {
+      "title": "GitHub",
+      "originalUrl": "https://github.com",
+      "shortUrl": "gh456"
+    },
+    {
+      "title": "Stack Overflow",
+      "originalUrl": "https://stackoverflow.com",
+      "shortUrl": "so789"
+    }
+  ]
+}
