@@ -85,8 +85,6 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
       const loadTime = Date.now() - startTime;
       setPageLoadTime(loadTime);
 
-      logger.urlShortener.debug(`Fetch completed in ${loadTime}ms`);
-
       // Handle different response formats
       if (data?.data?.original_url) {
         return { original_url: data.data.original_url, url_id: data.data.id };
@@ -109,7 +107,6 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
   useEffect(() => {
     // Prevent multiple initializations
     if (isInitializedRef.current) {
-      logger.debug("Initialization already in progress or completed, skipping");
       return;
     }
 
@@ -117,7 +114,6 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
 
     const initialize = async () => {
       setIsLoading(true);
-      logger.info(`Initializing interstitial page for: ${shortCode}`);
 
       try {
         // Load fact and URL in parallel
@@ -152,10 +148,6 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
             page_load_time: pageLoadTime,
             url_id: urlResult.url_id,
           });
-
-          logger.info(
-            `Successfully initialized: ${shortCode} -> ${urlResult.original_url}`
-          );
         } else {
           setError("Short URL not found or has expired.");
 
@@ -170,8 +162,6 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
             url_fetch_success: false,
             page_load_time: pageLoadTime,
           });
-
-          logger.warn(`URL not found: ${shortCode}`);
         }
       } catch (err) {
         logger.error("Failed to initialize interstitial page", err);
@@ -198,16 +188,10 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
    * Handle countdown completion
    */
   const handleCountdownComplete = useCallback(() => {
-    logger.info("[INTERSTITIAL] handleCountdownComplete called");
-
     if (!fact) {
-      logger.warn(
-        "[INTERSTITIAL] No fact available in handleCountdownComplete"
-      );
       return;
     }
 
-    logger.info("[INTERSTITIAL] Countdown completed for interstitial page");
     setShowManualButton(true);
 
     trackInterstitialCountdownCompleted({
@@ -226,14 +210,9 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
    * Handle auto redirect
    */
   const handleAutoRedirect = useCallback(() => {
-    logger.info("[INTERSTITIAL] handleAutoRedirect called");
-
     if (!fact) {
-      logger.warn("[INTERSTITIAL] No fact available in handleAutoRedirect");
       return;
     }
-
-    logger.info("[INTERSTITIAL] Auto redirect triggered - tracking analytics");
 
     trackInterstitialAutoRedirect({
       short_code: shortCode,
@@ -245,8 +224,6 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
       redirect_method: "auto",
       redirect_success: true,
     });
-
-    logger.info("[INTERSTITIAL] Analytics tracked for auto redirect");
   }, [shortCode, fact, trackInterstitialAutoRedirect]);
 
   /**
@@ -254,18 +231,9 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
    */
   const handleManualRedirect = useCallback(
     (timeRemaining: number) => {
-      logger.info(
-        `[INTERSTITIAL] handleManualRedirect called with timeRemaining: ${timeRemaining}`
-      );
-
       if (!fact) {
-        logger.warn("[INTERSTITIAL] No fact available in handleManualRedirect");
         return;
       }
-
-      logger.info(
-        "[INTERSTITIAL] Manual redirect triggered - tracking analytics"
-      );
 
       trackInterstitialManualRedirect({
         short_code: shortCode,
@@ -277,8 +245,6 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
         redirect_method: "manual",
         time_remaining: timeRemaining,
       });
-
-      logger.info("[INTERSTITIAL] Analytics tracked for manual redirect");
     },
     [shortCode, fact, trackInterstitialManualRedirect]
   );
@@ -289,16 +255,12 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
    */
   const handleRedirect = useCallback(
     (method: RedirectMethod, timeLeft: number) => {
-      logger.info(
-        `[INTERSTITIAL] onRedirect callback triggered with method: ${method}, timeLeft: ${timeLeft}`
-      );
-
       if (method === "auto") {
         handleAutoRedirect();
       } else if (method === "manual") {
         handleManualRedirect(timeLeft);
       } else if (method === "failed") {
-        logger.error("[INTERSTITIAL] Redirect failed");
+        logger.error("Interstitial redirect failed");
       }
     },
     [handleAutoRedirect, handleManualRedirect]
@@ -310,14 +272,9 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
    */
   const handleBounce = useCallback(
     (timeLeft: number) => {
-      logger.info("[INTERSTITIAL] onBounce callback triggered");
-
       if (!fact) {
-        logger.warn("[INTERSTITIAL] No fact available in onBounce");
         return;
       }
-
-      logger.info("[INTERSTITIAL] User bouncing from interstitial page");
 
       trackInterstitialBounced({
         short_code: shortCode,

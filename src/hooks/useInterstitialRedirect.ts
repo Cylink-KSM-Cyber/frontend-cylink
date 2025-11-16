@@ -88,36 +88,29 @@ export function useInterstitialRedirect({
    */
   const performRedirect = useCallback(
     (method: RedirectMethod) => {
-      logger.info(`[REDIRECT] performRedirect called with method: ${method}`);
-      
       // Prevent multiple redirect attempts
       if (redirectAttemptedRef.current) {
-        logger.warn(`[REDIRECT] Redirect already attempted, skipping`);
         return;
       }
 
       if (!originalUrl) {
-        logger.error(`[REDIRECT] No original URL provided, cannot redirect`);
+        logger.error("No original URL provided, cannot redirect");
         return;
       }
 
       redirectAttemptedRef.current = true;
       setIsRedirecting(true);
 
-      logger.info(`[REDIRECT] Performing ${method} redirect for ${shortCode} to ${originalUrl}`);
-
       try {
         // Call redirect callback
         if (onRedirect) {
-          logger.debug(`[REDIRECT] Calling onRedirect callback`);
           onRedirect(method, timeLeft);
         }
 
         // Use replace to avoid adding to history
-        logger.info(`[REDIRECT] Executing window.location.replace(${originalUrl})`);
         window.location.replace(originalUrl);
       } catch (error) {
-        logger.error("[REDIRECT] Redirect failed", error);
+        logger.error("Redirect failed", error);
         setRedirectFailed(true);
         setIsRedirecting(false);
         redirectAttemptedRef.current = false;
@@ -135,9 +128,8 @@ export function useInterstitialRedirect({
    * Handle manual redirect button click
    */
   const handleManualRedirect = useCallback(() => {
-    logger.info(`Manual redirect triggered for ${shortCode}`);
     performRedirect("manual");
-  }, [performRedirect, shortCode]);
+  }, [performRedirect]);
 
   /**
    * Manipulate browser history on mount
@@ -152,8 +144,6 @@ export function useInterstitialRedirect({
 
       // Replace history state so back button doesn't loop to interstitial
       if (referrer && referrer !== window.location.href) {
-        logger.debug(`Setting up history manipulation, referrer: ${referrer}`);
-        
         // Use history.replaceState to modify current entry
         window.history.replaceState(
           { interstitial: true, shortCode },
@@ -163,7 +153,6 @@ export function useInterstitialRedirect({
 
         // Add popstate listener to detect back button
         const handlePopState = () => {
-          logger.info("Back button detected during interstitial");
           if (onBounce) {
             onBounce(timeLeft);
           }
@@ -180,7 +169,7 @@ export function useInterstitialRedirect({
         };
       }
     } catch (error) {
-      logger.warn("History manipulation failed", error);
+      logger.error("History manipulation failed", error);
     }
   }, [shortCode, onBounce]);
 
@@ -204,41 +193,21 @@ export function useInterstitialRedirect({
    * Handle countdown
    */
   useEffect(() => {
-    logger.debug(`[COUNTDOWN] useEffect triggered - timeLeft: ${timeLeft}, originalUrl: ${!!originalUrl}, isRedirecting: ${isRedirecting}`);
-    
     // Don't start countdown if no URL or already redirecting
-    if (!originalUrl) {
-      logger.warn(`[COUNTDOWN] No original URL, cannot start countdown`);
+    if (!originalUrl || isRedirecting || timeLeft <= 0) {
       return;
     }
-
-    if (isRedirecting) {
-      logger.debug(`[COUNTDOWN] Already redirecting, skipping countdown`);
-      return;
-    }
-
-    if (timeLeft <= 0) {
-      logger.debug(`[COUNTDOWN] Time is already 0, skipping countdown`);
-      return;
-    }
-
-    logger.debug(`[COUNTDOWN] Starting countdown timer for ${timeLeft} seconds`);
 
     const timerId = setTimeout(() => {
       setTimeLeft((prev) => {
         const newTime = prev - 1;
-        logger.debug(`[COUNTDOWN] Tick: ${prev} -> ${newTime}`);
 
         // Countdown complete - trigger auto redirect
         if (newTime <= 0) {
-          logger.info("[COUNTDOWN] Countdown completed! Triggering auto redirect");
-          
           if (onCountdownComplete) {
-            logger.debug("[COUNTDOWN] Calling onCountdownComplete callback");
             onCountdownComplete();
           }
           
-          logger.info("[COUNTDOWN] Calling performRedirect('auto')");
           performRedirect("auto");
           return 0;
         }
@@ -248,7 +217,6 @@ export function useInterstitialRedirect({
     }, 1000);
 
     return () => {
-      logger.debug(`[COUNTDOWN] Cleaning up timer for timeLeft: ${timeLeft}`);
       clearTimeout(timerId);
     };
   }, [timeLeft, originalUrl, isRedirecting, onCountdownComplete, performRedirect]);
@@ -259,7 +227,6 @@ export function useInterstitialRedirect({
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (!redirectAttemptedRef.current && onBounce) {
-        logger.info("User bouncing from interstitial page");
         onBounce(timeLeft);
       }
     };

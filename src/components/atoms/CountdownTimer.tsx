@@ -11,7 +11,6 @@
 
 import React, { useState, useEffect } from "react";
 import { CountdownTimerProps } from "@/interfaces/interstitial";
-import logger from "@/utils/logger";
 
 const CountdownTimer: React.FC<CountdownTimerProps> = ({
   initialTime,
@@ -21,26 +20,19 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
   const [timeLeft, setTimeLeft] = useState(initialTime);
 
   useEffect(() => {
-    logger.debug(`[TIMER] useEffect triggered - timeLeft: ${timeLeft}`);
-    
     // Don't start countdown if time is already 0
     if (timeLeft <= 0) {
-      logger.info("[TIMER] Time already 0, calling onComplete immediately");
       onComplete();
       return;
     }
-
-    logger.info(`[TIMER] Starting interval for ${timeLeft} seconds`);
 
     // Set up interval to decrease time every second
     const intervalId = setInterval(() => {
       setTimeLeft((prevTime) => {
         const newTime = prevTime - 1;
-        logger.debug(`[TIMER] Tick: ${prevTime} -> ${newTime}`);
 
         // Call onComplete when countdown reaches 0
         if (newTime <= 0) {
-          logger.info("[TIMER] Countdown reached 0! Calling onComplete");
           clearInterval(intervalId);
           onComplete();
           return 0;
@@ -52,7 +44,6 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({
 
     // Cleanup interval on unmount
     return () => {
-      logger.debug(`[TIMER] Cleaning up interval for timeLeft: ${timeLeft}`);
       clearInterval(intervalId);
     };
   }, [timeLeft, onComplete]);
