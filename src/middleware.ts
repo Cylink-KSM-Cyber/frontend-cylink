@@ -2,6 +2,8 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { isShortUrlPath } from "@/utils/shortUrlUtils";
 import logger from "@/utils/logger";
+import { isFeatureEnabledServer } from "@/utils/posthogServer";
+import { FEATURE_FLAG_INTERSTITIAL } from "@/constants/featureFlags";
 
 /**
  * API response interface for short URL lookup
@@ -246,34 +248,72 @@ async function recordUrlClick(
 }
 
 /**
- * Special case handling for known short URLs
- * This is a fallback for development/testing environments
- */
-const KNOWN_URLS: Record<string, string> = {
-  // Add test/development short codes here
-  repocylink: "https://github.com/yourusername/cylink",
-  testshort: "https://example.com/test-page",
-  docs: "https://example.com/documentation",
-  dashboard: "https://example.com/dashboard",
-};
-
-/**
  * Middleware function for handling authentication and route protection
- * Also handles short URL redirects
+ * Also handles short URL redirects with feature flag support
  */
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
   const { pathname } = request.nextUrl;
 
   // Check if this is a short URL request
-  // Let the request pass through to the Next.js page ([shortCode]/page.tsx)
-  // which will render the interstitial page with countdown and cyber security facts
   if (isShortUrlPath(pathname)) {
     const shortCode = pathname.substring(1);
-    logger.urlShortener.info(
-      `Short URL detected: ${shortCode} - passing to interstitial page`
+
+    // Get or generate a distinct ID for feature flag evaluation
+    // Try to use user ID from token, otherwise use a combination of IP and user agent
+    let distinctId = request.cookies.get("ph_distinct_id")?.value;
+
+    if (!distinctId) {
+      // Generate a simple distinct ID based on request characteristics
+      const ip =
+        request.headers.get("x-forwarded-for") ||
+        request.headers.get("x-real-ip") ||
+        "unknown";
+      const userAgent = request.headers.get("user-agent") || "unknown";
+      distinctId = `anonymous_${Buffer.from(`${ip}-${userAgent}`)
+        .toString("base64")
+        .substring(0, 20)}`;
+    }
+
+    // Check if interstitial feature flag is enabled
+    const isInterstitialEnabled = await isFeatureEnabledServer(
+      FEATURE_FLAG_INTERSTITIAL,
+      distinctId
     );
-    return NextResponse.next();
+
+    if (isInterstitialEnabled) {
+      // Feature flag is enabled - pass to interstitial page
+      logger.urlShortener.info(
+        `Short URL detected: ${shortCode} - interstitial enabled, passing to interstitial page`
+      );
+      return NextResponse.next();
+    } else {
+      // Feature flag is disabled - redirect directly to original URL (old behavior)
+      logger.urlShortener.info(
+        `Short URL detected: ${shortCode} - interstitial disabled, attempting direct redirect`
+      );
+
+      // Try to get original URL and redirect directly
+      const originalUrl = await getOriginalUrlByIdentifier(
+        shortCode,
+        accessToken
+      );
+
+      if (originalUrl) {
+        logger.urlShortener.info(
+          `Direct redirect: ${shortCode} → ${originalUrl.substring(0, 50)}${
+            originalUrl.length > 50 ? "..." : ""
+          }`
+        );
+        return NextResponse.redirect(originalUrl);
+      } else {
+        // If we can't get the URL, pass to the page to show error
+        logger.urlShortener.warn(
+          `Failed to resolve short URL: ${shortCode} - passing to page for error handling`
+        );
+        return NextResponse.next();
+      }
+    }
   }
 
   // Handle protected routes

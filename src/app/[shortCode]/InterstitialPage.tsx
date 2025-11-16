@@ -27,8 +27,13 @@ import CountdownTimer from "@/components/atoms/CountdownTimer";
 import AnimatedStatusText from "@/components/molecules/AnimatedStatusText";
 import CyberSecurityFactCard from "@/components/molecules/CyberSecurityFactCard";
 import logger from "@/utils/logger";
+import { posthog } from "@/utils/posthogClient";
+import {
+  FEATURE_FLAG_INTERSTITIAL,
+  INTERSTITIAL_CONFIG,
+} from "@/constants/featureFlags";
 
-const COUNTDOWN_DURATION = 10; // seconds
+const COUNTDOWN_DURATION = INTERSTITIAL_CONFIG.COUNTDOWN_DURATION;
 
 const STATUS_MESSAGES = [
   "Scanning link security",
@@ -45,6 +50,7 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
   const [error, setError] = useState<string | null>(null);
   const [showManualButton, setShowManualButton] = useState(false);
   const [pageLoadTime, setPageLoadTime] = useState<number>(0);
+  const [featureFlagChecked, setFeatureFlagChecked] = useState(false);
 
   // Ref to prevent multiple API calls
   const isInitializedRef = useRef(false);
@@ -101,12 +107,39 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
   }, [shortCode]);
 
   /**
+   * Check feature flag on mount
+   * If disabled, redirect immediately
+   */
+  useEffect(() => {
+    // Wait for PostHog to load flags
+    if (typeof window !== "undefined" && posthog.__loaded) {
+      const isEnabled = posthog.isFeatureEnabled(FEATURE_FLAG_INTERSTITIAL);
+      setFeatureFlagChecked(true);
+
+      if (isEnabled === false) {
+        // Feature flag is explicitly disabled - redirect immediately
+        logger.urlShortener.info(
+          `Interstitial feature flag disabled for ${shortCode}, will redirect immediately`
+        );
+      }
+    } else {
+      // If PostHog isn't loaded yet, assume enabled (fail open for better UX)
+      setFeatureFlagChecked(true);
+    }
+  }, [shortCode]);
+
+  /**
    * Load fact and URL on mount
    * Uses ref to prevent multiple calls
    */
   useEffect(() => {
     // Prevent multiple initializations
     if (isInitializedRef.current) {
+      return;
+    }
+
+    // Wait for feature flag check
+    if (!featureFlagChecked) {
       return;
     }
 
@@ -182,7 +215,7 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
     initialize();
     // Only run once on mount - shortCode should not change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [featureFlagChecked]);
 
   /**
    * Handle countdown completion
