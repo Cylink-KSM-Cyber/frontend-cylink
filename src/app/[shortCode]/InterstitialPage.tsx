@@ -1,17 +1,20 @@
 /**
  * Interstitial Page Component
- * 
+ *
  * Main orchestrator for the interstitial redirect experience.
  * Displays countdown, cyber security facts, and handles redirect logic
  * with comprehensive analytics tracking.
- * 
+ *
  * @module src/app/[shortCode]/InterstitialPage
  */
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
-import { InterstitialPageProps, CyberSecurityFact } from "@/interfaces/interstitial";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  InterstitialPageProps,
+  CyberSecurityFact,
+} from "@/interfaces/interstitial";
 import { useConversionTracking } from "@/hooks/useConversionTracking";
 import { useInterstitialRedirect } from "@/hooks/useInterstitialRedirect";
 import { getRandomFact } from "@/utils/cyberSecurityFacts";
@@ -42,6 +45,9 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
   const [showManualButton, setShowManualButton] = useState(false);
   const [pageLoadTime, setPageLoadTime] = useState<number>(0);
 
+  // Ref to prevent multiple API calls
+  const isInitializedRef = useRef(false);
+
   const {
     trackInterstitialViewed,
     trackInterstitialCountdownCompleted,
@@ -52,7 +58,7 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
   } = useConversionTracking();
 
   /**
-   * Fetch original URL from API
+   * Fetch original URL from API using service layer
    */
   const fetchOriginalUrl = useCallback(async (): Promise<{
     original_url: string;
@@ -60,22 +66,32 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
   } | null> => {
     try {
       const startTime = Date.now();
-      const res = await fetch(`/api/v1/public/urls/${shortCode}`);
+
+      // Use getPublic from service layer to ensure correct baseURL
+      const { getPublic } = await import("@/services/api");
+
+      const data = await getPublic<{
+        status: number;
+        message: string;
+        data?: {
+          original_url: string;
+          id?: number;
+        };
+        original_url?: string;
+        id?: number;
+      }>(`/api/v1/public/urls/${shortCode}`);
+
       const loadTime = Date.now() - startTime;
       setPageLoadTime(loadTime);
 
-      if (!res.ok) {
-        logger.urlShortener.error(`Failed to fetch URL: ${res.status}`);
-        return null;
-      }
+      logger.urlShortener.debug(`Fetch completed in ${loadTime}ms`);
 
-      const data = await res.json();
-
-      if (data?.original_url) {
-        return { original_url: data.original_url, url_id: data.id };
-      }
+      // Handle different response formats
       if (data?.data?.original_url) {
         return { original_url: data.data.original_url, url_id: data.data.id };
+      }
+      if (data?.original_url) {
+        return { original_url: data.original_url, url_id: data.id };
       }
 
       return null;
@@ -87,10 +103,20 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
 
   /**
    * Load fact and URL on mount
+   * Uses ref to prevent multiple calls
    */
   useEffect(() => {
+    // Prevent multiple initializations
+    if (isInitializedRef.current) {
+      logger.debug("Initialization already in progress or completed, skipping");
+      return;
+    }
+
+    isInitializedRef.current = true;
+
     const initialize = async () => {
       setIsLoading(true);
+      logger.info(`Initializing interstitial page for: ${shortCode}`);
 
       try {
         // Load fact and URL in parallel
@@ -125,9 +151,13 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
             page_load_time: pageLoadTime,
             url_id: urlResult.url_id,
           });
+
+          logger.info(
+            `Successfully initialized: ${shortCode} -> ${urlResult.original_url}`
+          );
         } else {
           setError("Short URL not found or has expired.");
-          
+
           // Track viewed with error
           trackInterstitialViewed({
             short_code: shortCode,
@@ -139,17 +169,29 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
             url_fetch_success: false,
             page_load_time: pageLoadTime,
           });
+
+          logger.warn(`URL not found: ${shortCode}`);
         }
       } catch (err) {
         logger.error("Failed to initialize interstitial page", err);
         setError("Failed to load redirect information.");
+
+        // Load fallback fact
+        try {
+          const fallbackFact = await getRandomFact();
+          setFact(fallbackFact);
+        } catch (factError) {
+          logger.error("Failed to load fallback fact", factError);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     initialize();
-  }, [shortCode, fetchOriginalUrl, trackInterstitialViewed, trackUrlClick, pageLoadTime]);
+    // Only run once on mount - shortCode should not change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Handle countdown completion
@@ -216,29 +258,9 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
   );
 
   /**
-   * Handle bounce
-   */
-  const handleBounce = useCallback(() => {
-    if (!fact) return;
-
-    logger.info("User bouncing from interstitial page");
-
-    trackInterstitialBounced({
-      short_code: shortCode,
-      fact_id: fact.id,
-      fact_category: fact.category,
-      time_spent: state.timeLeft ? COUNTDOWN_DURATION - state.timeLeft : 0,
-      device_type: getDeviceType(),
-      referrer: document.referrer || undefined,
-      time_remaining: state.timeLeft,
-      countdown_started: true,
-    });
-  }, [shortCode, fact, trackInterstitialBounced]);
-
-  /**
    * Use interstitial redirect hook
    */
-  const { state, handleManualRedirect: triggerManualRedirect, timeSpent } =
+  const { state, handleManualRedirect: triggerManualRedirect } =
     useInterstitialRedirect({
       shortCode,
       originalUrl,
@@ -251,7 +273,22 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
         }
       },
       onCountdownComplete: handleCountdownComplete,
-      onBounce: handleBounce,
+      onBounce: () => {
+        if (!fact) return;
+
+        logger.info("User bouncing from interstitial page");
+
+        trackInterstitialBounced({
+          short_code: shortCode,
+          fact_id: fact.id,
+          fact_category: fact.category,
+          time_spent: state.timeLeft ? COUNTDOWN_DURATION - state.timeLeft : 0,
+          device_type: getDeviceType(),
+          referrer: document.referrer || undefined,
+          time_remaining: state.timeLeft,
+          countdown_started: true,
+        });
+      },
     });
 
   /**
@@ -281,7 +318,11 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
           <p className="text-lg text-gray-600 mb-6">
             {error || "Short URL not found or has expired."}
           </p>
-          <Button variant="primary" size="lg" onClick={() => window.location.href = "/"}>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => (window.location.href = "/")}
+          >
             Go to Homepage
           </Button>
         </div>
@@ -352,7 +393,8 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
           {state.redirectFailed && (
             <div className="text-center mt-8 p-4 bg-red-50 rounded-lg border border-red-200">
               <p className="text-red-600 font-medium">
-                Automatic redirect failed. Please click the button above to continue.
+                Automatic redirect failed. Please click the button above to
+                continue.
               </p>
             </div>
           )}
@@ -361,12 +403,15 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
 
       {/* Footer */}
       <footer className="w-full py-6 px-4 text-center text-sm text-gray-500">
-        <p>Secured by <span className="font-bold text-black">CyLink</span></p>
-        <p className="mt-2">Short URL: <span className="font-mono">{shortCode}</span></p>
+        <p>
+          Secured by <span className="font-bold text-black">CyLink</span>
+        </p>
+        <p className="mt-2">
+          Short URL: <span className="font-mono">{shortCode}</span>
+        </p>
       </footer>
     </div>
   );
 };
 
 export default InterstitialPage;
-
