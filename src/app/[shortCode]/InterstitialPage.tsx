@@ -108,7 +108,7 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
 
   /**
    * Check feature flag on mount
-   * If disabled, redirect immediately
+   * If disabled, redirect immediately to original URL
    */
   useEffect(() => {
     // Wait for PostHog to load flags
@@ -117,16 +117,33 @@ const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
       setFeatureFlagChecked(true);
 
       if (isEnabled === false) {
-        // Feature flag is explicitly disabled - redirect immediately
+        // Feature flag is explicitly disabled - we need to fetch URL and redirect immediately
         logger.urlShortener.info(
           `Interstitial feature flag disabled for ${shortCode}, will redirect immediately`
         );
+        
+        // Fetch original URL and redirect immediately
+        fetchOriginalUrl().then((urlResult) => {
+          if (urlResult && urlResult.original_url) {
+            logger.urlShortener.info(
+              `Feature flag disabled - redirecting directly to: ${urlResult.original_url}`
+            );
+            window.location.replace(urlResult.original_url);
+          } else {
+            // If URL fetch fails, still show the page with error
+            setFeatureFlagChecked(true);
+          }
+        }).catch((error) => {
+          logger.error("Failed to fetch URL for immediate redirect", error);
+          setFeatureFlagChecked(true);
+        });
+        return; // Don't set featureFlagChecked here, let redirect happen
       }
     } else {
       // If PostHog isn't loaded yet, assume enabled (fail open for better UX)
       setFeatureFlagChecked(true);
     }
-  }, [shortCode]);
+  }, [shortCode, fetchOriginalUrl]);
 
   /**
    * Load fact and URL on mount

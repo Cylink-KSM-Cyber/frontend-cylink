@@ -57,27 +57,29 @@ export const INTERSTITIAL_CONFIG = {
 
 **Changes:**
 
-1. Import server-side PostHog utilities and constants
-2. Generate or retrieve distinct ID for user identification
-3. Check `interstitial-micro-learning` feature flag
-4. **If enabled**: Pass to interstitial page (new behavior)
-5. **If disabled**: Direct redirect to original URL (legacy behavior)
-6. Removed unused `KNOWN_URLS` constant (linter cleanup)
+1. Simplified to always pass short URL requests to interstitial page
+2. Feature flag check moved to client-side (InterstitialPage component)
+3. Removed unused `KNOWN_URLS` constant (linter cleanup)
+
+**Reason**: Next.js middleware runs on Edge Runtime which doesn't support Node.js APIs required by `posthog-node`
 
 **Code Flow:**
 
 ```
 Short URL Request
     ↓
-Get/Generate Distinct ID
+Middleware (always passes through)
     ↓
-Check Feature Flag (Server-Side)
+InterstitialPage Component
+    ↓
+Check Feature Flag (Client-Side)
     ↓
   Enabled?
     ↙️     ↘️
   YES      NO
     ↓       ↓
-Interstitial  Direct Redirect
+Show       Immediate
+Interstitial  Redirect
 ```
 
 ---
@@ -88,11 +90,13 @@ Interstitial  Direct Redirect
 
 1. Import PostHog client and feature flag constants
 2. Add `featureFlagChecked` state
-3. Check feature flag on component mount
-4. Use centralized `INTERSTITIAL_CONFIG.COUNTDOWN_DURATION`
-5. Graceful fallback if PostHog not loaded (fail open)
+3. **Primary Feature Flag Check**: Evaluate flag on component mount
+4. **If enabled**: Show interstitial experience
+5. **If disabled**: Fetch original URL and redirect immediately
+6. Use centralized `INTERSTITIAL_CONFIG.COUNTDOWN_DURATION`
+7. Graceful fallback if PostHog not loaded (fail open)
 
-**Safety Net**: Client-side check ensures feature flag is respected even if middleware passes the request
+**Note**: This is now the **primary** feature flag evaluation point since middleware can't use server-side PostHog
 
 ---
 
@@ -117,11 +121,11 @@ Interstitial  Direct Redirect
 ```
 1. User clicks short URL (e.g., cylink.id/testclaude)
         ↓
-2. Middleware intercepts request
+2. Middleware intercepts request (always passes through)
         ↓
-3. Get distinct ID (from cookie or generate from IP/User-Agent)
+3. InterstitialPage component loads
         ↓
-4. Check PostHog feature flag (server-side)
+4. Check PostHog feature flag (client-side)
         ↓
 5a. FLAG ENABLED (e.g., 25% rollout)
         ↓
@@ -133,9 +137,13 @@ Interstitial  Direct Redirect
 
 5b. FLAG DISABLED (e.g., 75% rollout)
         ↓
-    Direct redirect to original URL
-    (legacy behavior, no interstitial)
+    Fetch original URL
+        ↓
+    Immediate redirect (no interstitial)
+    (legacy behavior)
 ```
+
+**Note**: Feature flag evaluation happens client-side because Next.js Edge Runtime (where middleware runs) doesn't support Node.js APIs required by `posthog-node`.
 
 ---
 
