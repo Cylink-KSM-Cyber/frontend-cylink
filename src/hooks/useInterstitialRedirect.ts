@@ -29,8 +29,10 @@ interface UseInterstitialRedirectOptions {
 
   /**
    * Callback when redirect occurs
+   * @param method - Type of redirect (auto/manual/failed)
+   * @param timeLeft - Time remaining when redirect occurred
    */
-  onRedirect?: (method: RedirectMethod) => void;
+  onRedirect?: (method: RedirectMethod, timeLeft: number) => void;
 
   /**
    * Callback when countdown completes
@@ -39,8 +41,9 @@ interface UseInterstitialRedirectOptions {
 
   /**
    * Callback when user bounces (leaves during countdown)
+   * @param timeLeft - Time remaining when bounce occurred
    */
-  onBounce?: () => void;
+  onBounce?: (timeLeft: number) => void;
 }
 
 interface UseInterstitialRedirectReturn {
@@ -85,37 +88,47 @@ export function useInterstitialRedirect({
    */
   const performRedirect = useCallback(
     (method: RedirectMethod) => {
+      logger.info(`[REDIRECT] performRedirect called with method: ${method}`);
+      
       // Prevent multiple redirect attempts
-      if (redirectAttemptedRef.current || !originalUrl) {
+      if (redirectAttemptedRef.current) {
+        logger.warn(`[REDIRECT] Redirect already attempted, skipping`);
+        return;
+      }
+
+      if (!originalUrl) {
+        logger.error(`[REDIRECT] No original URL provided, cannot redirect`);
         return;
       }
 
       redirectAttemptedRef.current = true;
       setIsRedirecting(true);
 
-      logger.info(`Performing ${method} redirect for ${shortCode} to ${originalUrl}`);
+      logger.info(`[REDIRECT] Performing ${method} redirect for ${shortCode} to ${originalUrl}`);
 
       try {
         // Call redirect callback
         if (onRedirect) {
-          onRedirect(method);
+          logger.debug(`[REDIRECT] Calling onRedirect callback`);
+          onRedirect(method, timeLeft);
         }
 
         // Use replace to avoid adding to history
+        logger.info(`[REDIRECT] Executing window.location.replace(${originalUrl})`);
         window.location.replace(originalUrl);
       } catch (error) {
-        logger.error("Redirect failed", error);
+        logger.error("[REDIRECT] Redirect failed", error);
         setRedirectFailed(true);
         setIsRedirecting(false);
         redirectAttemptedRef.current = false;
 
         // Call redirect callback with failed method
         if (onRedirect) {
-          onRedirect("failed");
+          onRedirect("failed", timeLeft);
         }
       }
     },
-    [originalUrl, shortCode, onRedirect]
+    [originalUrl, shortCode, onRedirect, timeLeft]
   );
 
   /**
@@ -152,7 +165,7 @@ export function useInterstitialRedirect({
         const handlePopState = () => {
           logger.info("Back button detected during interstitial");
           if (onBounce) {
-            onBounce();
+            onBounce(timeLeft);
           }
           // Navigate to referrer
           if (referrer) {
@@ -191,21 +204,41 @@ export function useInterstitialRedirect({
    * Handle countdown
    */
   useEffect(() => {
+    logger.debug(`[COUNTDOWN] useEffect triggered - timeLeft: ${timeLeft}, originalUrl: ${!!originalUrl}, isRedirecting: ${isRedirecting}`);
+    
     // Don't start countdown if no URL or already redirecting
-    if (!originalUrl || isRedirecting || timeLeft <= 0) {
+    if (!originalUrl) {
+      logger.warn(`[COUNTDOWN] No original URL, cannot start countdown`);
       return;
     }
+
+    if (isRedirecting) {
+      logger.debug(`[COUNTDOWN] Already redirecting, skipping countdown`);
+      return;
+    }
+
+    if (timeLeft <= 0) {
+      logger.debug(`[COUNTDOWN] Time is already 0, skipping countdown`);
+      return;
+    }
+
+    logger.debug(`[COUNTDOWN] Starting countdown timer for ${timeLeft} seconds`);
 
     const timerId = setTimeout(() => {
       setTimeLeft((prev) => {
         const newTime = prev - 1;
+        logger.debug(`[COUNTDOWN] Tick: ${prev} -> ${newTime}`);
 
         // Countdown complete - trigger auto redirect
         if (newTime <= 0) {
-          logger.info("Countdown completed, triggering auto redirect");
+          logger.info("[COUNTDOWN] Countdown completed! Triggering auto redirect");
+          
           if (onCountdownComplete) {
+            logger.debug("[COUNTDOWN] Calling onCountdownComplete callback");
             onCountdownComplete();
           }
+          
+          logger.info("[COUNTDOWN] Calling performRedirect('auto')");
           performRedirect("auto");
           return 0;
         }
@@ -214,7 +247,10 @@ export function useInterstitialRedirect({
       });
     }, 1000);
 
-    return () => clearTimeout(timerId);
+    return () => {
+      logger.debug(`[COUNTDOWN] Cleaning up timer for timeLeft: ${timeLeft}`);
+      clearTimeout(timerId);
+    };
   }, [timeLeft, originalUrl, isRedirecting, onCountdownComplete, performRedirect]);
 
   /**
@@ -224,7 +260,7 @@ export function useInterstitialRedirect({
     const handleBeforeUnload = () => {
       if (!redirectAttemptedRef.current && onBounce) {
         logger.info("User bouncing from interstitial page");
-        onBounce();
+        onBounce(timeLeft);
       }
     };
 
@@ -233,7 +269,7 @@ export function useInterstitialRedirect({
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [onBounce]);
+  }, [onBounce, timeLeft]);
 
   return {
     state: {
