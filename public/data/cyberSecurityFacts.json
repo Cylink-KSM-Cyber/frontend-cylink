@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "fact": "Over 90% of successful cyber attacks start with phishing emails.",
+    "category": "social_engineering"
+  },
+  {
+    "id": 2,
+    "fact": "A strong password should be at least 12 characters long and include uppercase, lowercase, numbers, and symbols.",
+    "category": "authentication"
+  },
+  {
+    "id": 3,
+    "fact": "Two-factor authentication (2FA) can block up to 99.9% of automated attacks.",
+    "category": "authentication"
+  },
+  {
+    "id": 4,
+    "fact": "Ransomware attacks occur every 11 seconds globally, with costs exceeding $20 billion annually.",
+    "category": "malware"
+  },
+  {
+    "id": 5,
+    "fact": "The average cost of a data breach in 2024 is $4.45 million for organizations.",
+    "category": "data_protection"
+  },
+  {
+    "id": 6,
+    "fact": "SQL injection remains one of the most common web application vulnerabilities, accounting for 65% of attacks.",
+    "category": "web_security"
+  },
+  {
+    "id": 7,
+    "fact": "Zero-day exploits can sell for up to $2.5 million on the dark web.",
+    "category": "vulnerability"
+  },
+  {
+    "id": 8,
+    "fact": "The average time to identify a breach is 207 days, and 73 days to contain it.",
+    "category": "incident_response"
+  },
+  {
+    "id": 9,
+    "fact": "Over 43% of cyber attacks target small businesses, as they often have weaker security.",
+    "category": "risk_management"
+  },
+  {
+    "id": 10,
+    "fact": "VPN usage increased by 124% during the pandemic, highlighting the importance of secure remote access.",
+    "category": "network_security"
+  },
+  {
+    "id": 11,
+    "fact": "HTTPS encrypts data in transit, protecting it from man-in-the-middle attacks.",
+    "category": "encryption"
+  },
+  {
+    "id": 12,
+    "fact": "The human factor causes 95% of cybersecurity breaches, making security awareness training crucial.",
+    "category": "human_factor"
+  },
+  {
+    "id": 13,
+    "fact": "Cryptojacking attacks increased by 163% in 2023, using victims' computers to mine cryptocurrency.",
+    "category": "malware"
+  },
+  {
+    "id": 14,
+    "fact": "Regular software updates patch vulnerabilities that hackers exploit. Always keep your systems up to date!",
+    "category": "patch_management"
+  },
+  {
+    "id": 15,
+    "fact": "A DDoS attack can generate over 1 Tbps of traffic, overwhelming even major websites.",
+    "category": "network_security"
+  },
+  {
+    "id": 16,
+    "fact": "The dark web hosts over 200,000 illegal marketplaces selling stolen data and hacking tools.",
+    "category": "threat_landscape"
+  },
+  {
+    "id": 17,
+    "fact": "Biometric authentication is 300 times more secure than traditional passwords.",
+    "category": "authentication"
+  },
+  {
+    "id": 18,
+    "fact": "IoT devices are vulnerable - there will be 75 billion connected devices by 2025, many poorly secured.",
+    "category": "iot_security"
+  },
+  {
+    "id": 19,
+    "fact": "Social engineering exploits human psychology rather than technical vulnerabilities.",
+    "category": "social_engineering"
+  },
+  {
+    "id": 20,
+    "fact": "End-to-end encryption ensures only sender and recipient can read messages, not even the service provider.",
+    "category": "encryption"
+  },
+  {
+    "id": 21,
+    "fact": "Firewall rules should follow the 'principle of least privilege' - only allow necessary traffic.",
+    "category": "network_security"
+  },
+  {
+    "id": 22,
+    "fact": "Bug bounty programs pay ethical hackers up to $100,000 for finding critical vulnerabilities.",
+    "category": "vulnerability"
+  },
+  {
+    "id": 23,
+    "fact": "Multi-factor authentication adds layers of security beyond just passwords.",
+    "category": "authentication"
+  },
+  {
+    "id": 24,
+    "fact": "The CIA Triad - Confidentiality, Integrity, Availability - are the three pillars of information security.",
+    "category": "fundamentals"
+  },
+  {
+    "id": 25,
+    "fact": "Penetration testing simulates real attacks to identify weaknesses before hackers do.",
+    "category": "security_testing"
+  }
+]
+

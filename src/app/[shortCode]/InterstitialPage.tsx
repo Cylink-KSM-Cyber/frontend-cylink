@@ -1,0 +1,372 @@
+/**
+ * Interstitial Page Component
+ * 
+ * Main orchestrator for the interstitial redirect experience.
+ * Displays countdown, cyber security facts, and handles redirect logic
+ * with comprehensive analytics tracking.
+ * 
+ * @module src/app/[shortCode]/InterstitialPage
+ */
+
+"use client";
+
+import React, { useState, useEffect, useCallback } from "react";
+import { InterstitialPageProps, CyberSecurityFact } from "@/interfaces/interstitial";
+import { useConversionTracking } from "@/hooks/useConversionTracking";
+import { useInterstitialRedirect } from "@/hooks/useInterstitialRedirect";
+import { getRandomFact } from "@/utils/cyberSecurityFacts";
+import { getDeviceType } from "@/utils/deviceDetection";
+import Logo from "@/components/atoms/Logo";
+import Button from "@/components/atoms/Button";
+import LoadingSpinner from "@/components/atoms/LoadingSpinner";
+import CountdownTimer from "@/components/atoms/CountdownTimer";
+import AnimatedStatusText from "@/components/molecules/AnimatedStatusText";
+import CyberSecurityFactCard from "@/components/molecules/CyberSecurityFactCard";
+import logger from "@/utils/logger";
+
+const COUNTDOWN_DURATION = 10; // seconds
+
+const STATUS_MESSAGES = [
+  "Scanning link security",
+  "Loading best content for you",
+  "Verifying destination",
+  "Preparing your redirect",
+  "Almost there",
+];
+
+const InterstitialPage: React.FC<InterstitialPageProps> = ({ shortCode }) => {
+  const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+  const [fact, setFact] = useState<CyberSecurityFact | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showManualButton, setShowManualButton] = useState(false);
+  const [pageLoadTime, setPageLoadTime] = useState<number>(0);
+
+  const {
+    trackInterstitialViewed,
+    trackInterstitialCountdownCompleted,
+    trackInterstitialManualRedirect,
+    trackInterstitialAutoRedirect,
+    trackInterstitialBounced,
+    trackUrlClick,
+  } = useConversionTracking();
+
+  /**
+   * Fetch original URL from API
+   */
+  const fetchOriginalUrl = useCallback(async (): Promise<{
+    original_url: string;
+    url_id?: number;
+  } | null> => {
+    try {
+      const startTime = Date.now();
+      const res = await fetch(`/api/v1/public/urls/${shortCode}`);
+      const loadTime = Date.now() - startTime;
+      setPageLoadTime(loadTime);
+
+      if (!res.ok) {
+        logger.urlShortener.error(`Failed to fetch URL: ${res.status}`);
+        return null;
+      }
+
+      const data = await res.json();
+
+      if (data?.original_url) {
+        return { original_url: data.original_url, url_id: data.id };
+      }
+      if (data?.data?.original_url) {
+        return { original_url: data.data.original_url, url_id: data.data.id };
+      }
+
+      return null;
+    } catch (error) {
+      logger.urlShortener.error("Error fetching original URL", error);
+      return null;
+    }
+  }, [shortCode]);
+
+  /**
+   * Load fact and URL on mount
+   */
+  useEffect(() => {
+    const initialize = async () => {
+      setIsLoading(true);
+
+      try {
+        // Load fact and URL in parallel
+        const [factResult, urlResult] = await Promise.all([
+          getRandomFact(),
+          fetchOriginalUrl(),
+        ]);
+
+        setFact(factResult);
+
+        if (urlResult && urlResult.original_url) {
+          setOriginalUrl(urlResult.original_url);
+
+          // Track URL click
+          if (urlResult.url_id) {
+            trackUrlClick({
+              url_id: urlResult.url_id,
+              short_code: shortCode,
+              referrer: document.referrer || undefined,
+            });
+          }
+
+          // Track interstitial viewed
+          trackInterstitialViewed({
+            short_code: shortCode,
+            fact_id: factResult.id,
+            fact_category: factResult.category,
+            time_spent: 0,
+            device_type: getDeviceType(),
+            referrer: document.referrer || undefined,
+            url_fetch_success: true,
+            page_load_time: pageLoadTime,
+            url_id: urlResult.url_id,
+          });
+        } else {
+          setError("Short URL not found or has expired.");
+          
+          // Track viewed with error
+          trackInterstitialViewed({
+            short_code: shortCode,
+            fact_id: factResult.id,
+            fact_category: factResult.category,
+            time_spent: 0,
+            device_type: getDeviceType(),
+            referrer: document.referrer || undefined,
+            url_fetch_success: false,
+            page_load_time: pageLoadTime,
+          });
+        }
+      } catch (err) {
+        logger.error("Failed to initialize interstitial page", err);
+        setError("Failed to load redirect information.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initialize();
+  }, [shortCode, fetchOriginalUrl, trackInterstitialViewed, trackUrlClick, pageLoadTime]);
+
+  /**
+   * Handle countdown completion
+   */
+  const handleCountdownComplete = useCallback(() => {
+    if (!fact) return;
+
+    logger.info("Countdown completed for interstitial page");
+    setShowManualButton(true);
+
+    trackInterstitialCountdownCompleted({
+      short_code: shortCode,
+      fact_id: fact.id,
+      fact_category: fact.category,
+      time_spent: COUNTDOWN_DURATION,
+      device_type: getDeviceType(),
+      referrer: document.referrer || undefined,
+      completed_without_bounce: true,
+      actual_countdown_duration: COUNTDOWN_DURATION,
+    });
+  }, [shortCode, fact, trackInterstitialCountdownCompleted]);
+
+  /**
+   * Handle auto redirect
+   */
+  const handleAutoRedirect = useCallback(() => {
+    if (!fact) return;
+
+    logger.info("Auto redirect triggered");
+
+    trackInterstitialAutoRedirect({
+      short_code: shortCode,
+      fact_id: fact.id,
+      fact_category: fact.category,
+      time_spent: COUNTDOWN_DURATION,
+      device_type: getDeviceType(),
+      referrer: document.referrer || undefined,
+      redirect_method: "auto",
+      redirect_success: true,
+    });
+  }, [shortCode, fact, trackInterstitialAutoRedirect]);
+
+  /**
+   * Handle manual redirect
+   */
+  const handleManualRedirect = useCallback(
+    (timeRemaining: number) => {
+      if (!fact) return;
+
+      logger.info("Manual redirect triggered");
+
+      trackInterstitialManualRedirect({
+        short_code: shortCode,
+        fact_id: fact.id,
+        fact_category: fact.category,
+        time_spent: COUNTDOWN_DURATION - timeRemaining,
+        device_type: getDeviceType(),
+        referrer: document.referrer || undefined,
+        redirect_method: "manual",
+        time_remaining: timeRemaining,
+      });
+    },
+    [shortCode, fact, trackInterstitialManualRedirect]
+  );
+
+  /**
+   * Handle bounce
+   */
+  const handleBounce = useCallback(() => {
+    if (!fact) return;
+
+    logger.info("User bouncing from interstitial page");
+
+    trackInterstitialBounced({
+      short_code: shortCode,
+      fact_id: fact.id,
+      fact_category: fact.category,
+      time_spent: state.timeLeft ? COUNTDOWN_DURATION - state.timeLeft : 0,
+      device_type: getDeviceType(),
+      referrer: document.referrer || undefined,
+      time_remaining: state.timeLeft,
+      countdown_started: true,
+    });
+  }, [shortCode, fact, trackInterstitialBounced]);
+
+  /**
+   * Use interstitial redirect hook
+   */
+  const { state, handleManualRedirect: triggerManualRedirect, timeSpent } =
+    useInterstitialRedirect({
+      shortCode,
+      originalUrl,
+      countdownDuration: COUNTDOWN_DURATION,
+      onRedirect: (method) => {
+        if (method === "auto") {
+          handleAutoRedirect();
+        } else if (method === "manual") {
+          handleManualRedirect(state.timeLeft);
+        }
+      },
+      onCountdownComplete: handleCountdownComplete,
+      onBounce: handleBounce,
+    });
+
+  /**
+   * Show loading state
+   */
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+        <Logo size="lg" withLink={false} className="mb-8" />
+        <LoadingSpinner size="large" />
+        <p className="mt-4 text-lg text-gray-600">Loading...</p>
+      </div>
+    );
+  }
+
+  /**
+   * Show error state
+   */
+  if (error || !originalUrl) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+        <Logo size="lg" withLink={true} className="mb-8" />
+        <div className="text-center max-w-md">
+          <h1 className="text-3xl font-bold text-red-600 mb-4">
+            Redirect Error
+          </h1>
+          <p className="text-lg text-gray-600 mb-6">
+            {error || "Short URL not found or has expired."}
+          </p>
+          <Button variant="primary" size="lg" onClick={() => window.location.href = "/"}>
+            Go to Homepage
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /**
+   * Show redirecting state
+   */
+  if (state.isRedirecting) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+        <Logo size="lg" withLink={false} className="mb-8" />
+        <LoadingSpinner size="large" />
+        <p className="mt-4 text-lg text-gray-600">Redirecting...</p>
+      </div>
+    );
+  }
+
+  /**
+   * Main interstitial content
+   */
+  return (
+    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Header with Logo */}
+      <header className="w-full py-6 px-4">
+        <div className="max-w-4xl mx-auto">
+          <Logo size="md" withLink={false} />
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+        <div className="w-full max-w-4xl space-y-12">
+          {/* Countdown Timer */}
+          <CountdownTimer
+            initialTime={COUNTDOWN_DURATION}
+            onComplete={handleCountdownComplete}
+            className="mb-8"
+          />
+
+          {/* Animated Status Text */}
+          <AnimatedStatusText messages={STATUS_MESSAGES} interval={2500} />
+
+          {/* Cyber Security Fact Card */}
+          {fact && <CyberSecurityFactCard fact={fact} className="mt-8" />}
+
+          {/* Manual Redirect Button (appears after countdown) */}
+          {showManualButton && !state.isRedirecting && (
+            <div className="text-center mt-8">
+              <p className="text-gray-600 mb-4">
+                Automatic redirect not working?
+              </p>
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={triggerManualRedirect}
+                fullWidth={false}
+                className="min-w-[200px]"
+              >
+                Continue to Destination
+              </Button>
+            </div>
+          )}
+
+          {/* Redirect Failed State */}
+          {state.redirectFailed && (
+            <div className="text-center mt-8 p-4 bg-red-50 rounded-lg border border-red-200">
+              <p className="text-red-600 font-medium">
+                Automatic redirect failed. Please click the button above to continue.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="w-full py-6 px-4 text-center text-sm text-gray-500">
+        <p>Secured by <span className="font-bold text-black">CyLink</span></p>
+        <p className="mt-2">Short URL: <span className="font-mono">{shortCode}</span></p>
+      </footer>
+    </div>
+  );
+};
+
+export default InterstitialPage;
+

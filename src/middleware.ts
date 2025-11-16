@@ -266,32 +266,14 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if this is a short URL request
+  // Let the request pass through to the Next.js page ([shortCode]/page.tsx)
+  // which will render the interstitial page with countdown and cyber security facts
   if (isShortUrlPath(pathname)) {
-    // Extract the short code from the pathname (remove leading slash)
     const shortCode = pathname.substring(1);
-
-    // Check for known URLs first (development/testing fallback)
-    if (shortCode in KNOWN_URLS) {
-      const originalUrl = KNOWN_URLS[shortCode];
-      logger.urlShortener.info(
-        `Redirecting to known URL: ${shortCode} → ${originalUrl}`
-      );
-      return NextResponse.redirect(originalUrl);
-    }
-
-    // Make API request to get the original URL
-    return getOriginalUrlByIdentifier(shortCode, accessToken)
-      .then((originalUrl: string | null) => {
-        if (originalUrl) {
-          return NextResponse.redirect(originalUrl);
-        }
-        logger.urlShortener.info(`No redirect found for: ${shortCode}`);
-        return NextResponse.next();
-      })
-      .catch(() => {
-        logger.urlShortener.error(`Redirect processing failed: ${shortCode}`);
-        return NextResponse.next();
-      });
+    logger.urlShortener.info(
+      `Short URL detected: ${shortCode} - passing to interstitial page`
+    );
+    return NextResponse.next();
   }
 
   // Handle protected routes
