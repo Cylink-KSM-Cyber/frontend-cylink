@@ -63,22 +63,23 @@ Week 7: 100% (if metrics are good)
 
 ## How It Works
 
-### Server-Side (Middleware)
+### Middleware
 
-1. When a short URL is accessed, middleware checks the feature flag
-2. Uses PostHog Node SDK for server-side evaluation
-3. Generates a distinct ID from cookies or request characteristics
-4. If **enabled**: Passes request to interstitial page
-5. If **disabled**: Redirects directly to original URL (legacy behavior)
+1. When a short URL is accessed, middleware always passes request to InterstitialPage
+2. No feature flag evaluation in middleware (Edge Runtime limitation)
+3. Simple pass-through for all short URL requests
 
 **File**: `src/middleware.ts`
 
-### Client-Side (Interstitial Page)
+**Note**: Next.js middleware runs on Edge Runtime which doesn't support Node.js APIs required by `posthog-node`, so server-side feature flag evaluation isn't possible.
 
-1. Component checks feature flag on mount as a safety net
+### Client-Side (Interstitial Page) - Primary Evaluation
+
+1. **Component loads** and checks PostHog feature flag on mount
 2. Uses PostHog JS SDK for client-side evaluation
-3. If flag is disabled, can implement immediate redirect
-4. Provides graceful fallback if PostHog isn't loaded
+3. **If enabled**: Shows interstitial experience with countdown
+4. **If disabled**: Fetches original URL and redirects immediately
+5. Provides graceful fallback if PostHog isn't loaded (fails open)
 
 **File**: `src/app/[shortCode]/InterstitialPage.tsx`
 
@@ -93,27 +94,7 @@ All feature flag keys are centralized in:
 export const FEATURE_FLAG_INTERSTITIAL = "interstitial-micro-learning";
 ```
 
-### Server-Side Check (Middleware)
-
-```typescript
-import { isFeatureEnabledServer } from "@/utils/posthogServer";
-import { FEATURE_FLAG_INTERSTITIAL } from "@/constants/featureFlags";
-
-const isEnabled = await isFeatureEnabledServer(
-  FEATURE_FLAG_INTERSTITIAL,
-  distinctId
-);
-
-if (isEnabled) {
-  // Show interstitial
-  return NextResponse.next();
-} else {
-  // Direct redirect
-  return NextResponse.redirect(originalUrl);
-}
-```
-
-### Client-Side Check (React Component)
+### Client-Side Check (React Component - Primary Evaluation)
 
 ```typescript
 import { posthog } from "@/utils/posthogClient";
@@ -122,8 +103,13 @@ import { FEATURE_FLAG_INTERSTITIAL } from "@/constants/featureFlags";
 useEffect(() => {
   if (posthog.__loaded) {
     const isEnabled = posthog.isFeatureEnabled(FEATURE_FLAG_INTERSTITIAL);
-    if (!isEnabled) {
-      // Handle disabled state
+    if (isEnabled === false) {
+      // Fetch original URL and redirect immediately
+      fetchOriginalUrl().then((urlResult) => {
+        if (urlResult?.original_url) {
+          window.location.replace(urlResult.original_url);
+        }
+      });
     }
   }
 }, []);

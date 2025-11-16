@@ -81,7 +81,7 @@ export function useInterstitialRedirect({
 
   const redirectAttemptedRef = useRef(false);
   const startTimeRef = useRef<number>(Date.now());
-  const timeSpentIntervalRef = useRef<NodeJS.Timeout>();
+  const timeSpentIntervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   /**
    * Perform the redirect to original URL
