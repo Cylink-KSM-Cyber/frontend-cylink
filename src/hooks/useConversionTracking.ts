@@ -27,6 +27,7 @@ import { useTrackConversion } from "./conversionTrackings/useTrackConversion";
 import { useTrackFeatureUsage } from "./conversionTrackings/useTrackFeatureUsage";
 import { useTrackError } from "./conversionTrackings/useTrackError";
 import { useTrackUserRegister } from "./conversionTrackings/useTrackUserRegister";
+import { useTrackInterstitialView } from "./conversionTrackings/useTrackInterstitialView";
 
 /**
  * Custom hook for PostHog conversion tracking
@@ -51,6 +52,7 @@ export const useConversionTracking = () => {
   const featureUsage = useTrackFeatureUsage();
   const error = useTrackError();
   const userRegister = useTrackUserRegister();
+  const interstitialView = useTrackInterstitialView();
 
   // trackQrCodePreviewEvent is now provided by useTrackQrCodePreviewEvent
 
@@ -71,6 +73,7 @@ export const useConversionTracking = () => {
     ...featureUsage,
     ...error,
     ...userRegister,
+    ...interstitialView,
   };
 };
 

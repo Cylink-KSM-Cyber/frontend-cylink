@@ -1,0 +1,48 @@
+---
+title: 'Critical Security Updates and Dependency Fixes'
+date: '2025-12-06'
+version: '1.3.1'
+category: ['Security', 'Bug Fix']
+author: 'CyLink Development Team'
+summary: 'This critical update addresses security vulnerabilities in our dependencies, including a high-severity RCE vulnerability in Next.js and prototype pollution issues in js-yaml. All users are strongly encouraged to update immediately.'
+published: true
+featured: true
+tags: ['security', 'vulnerability', 'dependencies', 'npm', 'next.js']
+---
+
+# Critical Security Updates and Dependency Fixes
+
+We've released an important security update that patches several vulnerabilities in our project dependencies. This release prioritizes the security and stability of the CyLink platform.
+
+## Security Vulnerabilities Addressed
+
+### Critical: Next.js RCE Vulnerability Fixed
+
+We've updated Next.js from version 15.5.4 to 15.5.7, which patches a critical Remote Code Execution (RCE) vulnerability in the React flight protocol (CVE GHSA-9qr9-h5gf-34mp). This vulnerability had a CVSS score of 10.0 and could potentially allow attackers to execute arbitrary code. **This update is critical for all users.**
+
+### Moderate: js-yaml Prototype Pollution
+
+Fixed prototype pollution vulnerabilities in the js-yaml package used for parsing YAML files. The issue affected the merge operation (<<) and has been resolved by updating to the latest secure version.
+
+### Moderate: mdast-util-to-hast Class Attribute Sanitization
+
+Addressed an unsanitized class attribute vulnerability in mdast-util-to-hast, which is used in our markdown processing pipeline. This ensures better security when rendering user-provided content.
+
+## What Changed
+
+- **Next.js**: Updated from 15.5.4 to 15.5.7
+- **js-yaml**: Updated to version 3.14.2+ / 4.1.1+
+- **mdast-util-to-hast**: Updated to version 13.2.1+
+- All dependency trees have been reviewed and updated to remove vulnerable packages
+
+## Impact on Users
+
+This update is transparent to end users—all functionality remains the same while security is significantly improved. No breaking changes have been introduced.
+
+## Recommendation
+
+We strongly recommend all instances of CyLink to update to this version immediately to ensure maximum security protection.
+
+---
+
+_Released on December 6, 2025 as version 1.3.1_
