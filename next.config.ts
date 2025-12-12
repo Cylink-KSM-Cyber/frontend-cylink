@@ -7,13 +7,15 @@ const nextConfig: NextConfig = {
 
   /* config options here */
   images: {
-    domains: ["placehold.co"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "placehold.co",
+      },
+    ],
   },
 
-  // Existing configurations
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Existing configurations - Note: eslint config removed in Next.js 16 (use eslint.config.mjs instead)
   typescript: {
     ignoreBuildErrors: true,
   },
