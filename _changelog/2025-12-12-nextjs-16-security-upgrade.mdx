@@ -1,0 +1,52 @@
+---
+title: 'Next.js 16 Security Upgrade'
+date: '2025-12-12'
+version: '1.4.0'
+category: ['Security', 'Upgrade']
+author: 'CyLink Development Team'
+summary: 'Major security upgrade migrating to Next.js 16. This release patches high-severity vulnerabilities including Denial of Service (DoS) and source code exposure issues in Server Components and Server Actions.'
+published: true
+featured: true
+tags: ['security', 'next.js', 'upgrade', 'vulnerability', 'server-components']
+---
+
+# Next.js 16 Security Upgrade
+
+This release delivers a major security upgrade by migrating from Next.js 15 to Next.js 16, addressing critical vulnerabilities that affected Server Components and Server Actions.
+
+## Security Vulnerabilities Fixed
+
+### High: Denial of Service with Server Components (GHSA-mwv6-3258-q52c)
+
+- **CVSS Score**: 7.5 (High)
+- **Impact**: Attackers could cause service disruption through malformed requests to Server Components
+- **Resolution**: Patched in Next.js 16.0.10
+
+### Moderate: Server Actions Source Code Exposure (GHSA-w37m-7fhw-fmv9)
+
+- **CVSS Score**: 5.3 (Moderate)
+- **Impact**: Potential exposure of server-side code through Server Actions
+- **Resolution**: Patched in Next.js 16.0.10
+
+## What Changed
+
+| Package | Previous | Current |
+|---------|----------|---------|
+| `next` | 15.5.4 | 16.0.10 |
+
+### Configuration Updates
+
+- **Removed**: `eslint.ignoreDuringBuilds` from `next.config.ts` (deprecated in Next.js 16)
+- **Updated**: `images.domains` migrated to `images.remotePatterns` (modern API)
+
+## Breaking Changes
+
+None for end users. All configuration changes are internal and backward-compatible.
+
+## Recommendation
+
+Test thoroughly in staging before deploying to production. While this update maintains backward compatibility, the major version upgrade warrants comprehensive testing.
+
+---
+
+_Released on December 12, 2025 as version 1.4.0_
