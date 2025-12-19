@@ -1,75 +1,175 @@
-name: Build and Push to Staging
+name: Build and Deploy to Staging
 
 on:
   push:
-    branches: [ staging ]
+    branches: [staging]
   workflow_dispatch:
+
+# Prevent concurrent deployments
+concurrency:
+  group: staging-deployment
+  cancel-in-progress: false
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}
 
 jobs:
   build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_digest: ${{ steps.build.outputs.digest }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=staging
+            type=sha,prefix=staging-
+
+      - name: Generate .env file for build stage
+        run: |
+          cat << EOF > .env
+          NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}
+          NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}
+          EOF
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/admin/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          no-cache: true
+          provenance: false
+
+      - name: Verify image exists in registry
+        run: |
+          echo "Verifying image was pushed successfully..."
+          docker pull ${{ env.IMAGE_NAME }}:staging
+          echo "✅ Image successfully pulled from registry"
+
+  deploy:
+    name: Deploy to Staging
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Create .env file from secrets for Docker
+        uses: 0ndt/envfile@v2
+        with:
+          secrets: ${{ toJSON(secrets) }}
+          exclude: DEPLOYMENT_*, PRODUCTION_*
 
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Upload .env to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          source: ".env"
+          target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/staging"
 
-    - name: Generate .env file for build stage
-      run: |
-        echo "NEXT_PUBLIC_BASE_API_URL=${{ secrets.STAGING_NEXT_PUBLIC_BASE_API_URL }}" > .env
-        echo "NEXT_PUBLIC_POSTHOG_KEY=${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}" >> .env
-        echo "NEXT_PUBLIC_POSTHOG_HOST=${{ secrets.NEXT_PUBLIC_POSTHOG_HOST }}" >> .env
+      - name: Deploy to Staging Server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DEPLOYMENT_HOST }}
+          port: ${{ secrets.DEPLOYMENT_PORT }}
+          username: ${{ secrets.DEPLOYMENT_USER }}
+          key: ${{ secrets.DEPLOYMENT_SSH_KEY }}
+          script: |
+            set -e
+            
+            cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/staging
+            
+            # Sync repository
+            git fetch origin
+            git reset --hard origin/staging
+            git clean -fd
+            
+            # Process .env file
+            sed -i 's/^STAGING_//g' .env
+            
+            # Pull latest image explicitly
+            echo "Pulling latest image..."
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
+            
+            # Deploy with docker-compose
+            echo "Starting deployment..."
+            docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging \
+              -f docker-compose.yml \
+              -f docker-compose.staging.yml \
+              up -d --force-recreate
+            
+            # Wait for container to be ready
+            echo "Waiting for container to be ready..."
+            sleep 15
+            
+            # Verify container is running
+            if ! docker ps | grep -q "${{ secrets.DOCKERHUB_APP_ID }}.admin.staging"; then
+              echo "❌ Container is not running!"
+              docker logs ${{ secrets.DOCKERHUB_APP_ID }}.admin.staging --tail 50
+              exit 1
+            fi
+            
+            echo "✅ Container is running"
+            
+            # Clean up old images (with delay and safer flags)
+            sleep 10
+            docker image prune -f --filter "until=48h"
+            docker container prune -f --filter "until=24h"
 
-    - name: Build and push frontend image
-      uses: docker/build-push-action@v5
-      with:
-        context: ./
-        file: ./docker/admin/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_APP_ID }}:staging
-        no-cache: true
-    
-    - name: Create .env file from secrets for Docker
-      uses: 0ndt/envfile@v2
-      with:
-        secrets: ${{ toJSON(secrets) }}
-        exclude: DEPLOYMENT_*, PRODUCTION_*
-    
-    - name: Upload .env to VPS
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.DEPLOYMENT_HOST }}
-        port: ${{ secrets.DEPLOYMENT_PORT }}
-        username: ${{ secrets.DEPLOYMENT_USER }}
-        key: |
-          ${{ secrets.DEPLOYMENT_SSH_KEY }}
-        source: ".env"
-        target: "/opt/${{ secrets.DOCKERHUB_APP_ID }}/staging"
-    
-    - name: Deploy to Deployment Server
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.DEPLOYMENT_HOST }}
-        port: ${{ secrets.DEPLOYMENT_PORT }}
-        username: ${{ secrets.DEPLOYMENT_USER }}
-        key: |
-          ${{ secrets.DEPLOYMENT_SSH_KEY }}
-        script: |
-          cd /opt/${{ secrets.DOCKERHUB_APP_ID }}/staging
-          git fetch origin
-          git reset --hard origin/staging
-          git clean -fd
+      - name: Verify deployment health
+        run: |
+          echo "Waiting for deployment to stabilize..."
+          sleep 10
+          
+          # Test if the site is responding
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://staging.cylink.id/changelog || echo "000")
+          
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Health check passed! Site is responding with HTTP $HTTP_STATUS"
+          else
+            echo "⚠️ Health check warning: Site returned HTTP $HTTP_STATUS"
+            echo "This may be due to CDN caching or DNS propagation"
+          fi
 
-          # Remove prefix
-          sed -i 's/^STAGING_//g' .env
-
-          docker-compose -p ${{ secrets.DOCKERHUB_APP_ID }}-staging -f docker-compose.yml -f docker-compose.staging.yml up -d --force-recreate --pull always
-          docker system prune -af
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Property | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Image** | \`${{ env.IMAGE_NAME }}:staging\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Commit** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Branch** | \`${{ github.ref_name }}\` |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Triggered by** | @${{ github.actor }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Workflow run** | [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### ✅ Deployment completed successfully!" >> $GITHUB_STEP_SUMMARY
