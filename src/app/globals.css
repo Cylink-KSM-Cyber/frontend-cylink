@@ -33,3 +33,51 @@ input[type="search"] {
 .animate-fade-in-up {
   animation: fade-in-up 0.6s ease-out forwards;
 }
+
+/* Changelog Table Styling - Solid borders with professional appearance
+ * @update 2025-12-19 - Added solid border styling for markdown tables
+ */
+.changelog-table-wrapper {
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.changelog-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.changelog-table th,
+.changelog-table td {
+  border: 1px solid #e5e7eb; /* Solid gray-200 border */
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+
+.changelog-table th {
+  background-color: #f9fafb; /* Light gray-50 header */
+  font-weight: 600;
+  color: #111827; /* gray-900 */
+}
+
+.changelog-table td {
+  color: #374151; /* gray-700 */
+}
+
+.changelog-table tbody tr:hover {
+  background-color: #f9fafb; /* Subtle hover effect */
+}
+
+/* Responsive table text size */
+@media (max-width: 640px) {
+  .changelog-table {
+    font-size: 0.75rem;
+  }
+
+  .changelog-table th,
+  .changelog-table td {
+    padding: 0.5rem 0.75rem;
+  }
+}

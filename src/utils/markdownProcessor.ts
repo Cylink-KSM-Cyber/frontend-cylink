@@ -11,10 +11,12 @@
  * - Text formatting (bold, italic, inline code)
  * - List processing (ordered and unordered)
  * - Horizontal rules and paragraph handling
+ * - Table processing with solid borders
  * - Content preview generation
  * - Reading time estimation
  *
  * @module markdownProcessor
+ * @update 2025-12-19 - Added table processing for GFM markdown tables
  */
 
 /**
@@ -30,11 +32,126 @@
  * - Inline code (`code`)
  * - Horizontal rules (---)
  * - Ordered and unordered lists
+ * - Tables (GFM syntax with pipes and header separator)
  * - Paragraphs with proper spacing
  *
  * @param content - Raw markdown content string
  * @returns Processed HTML string with light theme Tailwind classes
  */
+
+/**
+ * Helper function to check if a line is a table separator row
+ * @param line - Line to check
+ * @returns True if line is a table separator
+ */
+function isTableSeparator(line: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("|") || !trimmed.endsWith("|")) return false;
+  // Match pattern like |---|---|---| or |:--|:--:|--:|
+  return /^\|[\s\-:]+(\|[\s\-:]+)+\|$/.test(trimmed);
+}
+
+/**
+ * Helper function to check if a line is a table row
+ * @param line - Line to check
+ * @returns True if line is a table row
+ */
+function isTableRow(line: string): boolean {
+  const trimmed = line.trim();
+  return trimmed.startsWith("|") && trimmed.endsWith("|") && trimmed.includes("|");
+}
+
+/**
+ * Parse table cells from a row
+ * @param row - Table row string
+ * @returns Array of cell contents
+ */
+function parseTableCells(row: string): string[] {
+  return row
+    .trim()
+    .slice(1, -1) // Remove leading and trailing |
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+/**
+ * Get alignment from separator cell
+ * @param cell - Separator cell content
+ * @returns Alignment string
+ */
+function getAlignment(cell: string): string {
+  const trimmed = cell.trim();
+  if (trimmed.startsWith(":") && trimmed.endsWith(":")) return "center";
+  if (trimmed.endsWith(":")) return "right";
+  return "left";
+}
+
+/**
+ * Process markdown tables in content
+ * @param content - Content with potential tables
+ * @returns Content with tables converted to HTML
+ */
+function processMarkdownTables(content: string): string {
+  const lines = content.split(/\r?\n/);
+  const result: string[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const currentLine = lines[i];
+    const nextLine = lines[i + 1];
+
+    // Check if this could be a table header (current line is table row, next is separator)
+    if (
+      isTableRow(currentLine) &&
+      nextLine &&
+      isTableSeparator(nextLine)
+    ) {
+      // Found a table! Parse it
+      const headers = parseTableCells(currentLine);
+      const alignments = parseTableCells(nextLine).map(getAlignment);
+
+      // Collect body rows
+      const bodyRows: string[][] = [];
+      let j = i + 2;
+      while (j < lines.length && isTableRow(lines[j])) {
+        bodyRows.push(parseTableCells(lines[j]));
+        j++;
+      }
+
+      // Build HTML table
+      let tableHtml = '<div class="changelog-table-wrapper"><table class="changelog-table">';
+
+      // Add thead
+      tableHtml += "<thead><tr>";
+      headers.forEach((header, idx) => {
+        const align = alignments[idx] || "left";
+        tableHtml += `<th style="text-align: ${align}">${header}</th>`;
+      });
+      tableHtml += "</tr></thead>";
+
+      // Add tbody
+      tableHtml += "<tbody>";
+      bodyRows.forEach((row) => {
+        tableHtml += "<tr>";
+        row.forEach((cell, idx) => {
+          const align = alignments[idx] || "left";
+          tableHtml += `<td style="text-align: ${align}">${cell}</td>`;
+        });
+        tableHtml += "</tr>";
+      });
+      tableHtml += "</tbody></table></div>";
+
+      result.push(tableHtml);
+      i = j; // Skip to after the table
+    } else {
+      result.push(currentLine);
+      i++;
+    }
+  }
+
+  return result.join("\n");
+}
+
 export function processMarkdownContent(content: string): string {
   if (!content) return "";
 
@@ -100,6 +217,10 @@ export function processMarkdownContent(content: string): string {
     /^---$/gm,
     '<hr class="border-gray-200 my-6">'
   );
+
+  // Process markdown tables (GFM syntax)
+  // Parse tables line by line for better reliability
+  processedContent = processMarkdownTables(processedContent);
 
   // Process unordered lists and mark them with data attribute
   processedContent = processedContent.replace(
