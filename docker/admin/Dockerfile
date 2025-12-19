@@ -2,7 +2,7 @@
 FROM node:22-bookworm-slim AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN rm -f package-lock.json && npm install
+RUN rm -f package-lock.json && npm install --legacy-peer-deps
 COPY . . 
 COPY .env .env
 RUN npm rebuild lightningcss
