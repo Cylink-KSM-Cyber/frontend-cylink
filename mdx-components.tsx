@@ -67,6 +67,17 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <strong className="font-semibold text-gray-900">{children}</strong>
     ),
     em: ({ children }) => <em className="italic text-gray-700">{children}</em>,
+    // Table components for changelog tables with solid borders
+    table: ({ children }) => (
+      <div className="changelog-table-wrapper">
+        <table className="changelog-table">{children}</table>
+      </div>
+    ),
+    thead: ({ children }) => <thead>{children}</thead>,
+    tbody: ({ children }) => <tbody>{children}</tbody>,
+    tr: ({ children }) => <tr>{children}</tr>,
+    th: ({ children }) => <th>{children}</th>,
+    td: ({ children }) => <td>{children}</td>,
     // Allow spreading additional components
     ...components,
   };
