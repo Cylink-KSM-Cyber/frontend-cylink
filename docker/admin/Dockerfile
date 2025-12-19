@@ -11,7 +11,7 @@ COPY .env .env
 RUN npm run build
 
 # Production Stage
-FROM node:22-bookworm-slim
+FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 
 COPY --from=builder /app/.next .next
