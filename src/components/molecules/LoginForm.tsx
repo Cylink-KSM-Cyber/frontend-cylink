@@ -1,35 +1,34 @@
-"use client";
+'use client'
 
-import React from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "framer-motion";
-import Input from "@/components/atoms/Input";
-import Button from "@/components/atoms/Button";
-import Checkbox from "@/components/atoms/Checkbox";
-import Link from "next/link";
-import { useAuth } from "@/contexts/AuthContext";
+import React from 'react'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { motion } from 'framer-motion'
+import Input from '@/components/atoms/Input'
+import Button from '@/components/atoms/Button'
+import Checkbox from '@/components/atoms/Checkbox'
+import GoogleOAuthButton from '@/components/atoms/GoogleOAuthButton'
+import FormDivider from '@/components/atoms/FormDivider'
+import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 
 /**
  * Login form schema validation
  */
 const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, { message: "Email is required" })
-    .email({ message: "Please enter a valid email address" }),
+  email: z.string().min(1, { message: 'Email is required' }).email({ message: 'Please enter a valid email address' }),
   password: z
     .string()
-    .min(1, { message: "Password is required" })
-    .min(8, { message: "Password must be at least 8 characters" }),
-  rememberMe: z.boolean().optional(),
-});
+    .min(1, { message: 'Password is required' })
+    .min(8, { message: 'Password must be at least 8 characters' }),
+  rememberMe: z.boolean().optional()
+})
 
 /**
  * Login form values type
  */
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>
 
 /**
  * Login form properties
@@ -37,7 +36,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
  */
 interface LoginFormProps {
   /** Custom CSS class */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -46,22 +45,22 @@ interface LoginFormProps {
  * @param props - Login form properties
  * @returns Login form component
  */
-const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
-  const { login, isLoading } = useAuth();
+const LoginForm: React.FC<LoginFormProps> = ({ className = '' }) => {
+  const { login, isLoading } = useAuth()
 
   // Form validation with react-hook-form and zod
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors }
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
-      rememberMe: false,
-    },
-  });
+      email: '',
+      password: '',
+      rememberMe: false
+    }
+  })
 
   /**
    * Form submission handler
@@ -71,11 +70,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
     await login(
       {
         email: data.email,
-        password: data.password,
+        password: data.password
       },
       data.rememberMe
-    );
-  };
+    )
+  }
+
+  /**
+   * Google OAuth login handler
+   * @description Placeholder for future Google OAuth integration
+   */
+  const handleGoogleLogin = () => {
+    // TODO: Implement Google OAuth login flow
+    console.log('Google OAuth login - Backend integration pending')
+  }
 
   return (
     <motion.div
@@ -85,67 +93,65 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = "" }) => {
       className={`w-full ${className}`}
     >
       {/* Login form with validation */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+        {/* Google OAuth button - Top position per UX research */}
+        <GoogleOAuthButton onClick={handleGoogleLogin} disabled={isLoading} variant='login' />
+
+        {/* Divider */}
+        <FormDivider />
+
         {/* Email input */}
-        <div className="login-input">
+        <div className='login-input'>
           <Input
-            label="Email"
-            type="email"
+            label='Email'
+            type='email'
             fullWidth
             error={errors.email?.message}
-            autoComplete="email"
-            {...register("email")}
+            autoComplete='email'
+            {...register('email')}
           />
         </div>
 
         {/* Password input */}
-        <div className="login-input">
+        <div className='login-input'>
           <Input
-            label="Password"
-            type="password"
+            label='Password'
+            type='password'
             fullWidth
             error={errors.password?.message}
             showPasswordToggle
-            autoComplete="current-password"
-            {...register("password")}
+            autoComplete='current-password'
+            {...register('password')}
           />
         </div>
 
         {/* Remember me and forgot password */}
-        <div className="flex items-center justify-between">
-          <Checkbox label="Remember me" {...register("rememberMe")} />
+        <div className='flex items-center justify-between'>
+          <Checkbox label='Remember me' {...register('rememberMe')} />
 
           <Link
-            href="/forgot-password"
-            className="text-sm font-medium text-black hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+            href='/forgot-password'
+            className='text-sm font-medium text-black hover:underline focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black'
           >
             Forgot password?
           </Link>
         </div>
 
         {/* Submit button */}
-        <Button
-          type="submit"
-          fullWidth
-          disabled={isLoading}
-          className="login-button"
-        >
+        <Button type='submit' fullWidth disabled={isLoading} className='login-button'>
           Sign in
         </Button>
 
         {/* Register link */}
-        <div className="text-center text-sm mt-6">
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="font-medium text-black hover:underline"
-          >
+        <div className='text-center text-sm mt-6'>
+          Don&apos;t have an account?{' '}
+          <Link href='/register' className='font-medium text-black hover:underline'>
             Sign up
           </Link>
         </div>
       </form>
     </motion.div>
-  );
-};
+  )
+}
 
-export default LoginForm;
+export default LoginForm
