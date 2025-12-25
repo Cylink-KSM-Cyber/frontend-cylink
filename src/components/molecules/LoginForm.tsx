@@ -78,11 +78,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = '' }) => {
 
   /**
    * Google OAuth login handler
-   * @description Placeholder for future Google OAuth integration
+   * @description Redirects to backend OAuth endpoint which handles Google OAuth flow
    */
   const handleGoogleLogin = () => {
-    // TODO: Implement Google OAuth login flow
-    console.log('Google OAuth login - Backend integration pending')
+    const backendUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5123/api'
+    window.location.href = `${backendUrl}/api/v1/auth/oauth/google`
   }
 
   return (

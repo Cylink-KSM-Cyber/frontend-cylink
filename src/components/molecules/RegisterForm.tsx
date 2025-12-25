@@ -89,13 +89,11 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ className = '' }) => {
 
   /**
    * Google OAuth register handler
-   * @description Placeholder for future Google OAuth integration
-   * @note When implemented, this will require an interstitial step for username selection
-   *       since Google OAuth doesn't provide the custom username needed for cylink.id/username
+   * @description Redirects to backend OAuth register endpoint
    */
   const handleGoogleRegister = () => {
-    // TODO: Implement Google OAuth registration flow with username selection
-    console.log('Google OAuth register - Backend integration pending')
+    const backendUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5123'
+    window.location.href = `${backendUrl}/api/v1/auth/oauth/google/register`
   }
 
   return (
