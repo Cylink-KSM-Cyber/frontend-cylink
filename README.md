@@ -199,21 +199,70 @@ frontend-cylink/
 - **Input Sanitization**: Input sanitization to prevent XSS
 - **Rate Limiting**: Rate limiting to prevent abuse
 
-## 📈 Roadmap
+## 📋 Changelog
 
-### Version 1.3.0 (Q3 2025)
+### Version 1.5.0 (Latest) - Google OAuth Authentication & PostHog Analytics
 
-- [ ] Advanced Analytics Dashboard
-- [ ] Bulk URL Management
-- [ ] API Rate Limiting
-- [ ] Custom Domain Support
+**Release Date:** December 26, 2024
 
-### Version 1.4.0 (Q4 2025)
+**Major Features:**
 
-- [ ] Team Collaboration Features
-- [ ] Advanced QR Code Templates
-- [ ] Webhook Integration
-- [ ] Mobile App
+- 🆕 **Google OAuth Authentication**: Complete OAuth 2.0 login and registration flow
+- 🆕 **Username Selection**: Interactive username selection for OAuth registration
+- 🆕 **PostHog Event Tracking**: Comprehensive analytics for OAuth flows
+- 🆕 **OAuth Error Handling**: Dedicated error pages with user-friendly messages
+
+**New Pages:**
+
+- ✅ **OAuth Callback Page** (`/login/oauth/callback`): Handle OAuth authentication callback
+- ✅ **OAuth Error Page** (`/login/oauth/error`): Display OAuth error messages
+- ✅ **Username Selection Page** (`/register/oauth/username`): Choose username after OAuth registration
+
+**Frontend Enhancements:**
+
+- ✅ **LoginForm Component**: Added Google OAuth login button with tracking
+- ✅ **RegisterForm Component**: Added Google OAuth register button with tracking
+- ✅ **OAuth Tracking Hook** (`useOAuthTracking`): Centralized PostHog event tracking
+  - Track login flow: initiated → callback → success/failed
+  - Track register flow: initiated → callback → username viewed → submitted → success/failed
+- ✅ **Success Feedback**: 2-second success message before dashboard redirect
+- ✅ **Error Differentiation**: Separate handling for login and register errors
+
+**PostHog Analytics:**
+
+- ✅ **8 Total Events Tracked**:
+  - Login: `oauth_login_initiated`, `oauth_login_callback_received`, `oauth_login_success/failed`
+  - Register: `oauth_register_initiated`, `oauth_register_callback_received`, `oauth_username_selection_viewed`, `oauth_username_submitted`, `oauth_register_success/failed`
+- ✅ **Event Properties**: Comprehensive tracking with user_agent, referrer, timestamp, flow type
+- ✅ **Funnel Analysis Ready**: Events structured for conversion funnel analysis
+
+**User Experience:**
+
+- ✅ **Seamless OAuth Flow**: One-click authentication with Google
+- ✅ **Auto-Verification**: OAuth users automatically verified
+- ✅ **Visual Feedback**: Loading states and success messages
+- ✅ **Error Recovery**: Clear error messages with action buttons
+
+**Technical Implementation:**
+
+- ✅ **Type-Safe Tracking**: TypeScript interfaces for all event properties
+- ✅ **Reusable Hook**: `useOAuthTracking` for consistent tracking across components
+- ✅ **Server-Side OAuth**: Secure token exchange on backend
+- ✅ **Temporary JWT**: 15-minute tokens for username selection step
+
+**Configuration:**
+
+Frontend environment variables:
+
+```env
+NEXT_PUBLIC_BASE_API_URL=http://localhost:5123/api
+```
+
+**Breaking Changes:**
+
+- None - OAuth is an additional authentication method
+
+---
 
 ## 🤝 Contributing
 
