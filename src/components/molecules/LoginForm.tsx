@@ -12,6 +12,7 @@ import GoogleOAuthButton from '@/components/atoms/GoogleOAuthButton'
 import FormDivider from '@/components/atoms/FormDivider'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useOAuthTracking } from '@/hooks/useOAuthTracking'
 
 /**
  * Login form schema validation
@@ -47,6 +48,7 @@ interface LoginFormProps {
  */
 const LoginForm: React.FC<LoginFormProps> = ({ className = '' }) => {
   const { login, isLoading } = useAuth()
+  const { trackOAuthInitiated } = useOAuthTracking()
 
   // Form validation with react-hook-form and zod
   const {
@@ -64,16 +66,21 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = '' }) => {
 
   /**
    * Form submission handler
-   * @param data - Form values
+   * @param data - Form data
    */
   const onSubmit = async (data: LoginFormValues) => {
-    await login(
-      {
-        email: data.email,
-        password: data.password
-      },
-      data.rememberMe
-    )
+    try {
+      await login(
+        {
+          email: data.email,
+          password: data.password
+        },
+        data.rememberMe
+      )
+    } catch (error) {
+      // Error is handled by AuthContext
+      console.error('Login error:', error)
+    }
   }
 
   /**
@@ -81,6 +88,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = '' }) => {
    * @description Redirects to backend OAuth endpoint which handles Google OAuth flow
    */
   const handleGoogleLogin = () => {
+    // Track OAuth initiation
+    trackOAuthInitiated('login', 'login_page')
+
     const backendUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5123/api'
     window.location.href = `${backendUrl}/api/v1/auth/oauth/google`
   }

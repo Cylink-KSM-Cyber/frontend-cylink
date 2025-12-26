@@ -1,9 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
+import { useOAuthTracking } from '@/hooks/useOAuthTracking'
 
 /**
  * OAuth Error Page
@@ -13,9 +14,19 @@ import Link from 'next/link'
 const OAuthErrorPage: React.FC = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { trackOAuthError } = useOAuthTracking()
 
   const errorType = searchParams.get('error')
   const email = searchParams.get('email')
+  const flow = searchParams.get('flow') || 'login' // Default to login if not specified
+
+  // Track error on page load
+  useEffect(() => {
+    if (errorType) {
+      const errorMessage = getErrorDetails().message
+      trackOAuthError(flow as 'login' | 'register', 'callback', errorType, errorMessage)
+    }
+  }, [errorType, flow, trackOAuthError])
 
   const getErrorDetails = () => {
     switch (errorType) {
@@ -26,6 +37,12 @@ const OAuthErrorPage: React.FC = () => {
             ? `The email address ${email} is not registered in our system. Please create an account first.`
             : 'This Google account is not registered in our system. Please create an account first.',
           showRegisterButton: true
+        }
+      case 'email_exists':
+        return {
+          title: 'Email Already Registered',
+          message: `This email (${email}) is already associated with an account. Please login instead.`,
+          showRegisterButton: false
         }
       case 'access_denied':
         return {

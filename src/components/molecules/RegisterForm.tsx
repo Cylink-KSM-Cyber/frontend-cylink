@@ -5,6 +5,7 @@ import Input from '@/components/atoms/Input'
 import GoogleOAuthButton from '@/components/atoms/GoogleOAuthButton'
 import FormDivider from '@/components/atoms/FormDivider'
 import { useAuth } from '@/contexts/AuthContext'
+import { useOAuthTracking } from '@/hooks/useOAuthTracking'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
@@ -54,6 +55,7 @@ interface RegisterFormProps {
  */
 const RegisterForm: React.FC<RegisterFormProps> = ({ className = '' }) => {
   const { signup, isLoading, isModalOpen, setIsModalOpen } = useAuth()
+  const { trackOAuthInitiated } = useOAuthTracking()
 
   // Form validation with react-hook-form and zod
   const {
@@ -92,6 +94,9 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ className = '' }) => {
    * @description Redirects to backend OAuth register endpoint
    */
   const handleGoogleRegister = () => {
+    // Track OAuth initiation
+    trackOAuthInitiated('register', 'register_page')
+
     const backendUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5123'
     window.location.href = `${backendUrl}/api/v1/auth/oauth/google/register`
   }

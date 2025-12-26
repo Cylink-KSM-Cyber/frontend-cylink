@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import AuthService from '@/services/auth'
 import { motion } from 'framer-motion'
+import { useOAuthTracking } from '@/hooks/useOAuthTracking'
 
 /**
  * OAuth Callback Page
@@ -15,6 +16,7 @@ const OAuthCallbackPage: React.FC = () => {
   const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(true)
+  const { trackOAuthCallback, trackOAuthSuccess, trackOAuthError } = useOAuthTracking()
 
   useEffect(() => {
     const processCallback = async () => {
@@ -23,8 +25,15 @@ const OAuthCallbackPage: React.FC = () => {
         const accessToken = searchParams.get('access_token')
         const refreshToken = searchParams.get('refresh_token')
         const firstLogin = searchParams.get('first_login') === 'true'
+        const code = searchParams.get('code')
+        const errorParam = searchParams.get('error')
+
+        // Track callback received
+        trackOAuthCallback('login', !!code || !!accessToken, !!errorParam)
 
         if (!accessToken || !refreshToken) {
+          // Track error
+          trackOAuthError('login', 'callback', 'missing_tokens', 'Authentication failed. Missing tokens.')
           setError('Authentication failed. Missing tokens.')
           setIsProcessing(false)
           return
@@ -33,19 +42,30 @@ const OAuthCallbackPage: React.FC = () => {
         // Store tokens using AuthService
         AuthService.saveTokens(accessToken, refreshToken, true)
 
+        // Get user data from stored tokens
+        const userData = AuthService.getUser()
+
+        // Track success
+        trackOAuthSuccess('login', userData?.id?.toString(), userData?.email)
+
         // Redirect to dashboard
         setTimeout(() => {
           router.push('/dashboard')
         }, 1000)
       } catch (err) {
         console.error('OAuth callback error:', err)
-        setError('An error occurred during authentication.')
+        const errorMessage = err instanceof Error ? err.message : 'An error occurred during authentication.'
+
+        // Track error
+        trackOAuthError('login', 'callback', 'processing_error', errorMessage)
+
+        setError(errorMessage)
         setIsProcessing(false)
       }
     }
 
     processCallback()
-  }, [searchParams, router])
+  }, [searchParams, router, trackOAuthCallback, trackOAuthSuccess, trackOAuthError])
 
   if (error) {
     return (

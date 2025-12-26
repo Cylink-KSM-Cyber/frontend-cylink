@@ -9,6 +9,7 @@ import { z } from 'zod'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import AuthService from '@/services/auth'
+import { useOAuthTracking } from '@/hooks/useOAuthTracking'
 
 /**
  * Username selection schema
@@ -38,6 +39,9 @@ export default function OAuthUsernamePage() {
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false)
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null)
 
+  const { trackUsernameSelectionViewed, trackUsernameSubmitted, trackOAuthSuccess, trackOAuthError } =
+    useOAuthTracking()
+
   const {
     register,
     handleSubmit,
@@ -51,6 +55,11 @@ export default function OAuthUsernamePage() {
   })
 
   const username = watch('username')
+
+  // Track page view on mount
+  useEffect(() => {
+    trackUsernameSelectionViewed(!!token)
+  }, [trackUsernameSelectionViewed, token])
 
   // Check username availability with debounce
   useEffect(() => {
@@ -79,7 +88,7 @@ export default function OAuthUsernamePage() {
   // Redirect if no token
   useEffect(() => {
     if (!token) {
-      router.push('/login/oauth/error?error=invalid_token')
+      router.push('/login/oauth/error?error=invalid_token&flow=register')
     }
   }, [token, router])
 
@@ -88,6 +97,9 @@ export default function OAuthUsernamePage() {
 
     setIsLoading(true)
     setError(null)
+
+    // Track username submission
+    trackUsernameSubmitted(data.username, usernameAvailable || false)
 
     try {
       const backendUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5123'
@@ -111,6 +123,9 @@ export default function OAuthUsernamePage() {
       // Save tokens
       AuthService.saveTokens(result.data.token.access, result.data.token.refresh, true)
 
+      // Track success
+      trackOAuthSuccess('register', result.data.user?.id?.toString(), result.data.user?.email, data.username)
+
       // Show success state
       setIsLoading(false)
       setIsSuccess(true)
@@ -121,6 +136,10 @@ export default function OAuthUsernamePage() {
       }, 2000)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred'
+
+      // Track error
+      trackOAuthError('register', 'completion', 'registration_failed', errorMessage)
+
       setError(errorMessage)
       setIsLoading(false)
     }
