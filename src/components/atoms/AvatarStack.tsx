@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
 import Avatar from '@/components/atoms/Avatar'
 import { FeedbackUser } from '@/interfaces/feedback'
 
@@ -41,12 +41,10 @@ interface AvatarStackProps {
  * - First 5 avatars with 25% overlap
  * - 2px white border for separation
  * - +N counter for additional supporters
- * - Hover tooltips
+ * - Hover tooltips (CSS-only)
  * - Last-on-top z-index layering
  */
 const AvatarStack: React.FC<AvatarStackProps> = ({ users, totalCount, onOverflowClick, size = 32, className = '' }) => {
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
-
   // Display first 5 users
   const displayUsers = users.slice(0, 5)
   const overflowCount = totalCount - displayUsers.length
@@ -59,35 +57,38 @@ const AvatarStack: React.FC<AvatarStackProps> = ({ users, totalCount, onOverflow
   }
 
   return (
-    <div className={`flex items-center ${className}`} role='group' aria-label='Supporters'>
+    <fieldset className={`flex items-center border-0 p-0 m-0 ${className}`} aria-label='Supporters'>
+      <legend className='sr-only'>Supporters</legend>
       {/* Avatar stack */}
       <div className='flex items-center' style={{ marginRight: overflowCount > 0 ? `-${overlap}px` : 0 }}>
         {displayUsers.map((user, index) => (
           <div
             key={user.id}
-            className='relative'
+            className='relative group'
             style={{
               marginLeft: index > 0 ? `-${overlap}px` : 0,
               zIndex: displayUsers.length - index
             }}
-            onMouseEnter={() => setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
           >
             <div className='relative' style={{ width: size, height: size }}>
               <div className='absolute inset-0 rounded-full bg-white' style={{ padding: '2px' }}>
-                <Avatar username={user.name} size={size - 4} isClickable={false} ariaLabel={`Avatar of ${user.name}`} />
+                <Avatar
+                  username={user.name}
+                  avatarUrl={user.avatar_url}
+                  size={size - 4}
+                  isClickable={false}
+                  ariaLabel={`Avatar of ${user.name}`}
+                />
               </div>
             </div>
 
-            {/* Tooltip */}
-            {hoveredIndex === index && (
-              <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50'>
-                {user.name}
-                <div className='absolute top-full left-1/2 transform -translate-x-1/2 -mt-1'>
-                  <div className='border-4 border-transparent border-t-gray-900'></div>
-                </div>
+            {/* Tooltip - CSS only with group-hover */}
+            <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity duration-200'>
+              {user.name}
+              <div className='absolute top-full left-1/2 transform -translate-x-1/2 -mt-1'>
+                <div className='border-4 border-transparent border-t-gray-900' />
               </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
@@ -109,7 +110,7 @@ const AvatarStack: React.FC<AvatarStackProps> = ({ users, totalCount, onOverflow
           +{overflowCount}
         </button>
       )}
-    </div>
+    </fieldset>
   )
 }
 
