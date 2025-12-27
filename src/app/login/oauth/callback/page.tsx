@@ -15,7 +15,6 @@ const OAuthCallbackPage: React.FC = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [error, setError] = useState<string | null>(null)
-  const [isProcessing, setIsProcessing] = useState(true)
   const { trackOAuthCallback, trackOAuthSuccess, trackOAuthError } = useOAuthTracking()
 
   useEffect(() => {
@@ -24,7 +23,6 @@ const OAuthCallbackPage: React.FC = () => {
         // Get tokens from URL parameters
         const accessToken = searchParams.get('access_token')
         const refreshToken = searchParams.get('refresh_token')
-        const firstLogin = searchParams.get('first_login') === 'true'
         const code = searchParams.get('code')
         const errorParam = searchParams.get('error')
 
@@ -35,7 +33,6 @@ const OAuthCallbackPage: React.FC = () => {
           // Track error
           trackOAuthError('login', 'callback', 'missing_tokens', 'Authentication failed. Missing tokens.')
           setError('Authentication failed. Missing tokens.')
-          setIsProcessing(false)
           return
         }
 
@@ -60,7 +57,6 @@ const OAuthCallbackPage: React.FC = () => {
         trackOAuthError('login', 'callback', 'processing_error', errorMessage)
 
         setError(errorMessage)
-        setIsProcessing(false)
       }
     }
 
