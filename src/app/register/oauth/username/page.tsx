@@ -19,7 +19,7 @@ const usernameSchema = z.object({
     .string()
     .min(3, { message: 'Username must be at least 3 characters' })
     .max(20, { message: 'Username must be at most 20 characters' })
-    .regex(/^[a-zA-Z0-9_]+$/, { message: 'Username can only contain letters, numbers, and underscores' })
+    .regex(/^\w+$/, { message: 'Username can only contain letters, numbers, and underscores' })
 })
 
 type UsernameFormValues = z.infer<typeof usernameSchema>
@@ -56,6 +56,32 @@ export default function OAuthUsernamePage() {
 
   const username = watch('username')
 
+  /**
+   * Get username availability indicator text
+   */
+  const getAvailabilityIndicator = () => {
+    if (isCheckingAvailability) {
+      return <span className='text-gray-500'>Checking availability...</span>
+    }
+    if (usernameAvailable) {
+      return <span className='text-green-600'>✓ Username available</span>
+    }
+    return <span className='text-red-600'>✗ Username already taken</span>
+  }
+
+  /**
+   * Get submit button text based on current state
+   */
+  const getButtonText = () => {
+    if (isSuccess) {
+      return '✓ Registration Successful! Redirecting...'
+    }
+    if (isLoading) {
+      return 'Creating Account...'
+    }
+    return 'Complete Registration'
+  }
+
   // Track page view on mount
   useEffect(() => {
     trackUsernameSelectionViewed(!!token)
@@ -76,6 +102,7 @@ export default function OAuthUsernamePage() {
         await new Promise(resolve => setTimeout(resolve, 500))
         setUsernameAvailable(true)
       } catch (err) {
+        console.error('Username availability check failed:', err)
         setUsernameAvailable(false)
       } finally {
         setIsCheckingAvailability(false)
@@ -176,15 +203,7 @@ export default function OAuthUsernamePage() {
 
               {/* Username availability indicator */}
               {username && username.length >= 3 && !errors.username && (
-                <div className='mt-2 text-sm'>
-                  {isCheckingAvailability ? (
-                    <span className='text-gray-500'>Checking availability...</span>
-                  ) : usernameAvailable ? (
-                    <span className='text-green-600'>✓ Username available</span>
-                  ) : (
-                    <span className='text-red-600'>✗ Username already taken</span>
-                  )}
-                </div>
+                <div className='mt-2 text-sm'>{getAvailabilityIndicator()}</div>
               )}
             </div>
 
@@ -195,11 +214,7 @@ export default function OAuthUsernamePage() {
             )}
 
             <Button type='submit' variant='primary' fullWidth disabled={isLoading || isSuccess || !usernameAvailable}>
-              {isSuccess
-                ? '✓ Registration Successful! Redirecting...'
-                : isLoading
-                ? 'Creating Account...'
-                : 'Complete Registration'}
+              {getButtonText()}
             </Button>
           </form>
 
