@@ -5,24 +5,18 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { CreateFeedbackFormData, FeedbackType, FeedbackItem } from '@/interfaces/feedback'
-import Input from '@/components/atoms/Input'
-import Button from '@/components/atoms/Button'
-import SegmentedControl from '@/components/atoms/SegmentedControl'
+import { RiLightbulbLine, RiBugLine } from 'react-icons/ri'
 
 /**
- * Form validation schema
+ * Form validation schema - Simplified to encourage participation
  */
 const feedbackSchema = z.object({
   title: z.string().min(5, 'Title must be at least 5 characters').max(100, 'Title must be less than 100 characters'),
   description: z
     .string()
-    .min(20, 'Description must be at least 20 characters')
+    .min(10, 'Description must be at least 10 characters')
     .max(1000, 'Description must be less than 1000 characters'),
-  type: z.enum(['bug', 'feature']),
-  reproduction_steps: z.string().optional(),
-  expected_behavior: z.string().optional(),
-  actual_behavior: z.string().optional(),
-  use_case: z.string().optional()
+  type: z.enum(['bug', 'feature'])
 })
 
 type FeedbackFormValues = z.infer<typeof feedbackSchema>
@@ -64,7 +58,8 @@ interface CreateFeedbackFormProps {
 
 /**
  * Create Feedback Form Component
- * @description Form for creating new feedback with duplicate detection
+ * @description Simplified feedback form with only essential fields (Type, Title, Description)
+ * Following best practices: 2-4 fields to encourage user participation
  */
 const CreateFeedbackForm: React.FC<CreateFeedbackFormProps> = ({
   similarFeedback,
@@ -80,6 +75,7 @@ const CreateFeedbackForm: React.FC<CreateFeedbackFormProps> = ({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<FeedbackFormValues>({
     resolver: zodResolver(feedbackSchema),
@@ -105,136 +101,149 @@ const CreateFeedbackForm: React.FC<CreateFeedbackFormProps> = ({
 
   const handleTypeChange = (type: FeedbackType) => {
     setFeedbackType(type)
+    setValue('type', type)
+  }
+
+  // Get placeholder based on type
+  const getDescriptionPlaceholder = () => {
+    if (feedbackType === 'bug') {
+      return "Describe what's not working and how it affects you. Include any context that helps us understand the issue."
+    }
+    return 'Describe the feature you want and why it would be helpful. The more context you provide, the better we can understand your needs.'
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-6'>
-      {/* Type Selector */}
+    <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-5'>
+      {/* Type Selector - Icon-based toggle */}
       <div>
-        <label className='block text-sm font-medium text-gray-700 mb-2'>Type</label>
-        <SegmentedControl
-          options={[
-            { value: 'feature' as FeedbackType, label: 'Feature Request' },
-            { value: 'bug' as FeedbackType, label: 'Bug Report' }
-          ]}
-          value={feedbackType}
-          onChange={handleTypeChange}
-        />
+        <span className='block text-sm font-medium text-gray-700 mb-3'>What would you like to share?</span>
+        <div className='flex gap-3'>
+          <button
+            type='button'
+            onClick={() => handleTypeChange('feature')}
+            className={`
+              flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 transition-all duration-200
+              ${
+                feedbackType === 'feature'
+                  ? 'border-gray-900 bg-gray-900 text-white'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+              }
+            `}
+          >
+            <RiLightbulbLine size={20} />
+            <span className='font-medium'>Feature Request</span>
+          </button>
+          <button
+            type='button'
+            onClick={() => handleTypeChange('bug')}
+            className={`
+              flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 transition-all duration-200
+              ${
+                feedbackType === 'bug'
+                  ? 'border-gray-900 bg-gray-900 text-white'
+                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+              }
+            `}
+          >
+            <RiBugLine size={20} />
+            <span className='font-medium'>Bug Report</span>
+          </button>
+        </div>
         <input type='hidden' {...register('type')} value={feedbackType} />
       </div>
 
-      {/* Title */}
-      <div>
-        <Input
-          label='Title'
-          placeholder={feedbackType === 'bug' ? 'Describe the bug briefly' : 'Describe the feature you want'}
-          error={errors.title?.message}
-          fullWidth
+      {/* Title with standard label (no floating) */}
+      <div className='transition-all duration-200 ease-out'>
+        <label htmlFor='feedback-title' className='block text-sm font-medium text-gray-700 mb-1'>
+          {feedbackType === 'bug' ? 'What went wrong?' : 'What do you want to see?'}
+        </label>
+        <input
           {...register('title')}
+          id='feedback-title'
+          type='text'
+          placeholder={feedbackType === 'bug' ? 'e.g., Login button not working on mobile' : 'e.g., Dark mode support'}
+          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent transition-all duration-200'
         />
+        {errors.title && <p className='mt-1 text-sm text-red-600'>{errors.title.message}</p>}
 
-        {/* Similar Feedback (Duplicate Detection) */}
-        {isSearchingSimilar && <p className='mt-2 text-sm text-gray-500'>Searching for similar feedback...</p>}
+        {/* Similar Feedback (Duplicate Detection) with animation */}
+        <div
+          className={`transition-all duration-300 ease-out overflow-hidden ${
+            isSearchingSimilar || similarFeedback.length > 0 ? 'max-h-96 opacity-100 mt-3' : 'max-h-0 opacity-0'
+          }`}
+        >
+          {isSearchingSimilar && (
+            <div className='flex items-center gap-2 text-sm text-gray-500'>
+              <div className='w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin' />
+              Checking for similar feedback...
+            </div>
+          )}
 
-        {!isSearchingSimilar && similarFeedback.length > 0 && (
-          <div className='mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-md'>
-            <p className='text-sm font-medium text-yellow-800 mb-2'>
-              Similar feedback found. Consider voting for these instead:
-            </p>
-            <div className='space-y-2'>
-              {similarFeedback.slice(0, 3).map(item => (
-                <div key={item.id} className='text-sm'>
-                  <a
-                    href='#'
-                    className='text-blue-600 hover:underline'
+          {!isSearchingSimilar && similarFeedback.length > 0 && (
+            <div className='p-3 bg-amber-50 border border-amber-200 rounded-lg'>
+              <p className='text-sm font-medium text-amber-800 mb-2'>
+                💡 Similar feedback found - consider voting instead:
+              </p>
+              <div className='space-y-1.5'>
+                {similarFeedback.slice(0, 3).map(item => (
+                  <button
+                    key={item.id}
+                    type='button'
+                    className='w-full text-left text-sm p-2 rounded hover:bg-amber-100 transition-colors flex items-center justify-between group'
                     onClick={e => {
                       e.preventDefault()
                       // In real implementation, navigate to feedback detail
                     }}
                   >
-                    {item.title}
-                  </a>
-                  <span className='text-gray-500 ml-2'>({item.score} votes)</span>
-                </div>
-              ))}
+                    <span className='text-amber-900 group-hover:text-amber-950'>{item.title}</span>
+                    <span className='text-amber-600 text-xs shrink-0 ml-2'>{item.score} votes</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* Description */}
-      <div>
-        <label className='block text-sm font-medium text-gray-700 mb-1'>Description</label>
+      {/* Description with dynamic placeholder */}
+      <div className='transition-all duration-200 ease-out'>
+        <label htmlFor='feedback-description' className='block text-sm font-medium text-gray-700 mb-1'>
+          Tell us more
+        </label>
         <textarea
           {...register('description')}
+          id='feedback-description'
           rows={4}
-          className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-          placeholder={
-            feedbackType === 'bug' ? 'Provide details about the bug' : 'Explain the feature and why it would be useful'
-          }
+          className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent resize-none transition-all duration-200'
+          placeholder={getDescriptionPlaceholder()}
         />
         {errors.description && <p className='mt-1 text-sm text-red-600'>{errors.description.message}</p>}
       </div>
 
-      {/* Bug-specific fields */}
-      {feedbackType === 'bug' && (
-        <>
-          <div>
-            <label className='block text-sm font-medium text-gray-700 mb-1'>Steps to Reproduce</label>
-            <textarea
-              {...register('reproduction_steps')}
-              rows={3}
-              className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-              placeholder={'1. Go to...\n2. Click on...\n3. See error'}
-            />
-          </div>
-
-          <div>
-            <Input
-              label='Expected Behavior'
-              placeholder='What should happen?'
-              fullWidth
-              {...register('expected_behavior')}
-            />
-          </div>
-
-          <div>
-            <Input
-              label='Actual Behavior'
-              placeholder='What actually happens?'
-              fullWidth
-              {...register('actual_behavior')}
-            />
-          </div>
-        </>
-      )}
-
-      {/* Feature-specific fields */}
-      {feedbackType === 'feature' && (
-        <div>
-          <label className='block text-sm font-medium text-gray-700 mb-1'>Use Case</label>
-          <textarea
-            {...register('use_case')}
-            rows={3}
-            className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-            placeholder="Describe how you would use this feature and why it's valuable"
-          />
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className='flex items-center justify-end gap-3 pt-4 border-t border-gray-200'>
-        <Button
+      {/* Actions with visible Cancel button */}
+      <div className='flex items-center justify-end gap-3 pt-4 border-t border-gray-100'>
+        <button
           type='button'
           onClick={onCancel}
           disabled={isSubmitting}
-          className='bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+          className='px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-all duration-200 disabled:opacity-50'
         >
           Cancel
-        </Button>
-        <Button type='submit' disabled={isSubmitting}>
-          {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
-        </Button>
+        </button>
+        <button
+          type='submit'
+          disabled={isSubmitting}
+          className='px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg hover:bg-gray-800 transition-all duration-200 disabled:opacity-50'
+        >
+          {isSubmitting ? (
+            <span className='flex items-center gap-2'>
+              <div className='w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin' />
+              Submitting...
+            </span>
+          ) : (
+            'Submit'
+          )}
+        </button>
       </div>
     </form>
   )

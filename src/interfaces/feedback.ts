@@ -95,16 +95,13 @@ export interface FeedbackApiResponse {
 }
 /**
  * Create Feedback Form Data Interface
+ * Simplified to essential fields to encourage user participation
  */
 export interface CreateFeedbackFormData {
   title: string
   description: string
   type: FeedbackType
   tags?: string[]
-  reproduction_steps?: string // Only for bugs
-  expected_behavior?: string // Only for bugs
-  actual_behavior?: string // Only for bugs
-  use_case?: string // Only for features
 }
 /**
  * Downvote Form Data Interface
