@@ -10,10 +10,9 @@ import FeedbackFilterBar from '@/components/molecules/FeedbackFilterBar'
 import FeedbackList from '@/components/organisms/FeedbackList'
 import Modal from '@/components/atoms/Modal'
 import CreateFeedbackForm from '@/components/molecules/CreateFeedbackForm'
-import DownvoteReasonModal from '@/components/molecules/DownvoteReasonModal'
 import SupportersModal from '@/components/molecules/SupportersModal'
 import { fetchVoters } from '@/services/feedback'
-import { FeedbackUser } from '@/interfaces/feedback'
+import { FeedbackUser, DownvoteFormData } from '@/interfaces/feedback'
 
 /**
  * Feedback Board Component
@@ -32,8 +31,7 @@ const FeedbackBoard: React.FC = () => {
   })
 
   // Voting functionality
-  const { isVoting, showDownvoteModal, handleUpvote, handleDownvote, submitDownvote, cancelDownvote } =
-    useFeedbackVoting()
+  const { isVoting, handleUpvote, handleDownvote } = useFeedbackVoting()
 
   // Submission functionality
   const submissionHook = useFeedbackSubmission()
@@ -67,15 +65,20 @@ const FeedbackBoard: React.FC = () => {
   }
 
   /**
-   * Handle downvote
+   * Handle downvote with optional reason data
    */
-  const handleDownvoteClick = (feedbackId: number) => {
+  const handleDownvoteClick = (feedbackId: number, data?: DownvoteFormData) => {
     const item = feedback.find(f => f.id === feedbackId)
     if (!item) return
 
-    handleDownvote(feedbackId, item.user_vote, updatedItem => {
-      updateFeedbackItem(updatedItem)
-    })
+    handleDownvote(
+      feedbackId,
+      item.user_vote,
+      updatedItem => {
+        updateFeedbackItem(updatedItem)
+      },
+      data
+    )
   }
 
   /**
@@ -122,6 +125,7 @@ const FeedbackBoard: React.FC = () => {
 
         {/* Create Button - Desktop */}
         <button
+          type='button'
           onClick={() => setShowCreateModal(true)}
           className='hidden lg:flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors'
         >
@@ -156,6 +160,7 @@ const FeedbackBoard: React.FC = () => {
 
       {/* Floating Action Button - Mobile */}
       <button
+        type='button'
         onClick={() => setShowCreateModal(true)}
         className='lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-colors z-10'
         aria-label='Create feedback'
@@ -185,14 +190,6 @@ const FeedbackBoard: React.FC = () => {
           isSubmitting={isSubmitting}
         />
       </Modal>
-
-      {/* Downvote Reason Modal */}
-      <DownvoteReasonModal
-        isOpen={showDownvoteModal}
-        onClose={cancelDownvote}
-        onSubmit={submitDownvote}
-        isSubmitting={isVoting}
-      />
 
       {/* Supporters Modal */}
       <SupportersModal

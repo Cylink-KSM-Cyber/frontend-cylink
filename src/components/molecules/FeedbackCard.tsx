@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { FeedbackItem } from '@/interfaces/feedback'
+import { FeedbackItem, DownvoteFormData } from '@/interfaces/feedback'
 import VoteRail from '@/components/molecules/VoteRail'
 import FeedbackTypeBadge from '@/components/atoms/FeedbackTypeBadge'
 import FeedbackStatusBadge from '@/components/atoms/FeedbackStatusBadge'
@@ -23,9 +23,9 @@ interface FeedbackCardProps {
   onUpvote: () => void
 
   /**
-   * Downvote handler
+   * Downvote handler with optional reason data
    */
-  onDownvote: () => void
+  onDownvote: (data?: DownvoteFormData) => void
 
   /**
    * Click handler for viewing supporters
@@ -78,18 +78,19 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
           onUpvote={onUpvote}
           onDownvote={onDownvote}
           disabled={disabled}
-          className='flex-shrink-0'
+          className='shrink-0'
         />
 
         {/* Content - Center */}
         <div className='flex-1 min-w-0'>
-          {/* Title */}
-          <h3
-            className='text-lg font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors'
+          {/* Title - Using button for accessibility */}
+          <button
+            type='button'
+            className='text-lg font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors text-left w-full'
             onClick={onTitleClick}
           >
             {feedback.title}
-          </h3>
+          </button>
 
           {/* Description */}
           <p className='text-sm text-gray-600 mb-3 line-clamp-2'>{feedback.description}</p>
@@ -114,7 +115,7 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
         </div>
 
         {/* Social Rail - Right */}
-        <div className='flex-shrink-0'>
+        <div className='shrink-0'>
           <AvatarStack
             users={feedback.voters}
             totalCount={feedback.total_voters}
@@ -128,13 +129,14 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
       <div className='lg:hidden p-4'>
         {/* Content */}
         <div className='mb-3'>
-          {/* Title */}
-          <h3
-            className='text-base font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors'
+          {/* Title - Using button for accessibility */}
+          <button
+            type='button'
+            className='text-base font-semibold text-gray-900 mb-2 cursor-pointer hover:text-blue-600 transition-colors text-left w-full'
             onClick={onTitleClick}
           >
             {feedback.title}
-          </h3>
+          </button>
 
           {/* Description */}
           <p className='text-sm text-gray-600 mb-2 line-clamp-2'>{feedback.description}</p>

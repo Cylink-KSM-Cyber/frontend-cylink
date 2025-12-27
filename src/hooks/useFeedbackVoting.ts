@@ -12,11 +12,6 @@ import logger from '@/utils/logger'
  */
 export const useFeedbackVoting = () => {
   const [isVoting, setIsVoting] = useState<boolean>(false)
-  const [showDownvoteModal, setShowDownvoteModal] = useState<boolean>(false)
-  const [pendingDownvote, setPendingDownvote] = useState<{
-    feedbackId: number
-    onSuccess: (item: FeedbackItem) => void
-  } | null>(null)
   const { showToast } = useToast()
 
   /**
@@ -54,55 +49,34 @@ export const useFeedbackVoting = () => {
   )
 
   /**
-   * Handle downvote action (shows modal for reason)
+   * Handle downvote action with optional reason data
    * @param feedbackId - ID of feedback to downvote
    * @param currentVote - Current user's vote (if any)
    * @param onSuccess - Callback with updated feedback item
+   * @param data - Optional downvote form data with reason
    */
   const handleDownvote = useCallback(
-    async (feedbackId: number, currentVote: VoteType | undefined, onSuccess: (item: FeedbackItem) => void) => {
-      logger.debug('Handling downvote', { feedbackId, currentVote })
+    async (
+      feedbackId: number,
+      currentVote: VoteType | undefined,
+      onSuccess: (item: FeedbackItem) => void,
+      data?: DownvoteFormData
+    ) => {
+      setIsVoting(true)
+      logger.debug('Handling downvote', { feedbackId, currentVote, data })
 
-      // If already downvoted, remove vote
-      if (currentVote === 'downvote') {
-        setIsVoting(true)
-        try {
+      try {
+        // If already downvoted, remove vote
+        if (currentVote === 'downvote') {
           const response = await removeVote(feedbackId)
           onSuccess(response.data)
           showToast('Vote removed', 'white', 2000)
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to remove vote'
-          logger.error('Remove vote failed', { err })
-          showToast(errorMessage, 'error', 3000)
-        } finally {
-          setIsVoting(false)
+        } else {
+          // Otherwise, add downvote with reason
+          const response = await voteFeedback(feedbackId, 'downvote', data)
+          onSuccess(response.data)
+          showToast('Downvote recorded', 'white', 2000)
         }
-      } else {
-        // Otherwise, show modal to get reason
-        setPendingDownvote({ feedbackId, onSuccess })
-        setShowDownvoteModal(true)
-      }
-    },
-    [showToast]
-  )
-
-  /**
-   * Submit downvote with reason
-   * @param data - Downvote form data with reason
-   */
-  const submitDownvote = useCallback(
-    async (data: DownvoteFormData) => {
-      if (!pendingDownvote) return
-
-      setIsVoting(true)
-      logger.debug('Submitting downvote with reason', { data })
-
-      try {
-        const response = await voteFeedback(pendingDownvote.feedbackId, 'downvote', data)
-        pendingDownvote.onSuccess(response.data)
-        showToast('Downvote recorded', 'white', 2000)
-        setShowDownvoteModal(false)
-        setPendingDownvote(null)
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to downvote'
         logger.error('Downvote failed', { err })
@@ -111,24 +85,13 @@ export const useFeedbackVoting = () => {
         setIsVoting(false)
       }
     },
-    [pendingDownvote, showToast]
+    [showToast]
   )
-
-  /**
-   * Cancel downvote modal
-   */
-  const cancelDownvote = useCallback(() => {
-    setShowDownvoteModal(false)
-    setPendingDownvote(null)
-  }, [])
 
   return {
     isVoting,
-    showDownvoteModal,
     handleUpvote,
-    handleDownvote,
-    submitDownvote,
-    cancelDownvote
+    handleDownvote
   }
 }
 

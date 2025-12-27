@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { FeedbackItem } from '@/interfaces/feedback'
+import { FeedbackItem, DownvoteFormData } from '@/interfaces/feedback'
 import FeedbackCard from '@/components/molecules/FeedbackCard'
 import Pagination from '@/components/molecules/Pagination'
 import LoadingSpinner from '@/components/atoms/LoadingSpinner'
@@ -41,9 +41,9 @@ interface FeedbackListProps {
   onUpvote: (feedbackId: number) => void
 
   /**
-   * Downvote handler
+   * Downvote handler with optional reason data
    */
-  onDownvote: (feedbackId: number) => void
+  onDownvote: (feedbackId: number, data?: DownvoteFormData) => void
 
   /**
    * View supporters handler
@@ -112,7 +112,7 @@ const FeedbackList: React.FC<FeedbackListProps> = ({
             key={item.id}
             feedback={item}
             onUpvote={() => onUpvote(item.id)}
-            onDownvote={() => onDownvote(item.id)}
+            onDownvote={data => onDownvote(item.id, data)}
             onViewSupporters={() => onViewSupporters(item.id)}
             disabled={isVoting}
           />

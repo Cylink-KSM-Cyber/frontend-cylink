@@ -6,18 +6,28 @@ import SearchInput from '@/components/atoms/SearchInput'
 import { FeedbackType } from '@/interfaces/feedback'
 
 /**
+ * Type filter including 'all' option
+ */
+type FeedbackTypeFilter = FeedbackType | 'all'
+
+/**
+ * Sort option for feedback list
+ */
+type FeedbackSortOption = 'trending' | 'top_voted' | 'newest'
+
+/**
  * Feedback Filter Bar Props
  */
 interface FeedbackFilterBarProps {
   /**
    * Current type filter
    */
-  type: FeedbackType | 'all'
+  type: FeedbackTypeFilter
 
   /**
    * Current sort option
    */
-  sortBy: 'trending' | 'top_voted' | 'newest'
+  sortBy: FeedbackSortOption
 
   /**
    * Current search query
@@ -32,12 +42,12 @@ interface FeedbackFilterBarProps {
   /**
    * Type filter change handler
    */
-  onTypeChange: (type: FeedbackType | 'all') => void
+  onTypeChange: (type: FeedbackTypeFilter) => void
 
   /**
    * Sort change handler
    */
-  onSortChange: (sort: 'trending' | 'top_voted' | 'newest') => void
+  onSortChange: (sort: FeedbackSortOption) => void
 
   /**
    * Search change handler
@@ -144,7 +154,7 @@ const FeedbackFilterBar: React.FC<FeedbackFilterBarProps> = ({
             type='button'
             onClick={onMyVotesToggle}
             className={`
-              flex-shrink-0 px-3 py-2 text-sm font-medium rounded-md border transition-all duration-200
+              shrink-0 px-3 py-2 text-sm font-medium rounded-md border transition-all duration-200
               ${myVotes ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-white text-gray-700 border-gray-200'}
             `}
           >
