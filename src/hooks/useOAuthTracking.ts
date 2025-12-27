@@ -72,9 +72,8 @@ interface OAuthErrorProperties extends BaseOAuthProperties {
  */
 const getBaseProperties = (): BaseOAuthProperties => ({
   timestamp: Date.now(),
-  user_agent: typeof globalThis.window !== 'undefined' ? globalThis.window.navigator.userAgent : '',
-  referrer:
-    typeof globalThis !== 'undefined' && typeof globalThis.document !== 'undefined' ? globalThis.document.referrer : ''
+  user_agent: globalThis.window === undefined ? '' : globalThis.window.navigator.userAgent,
+  referrer: globalThis.document === undefined ? '' : globalThis.document.referrer
 })
 
 /**

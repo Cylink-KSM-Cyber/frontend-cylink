@@ -92,7 +92,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ className = '' }) => {
     trackOAuthInitiated('login', 'login_page')
 
     const backendUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5123/api'
-    window.location.href = `${backendUrl}/api/v1/auth/oauth/google`
+    globalThis.location.href = `${backendUrl}/api/v1/auth/oauth/google`
   }
 
   return (

@@ -98,7 +98,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ className = '' }) => {
     trackOAuthInitiated('register', 'register_page')
 
     const backendUrl = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:5123'
-    window.location.href = `${backendUrl}/api/v1/auth/oauth/google/register`
+    globalThis.location.href = `${backendUrl}/api/v1/auth/oauth/google/register`
   }
 
   return (
