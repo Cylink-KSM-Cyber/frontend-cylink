@@ -21,7 +21,7 @@ const STORAGE_KEY = 'cylink_feedback_data'
  * Get feedback data from localStorage or use default fakedb
  */
 const getFeedbackData = () => {
-  if (typeof globalThis.window === 'undefined') return fakeData
+  if (globalThis.window === undefined) return fakeData
 
   const stored = localStorage.getItem(STORAGE_KEY)
   if (stored) {
@@ -38,7 +38,7 @@ const getFeedbackData = () => {
  * Save feedback data to localStorage
  */
 const saveFeedbackData = (data: typeof fakeData) => {
-  if (typeof globalThis.window === 'undefined') return
+  if (globalThis.window === undefined) return
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
 }
 /**
@@ -77,7 +77,7 @@ const enrichFeedbackItem = (
     .map(v => data.users.find(u => u.id === v.user_id))
     .filter((u): u is (typeof data.users)[0] => u !== undefined)
     .slice(0, 5)
-    .map(u => ({ ...u, avatar_url: u.avatar_url || undefined }))
+    .map(u => ({ ...u, avatar_url: u.avatar_url ?? undefined }))
 
   // Get current user's vote
   const userVote = feedbackVotes.find(v => v.user_id === currentUserId)
@@ -92,7 +92,7 @@ const enrichFeedbackItem = (
     voters: upvoters,
     total_voters: feedbackVotes.filter(v => v.vote_type === 'upvote').length,
     user_vote: userVote?.vote_type as VoteType | undefined,
-    author: author ? { ...author, avatar_url: author.avatar_url || undefined } : undefined
+    author: author ? { ...author, avatar_url: author.avatar_url ?? undefined } : undefined
   }
 }
 /**
@@ -192,21 +192,24 @@ export const createFeedback = async (
     user_id: currentUserId,
     created_at: now,
     updated_at: now,
-    upvotes: 0,
+    upvotes: 1, // Creator auto-upvotes their own feedback
     downvotes: 0,
-    score: 0,
-    tags: formData.tags || [],
-    ...(formData.type === 'bug' && {
-      reproduction_steps: formData.reproduction_steps || '',
-      expected_behavior: formData.expected_behavior || '',
-      actual_behavior: formData.actual_behavior || ''
-    }),
-    ...(formData.type === 'feature' && {
-      use_case: formData.use_case || ''
-    })
+    score: 1, // Score starts at 1 from creator's upvote
+    tags: formData.tags || []
   }
 
   data.feedback.push(newFeedback)
+
+  // Auto-upvote: Add vote record for the creator
+  const newVoteId = Math.max(...data.votes.map((v: any) => v.id), 0) + 1
+  data.votes.push({
+    id: newVoteId,
+    feedback_id: newId,
+    user_id: currentUserId,
+    vote_type: 'upvote',
+    created_at: now
+  })
+
   saveFeedbackData(data)
 
   const enrichedItem = enrichFeedbackItem(newFeedback, data, currentUserId)
