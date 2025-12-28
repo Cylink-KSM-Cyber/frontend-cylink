@@ -47,10 +47,15 @@ const FeedbackBoard: React.FC = () => {
   // Update filter when filter state changes
   React.useEffect(() => {
     updateFilter({
-      ...getFilterObject(),
+      type: type === 'all' ? undefined : type,
+      status: undefined,
+      sortBy,
+      search: search.trim() || undefined,
+      myVotes: myVotes || undefined,
       page: 1
     })
-  }, [type, sortBy, search, myVotes, updateFilter, getFilterObject])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [type, sortBy, search, myVotes])
 
   /**
    * Handle upvote
@@ -126,7 +131,10 @@ const FeedbackBoard: React.FC = () => {
         {/* Create Button - Desktop */}
         <button
           type='button'
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            clearSimilar()
+            setShowCreateModal(true)
+          }}
           className='hidden lg:flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-colors'
         >
           <RiAddLine size={20} />
@@ -161,7 +169,10 @@ const FeedbackBoard: React.FC = () => {
       {/* Floating Action Button - Mobile */}
       <button
         type='button'
-        onClick={() => setShowCreateModal(true)}
+        onClick={() => {
+          clearSimilar()
+          setShowCreateModal(true)
+        }}
         className='lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-colors z-10'
         aria-label='Create feedback'
       >
