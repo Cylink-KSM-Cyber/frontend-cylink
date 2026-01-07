@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { FeedbackItem, FeedbackFilter } from '@/interfaces/feedback'
 import { fetchFeedback, deleteFeedback } from '@/services/feedback'
 import { useToast } from '@/contexts/ToastContext'
-import logger from '@/utils/logger'
 /**
  * Custom hook for fetching and managing feedback items
  * @param initialFilter - Initial filter settings
@@ -35,23 +34,19 @@ export const useFeedback = (
   const fetchFeedbackData = useCallback(async () => {
     setIsLoading(true)
     setError(null)
-    logger.debug('Fetching feedback with filter', { filter })
     try {
       const response = await fetchFeedback(filter)
-      logger.debug('Feedback API response', { response })
       if (response?.data) {
         setFeedback(response.data)
         if (response.pagination) {
           setPagination(response.pagination)
         }
       } else {
-        logger.error('Unexpected API response structure', { response })
         setError(new Error('Unexpected API response structure'))
         setFeedback([])
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to fetch feedback'))
-      logger.error('Failed to fetch feedback', { err })
       showToast('Failed to load feedback', 'error', 4000)
     } finally {
       setIsLoading(false)
@@ -66,7 +61,6 @@ export const useFeedback = (
    * @param newFilter - New filter settings to apply
    */
   const updateFilter = useCallback((newFilter: Partial<FeedbackFilter>) => {
-    logger.debug('Updating filter', { newFilter })
     setFilter(prevFilter => ({
       ...prevFilter,
       ...newFilter,
@@ -78,7 +72,6 @@ export const useFeedback = (
    * Manually refresh feedback data
    */
   const refreshFeedback = useCallback(() => {
-    logger.debug('Manually refreshing feedback')
     return fetchFeedbackData()
   }, [fetchFeedbackData])
   /**

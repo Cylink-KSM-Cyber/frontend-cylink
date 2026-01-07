@@ -94,14 +94,11 @@ export const fetchFeedbackFromApi = async (filter: Partial<FeedbackFilter> = {})
   const queryString = buildFeedbackQueryParams(filter).toString()
   const endpoint = `${FEEDBACK_API_ENDPOINT}?${queryString}`
 
-  logger.debug('Fetching feedback', { filter, endpoint })
-
   try {
     const response = await get<FeedbackApiResponse>(endpoint)
 
     // If valid response with data, return it
     if (response?.status === 200 && response.data?.length) {
-      logger.debug('Feedback fetched', { count: response.data.length })
       return response
     }
 
