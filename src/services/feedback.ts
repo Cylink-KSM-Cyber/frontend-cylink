@@ -3,6 +3,7 @@ import {
   FeedbackFilter,
   FeedbackItem,
   CreateFeedbackFormData,
+  CreateFeedbackApiResponse,
   VoteType,
   DownvoteFormData,
   VotersResponse,
@@ -11,7 +12,7 @@ import {
 import logger from '@/utils/logger'
 // Import fakedb data
 import fakeData from '@/fakedb/feedback.json'
-import { get } from './api'
+import { get, post } from './api'
 /**
  * Feedback Service
  * @description Service for interacting with feedback-related operations
@@ -164,57 +165,41 @@ const enrichFeedbackItem = (
 }
 
 /**
+ * Submit feedback to the real API
+ * @param formData - Feedback form data to submit
+ * @returns Promise with the API response
+ * @throws Error if the API call fails or returns invalid response
+ */
+export const submitFeedbackToApi = async (formData: CreateFeedbackFormData): Promise<CreateFeedbackApiResponse> => {
+  try {
+    const response = await post<CreateFeedbackApiResponse>(FEEDBACK_API_ENDPOINT, formData)
+
+    if (!response?.data) throw new Error('Invalid response from server')
+
+    return response
+  } catch (error) {
+    logger.error('Failed to submit feedback', { error, formData })
+    throw error
+  }
+}
+
+/**
  * Create new feedback item
+ * Uses the real backend API
+ * @param formData - Feedback form data
+ * @returns Promise with the created feedback item
  */
 export const createFeedback = async (
   formData: CreateFeedbackFormData
 ): Promise<{ status: number; message: string; data: FeedbackItem }> => {
-  logger.info('Creating feedback', { formData })
+  logger.info('Creating feedback', { title: formData.title, type: formData.type })
 
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  const data = getFeedbackData()
-  const currentUserId = getCurrentUserId()
-
-  const newId = Math.max(...data.feedback.map((f: any) => f.id), 0) + 1
-  const now = new Date().toISOString()
-
-  const newFeedback: any = {
-    id: newId,
-    title: formData.title,
-    description: formData.description,
-    type: formData.type,
-    status: 'open' as const,
-    user_id: currentUserId,
-    created_at: now,
-    updated_at: now,
-    upvotes: 1, // Creator auto-upvotes their own feedback
-    downvotes: 0,
-    score: 1, // Score starts at 1 from creator's upvote
-    tags: formData.tags || []
-  }
-
-  data.feedback.push(newFeedback)
-
-  // Auto-upvote: Add vote record for the creator
-  const newVoteId = Math.max(...data.votes.map((v: any) => v.id), 0) + 1
-  data.votes.push({
-    id: newVoteId,
-    feedback_id: newId,
-    user_id: currentUserId,
-    vote_type: 'upvote',
-    created_at: now
-  })
-
-  saveFeedbackData(data)
-
-  const enrichedItem = enrichFeedbackItem(newFeedback, data, currentUserId)
+  const response = await submitFeedbackToApi(formData)
 
   return {
-    status: 201,
-    message: 'Feedback created successfully',
-    data: enrichedItem
+    status: response.status,
+    message: response.message,
+    data: response.data
   }
 }
 /**

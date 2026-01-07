@@ -97,12 +97,46 @@ export interface FeedbackApiResponse {
 /**
  * Create Feedback Form Data Interface
  * Simplified to essential fields to encourage user participation
+ * Optional fields available for detailed bug reports or feature requests
  */
 export interface CreateFeedbackFormData {
   title: string
   description: string
   type: FeedbackType
   tags?: string[]
+  /** Use case description for feature requests */
+  use_case?: string
+  /** Steps to reproduce for bug reports */
+  reproduction_steps?: string
+  /** Expected behavior for bug reports */
+  expected_behavior?: string
+  /** Actual behavior observed for bug reports */
+  actual_behavior?: string
+}
+
+/**
+ * Create Feedback API Request Interface
+ * Matches the backend POST /api/v1/feedback request body
+ */
+export interface CreateFeedbackApiRequest {
+  title: string
+  description: string
+  type: FeedbackType
+  tags?: string[]
+  use_case?: string
+  reproduction_steps?: string
+  expected_behavior?: string
+  actual_behavior?: string
+}
+
+/**
+ * Create Feedback API Response Interface
+ * Matches the backend POST /api/v1/feedback response
+ */
+export interface CreateFeedbackApiResponse {
+  status: number
+  message: string
+  data: FeedbackItem
 }
 /**
  * Downvote Form Data Interface
