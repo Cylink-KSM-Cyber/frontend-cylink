@@ -192,8 +192,6 @@ export const submitFeedbackToApi = async (formData: CreateFeedbackFormData): Pro
 export const createFeedback = async (
   formData: CreateFeedbackFormData
 ): Promise<{ status: number; message: string; data: FeedbackItem }> => {
-  logger.info('Creating feedback', { title: formData.title, type: formData.type })
-
   const response = await submitFeedbackToApi(formData)
 
   return {

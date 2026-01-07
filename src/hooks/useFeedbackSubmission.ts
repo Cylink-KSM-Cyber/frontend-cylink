@@ -70,7 +70,6 @@ export const useFeedbackSubmission = () => {
   const submitFeedback = useCallback(
     async (data: CreateFeedbackFormData, onSuccess?: (item: FeedbackItem) => void) => {
       setIsSubmitting(true)
-      logger.debug('Submitting feedback', { data })
 
       try {
         const response = await createFeedback(data)
