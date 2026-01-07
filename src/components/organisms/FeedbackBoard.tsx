@@ -64,7 +64,7 @@ const FeedbackBoard: React.FC = () => {
     const item = feedback.find(f => f.id === feedbackId)
     if (!item) return
 
-    handleUpvote(feedbackId, item.user_vote, updatedItem => {
+    handleUpvote(feedbackId, item.user_vote, item, updatedItem => {
       updateFeedbackItem(updatedItem)
     })
   }
@@ -79,6 +79,7 @@ const FeedbackBoard: React.FC = () => {
     handleDownvote(
       feedbackId,
       item.user_vote,
+      item,
       updatedItem => {
         updateFeedbackItem(updatedItem)
       },

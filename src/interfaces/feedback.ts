@@ -21,7 +21,14 @@ export type VoteType = 'upvote' | 'downvote'
 /**
  * Downvote Reason Enum
  */
-export type DownvoteReason = 'duplicate' | 'not_reproducible' | 'spam' | 'off_topic' | 'unclear' | 'other'
+export type DownvoteReason =
+  | 'duplicate'
+  | 'not_reproducible'
+  | 'not_useful'
+  | 'spam'
+  | 'off_topic'
+  | 'unclear'
+  | 'other'
 
 /**
  * User Interface (simplified for facepile)
@@ -163,4 +170,38 @@ export interface SimilarFeedbackResponse {
   status: number
   message: string
   data: FeedbackItem[]
+}
+
+/**
+ * Vote API Request Interface
+ * Matches POST /api/v1/feedback/{id}/vote request body
+ */
+export interface VoteApiRequest {
+  vote_type: VoteType
+  reason?: DownvoteReason
+  comment?: string | null
+}
+
+/**
+ * Vote API Response Data Interface
+ * Matches POST /api/v1/feedback/{id}/vote response data
+ */
+export interface VoteApiResponseData {
+  id: number
+  upvotes: number
+  downvotes: number
+  score: number
+  user_vote: VoteType | null
+  voters: FeedbackUser[]
+  total_voters: number
+}
+
+/**
+ * Vote API Response Interface
+ * Matches POST /api/v1/feedback/{id}/vote response
+ */
+export interface VoteApiResponse {
+  status: number
+  message: string
+  data: VoteApiResponseData
 }

@@ -18,10 +18,16 @@ export const useFeedbackVoting = () => {
    * Handle upvote action
    * @param feedbackId - ID of feedback to upvote
    * @param currentVote - Current user's vote (if any)
+   * @param originalItem - Original feedback item (to merge with vote response)
    * @param onSuccess - Callback with updated feedback item
    */
   const handleUpvote = useCallback(
-    async (feedbackId: number, currentVote: VoteType | undefined, onSuccess: (item: FeedbackItem) => void) => {
+    async (
+      feedbackId: number,
+      currentVote: VoteType | undefined,
+      originalItem: FeedbackItem,
+      onSuccess: (item: FeedbackItem) => void
+    ) => {
       setIsVoting(true)
       logger.debug('Handling upvote', { feedbackId, currentVote })
 
@@ -29,12 +35,22 @@ export const useFeedbackVoting = () => {
         // If already upvoted, remove vote
         if (currentVote === 'upvote') {
           const response = await removeVote(feedbackId)
-          onSuccess(response.data)
+          // Merge vote response with original item to preserve all fields
+          const mergedItem: FeedbackItem = {
+            ...originalItem,
+            ...response.data
+          }
+          onSuccess(mergedItem)
           showToast('Vote removed', 'white', 2000)
         } else {
           // Otherwise, add upvote
           const response = await voteFeedback(feedbackId, 'upvote')
-          onSuccess(response.data)
+          // Merge vote response with original item to preserve all fields
+          const mergedItem: FeedbackItem = {
+            ...originalItem,
+            ...response.data
+          }
+          onSuccess(mergedItem)
           showToast('Upvoted successfully', 'white', 2000)
         }
       } catch (err) {
@@ -52,6 +68,7 @@ export const useFeedbackVoting = () => {
    * Handle downvote action with optional reason data
    * @param feedbackId - ID of feedback to downvote
    * @param currentVote - Current user's vote (if any)
+   * @param originalItem - Original feedback item (to merge with vote response)
    * @param onSuccess - Callback with updated feedback item
    * @param data - Optional downvote form data with reason
    */
@@ -59,6 +76,7 @@ export const useFeedbackVoting = () => {
     async (
       feedbackId: number,
       currentVote: VoteType | undefined,
+      originalItem: FeedbackItem,
       onSuccess: (item: FeedbackItem) => void,
       data?: DownvoteFormData
     ) => {
@@ -69,12 +87,22 @@ export const useFeedbackVoting = () => {
         // If already downvoted, remove vote
         if (currentVote === 'downvote') {
           const response = await removeVote(feedbackId)
-          onSuccess(response.data)
+          // Merge vote response with original item to preserve all fields
+          const mergedItem: FeedbackItem = {
+            ...originalItem,
+            ...response.data
+          }
+          onSuccess(mergedItem)
           showToast('Vote removed', 'white', 2000)
         } else {
           // Otherwise, add downvote with reason
           const response = await voteFeedback(feedbackId, 'downvote', data)
-          onSuccess(response.data)
+          // Merge vote response with original item to preserve all fields
+          const mergedItem: FeedbackItem = {
+            ...originalItem,
+            ...response.data
+          }
+          onSuccess(mergedItem)
           showToast('Downvote recorded', 'white', 2000)
         }
       } catch (err) {

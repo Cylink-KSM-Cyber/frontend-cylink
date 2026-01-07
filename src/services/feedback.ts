@@ -7,7 +7,9 @@ import {
   VoteType,
   DownvoteFormData,
   VotersResponse,
-  SimilarFeedbackResponse
+  SimilarFeedbackResponse,
+  VoteApiRequest,
+  VoteApiResponse
 } from '@/interfaces/feedback'
 import logger from '@/utils/logger'
 // Import fakedb data
@@ -201,78 +203,66 @@ export const createFeedback = async (
   }
 }
 /**
+ * Submit a vote to the real API
+ * @param feedbackId - Feedback ID to vote on
+ * @param voteData - Vote request data
+ * @returns Promise with the API response
+ * @throws Error if the API call fails
+ */
+export const submitVoteToApi = async (feedbackId: number, voteData: VoteApiRequest): Promise<VoteApiResponse> => {
+  const endpoint = `${FEEDBACK_API_ENDPOINT}/${feedbackId}/vote`
+
+  try {
+    const response = await post<VoteApiResponse>(endpoint, voteData)
+
+    if (!response?.data) {
+      throw new Error('Invalid response from server')
+    }
+
+    return response
+  } catch (error) {
+    logger.error('Failed to submit vote', { error, feedbackId, voteData })
+    throw error
+  }
+}
+
+/**
  * Vote on feedback item
+ * Uses the real backend API
+ * @param feedbackId - ID of the feedback to vote on
+ * @param voteType - Type of vote (upvote/downvote)
+ * @param downvoteData - Optional downvote reason data
+ * @returns Promise with vote response
  */
 export const voteFeedback = async (
   feedbackId: number,
   voteType: VoteType,
   downvoteData?: DownvoteFormData
 ): Promise<{ status: number; message: string; data: FeedbackItem }> => {
-  logger.info('Voting on feedback', { feedbackId, voteType, downvoteData })
-
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 200))
-
-  const data = getFeedbackData()
-  const currentUserId = getCurrentUserId()
-
-  // Find feedback item
-  const feedbackIndex = data.feedback.findIndex((f: any) => f.id === feedbackId)
-  if (feedbackIndex === -1) {
-    throw new Error('Feedback not found')
-  }
-
-  // Check if user already voted
-  const existingVoteIndex = data.votes.findIndex(
-    (v: any) => v.feedback_id === feedbackId && v.user_id === currentUserId
-  )
-
-  if (existingVoteIndex !== -1) {
-    // Remove old vote counts
-    const oldVote = data.votes[existingVoteIndex]
-    if (oldVote.vote_type === 'upvote') {
-      data.feedback[feedbackIndex].upvotes--
-    } else {
-      data.feedback[feedbackIndex].downvotes--
-    }
-
-    // Remove old vote
-    data.votes.splice(existingVoteIndex, 1)
-  }
-
-  // Add new vote
-  const newVote: any = {
-    id: Math.max(...data.votes.map((v: any) => v.id), 0) + 1,
-    feedback_id: feedbackId,
-    user_id: currentUserId,
+  const voteData: VoteApiRequest = {
     vote_type: voteType,
-    created_at: new Date().toISOString(),
     ...(voteType === 'downvote' &&
       downvoteData && {
         reason: downvoteData.reason,
-        comment: downvoteData.comment
+        comment: downvoteData.comment ?? null
       })
   }
 
-  data.votes.push(newVote)
+  const response = await submitVoteToApi(feedbackId, voteData)
 
-  // Update vote counts
-  if (voteType === 'upvote') {
-    data.feedback[feedbackIndex].upvotes++
-  } else {
-    data.feedback[feedbackIndex].downvotes++
-  }
-
-  data.feedback[feedbackIndex].score = data.feedback[feedbackIndex].upvotes - data.feedback[feedbackIndex].downvotes
-
-  saveFeedbackData(data)
-
-  const enrichedItem = enrichFeedbackItem(data.feedback[feedbackIndex], data, currentUserId)
-
+  // Transform VoteApiResponse to match expected return type
   return {
-    status: 200,
-    message: 'Vote recorded successfully',
-    data: enrichedItem
+    status: response.status,
+    message: response.message,
+    data: {
+      id: response.data.id,
+      upvotes: response.data.upvotes,
+      downvotes: response.data.downvotes,
+      score: response.data.score,
+      user_vote: response.data.user_vote ?? undefined,
+      voters: response.data.voters,
+      total_voters: response.data.total_voters
+    } as FeedbackItem
   }
 }
 /**
