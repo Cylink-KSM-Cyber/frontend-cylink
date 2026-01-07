@@ -11,6 +11,7 @@ import {
 import logger from '@/utils/logger'
 // Import fakedb data
 import fakeData from '@/fakedb/feedback.json'
+import { get } from './api'
 /**
  * Feedback Service
  * @description Service for interacting with feedback-related operations
@@ -43,25 +44,94 @@ const saveFeedbackData = (data: typeof fakeData) => {
 }
 /**
  * Get current user ID (mock)
+ * @deprecated Will use auth context when other operations are migrated
  */
 const getCurrentUserId = (): number => {
   // In real implementation, get from auth context
   return 1
 }
+
 /**
- * Calculate Wilson Score for trending algorithm
+ * API Configuration
  */
-const calculateWilsonScore = (upvotes: number, downvotes: number): number => {
-  const n = upvotes + downvotes
-  if (n === 0) return 0
+const FEEDBACK_API_ENDPOINT = '/api/v1/feedback'
 
-  const z = 1.96 // 95% confidence
-  const phat = upvotes / n
-
-  return (phat + (z * z) / (2 * n) - z * Math.sqrt((phat * (1 - phat) + (z * z) / (4 * n)) / n)) / (1 + (z * z) / n)
+/**
+ * Map frontend sortBy values to backend sortBy values
+ */
+const SORT_BY_MAP: Record<string, string> = {
+  trending: 'trending',
+  top_voted: 'top_voted',
+  newest: 'newest'
 }
+
+/**
+ * Build query parameters for feedback API
+ * @param filter - Feedback filter parameters
+ * @returns URLSearchParams object with properly formatted query string
+ */
+const buildFeedbackQueryParams = (filter: Partial<FeedbackFilter>): URLSearchParams => {
+  const query = {
+    sortBy: SORT_BY_MAP[filter.sortBy ?? 'newest'] ?? 'newest',
+    page: String(filter.page ?? 1),
+    limit: String(filter.limit ?? 10),
+    ...(filter.type && filter.type !== 'all' && { type: filter.type }),
+    ...(filter.status && filter.status !== 'all' && { status: filter.status }),
+    ...(filter.search?.trim() && { search: filter.search.trim() }),
+    ...(filter.myVotes !== undefined && { myVotes: String(filter.myVotes) })
+  }
+
+  return new URLSearchParams(query)
+}
+
+/**
+ * Fetch feedback items from the real API
+ * @param filter - Filter parameters for the feedback query
+ * @returns Promise with the API response
+ * @throws Error if the API call fails
+ */
+export const fetchFeedbackFromApi = async (filter: Partial<FeedbackFilter> = {}): Promise<FeedbackApiResponse> => {
+  const queryString = buildFeedbackQueryParams(filter).toString()
+  const endpoint = `${FEEDBACK_API_ENDPOINT}?${queryString}`
+
+  logger.debug('Fetching feedback', { filter, endpoint })
+
+  try {
+    const response = await get<FeedbackApiResponse>(endpoint)
+
+    // If valid response with data, return it
+    if (response?.status === 200 && response.data?.length) {
+      logger.debug('Feedback fetched', { count: response.data.length })
+      return response
+    }
+
+    // Fallback Return empty state if response is missing or empty
+    return {
+      status: 200,
+      message: 'No feedback found',
+      data: [],
+      pagination: { total: 0, page: filter.page ?? 1, limit: filter.limit ?? 10, total_pages: 0 }
+    }
+  } catch (error) {
+    logger.error('Failed to fetch feedback', { error, filter })
+    throw error
+  }
+}
+
+/**
+ * Fetch feedback items with filtering and sorting
+ * Uses the real backend API
+ *
+ * @param filter - Filter parameters for the feedback query
+ * @returns Promise with the API response containing feedback items and pagination
+ */
+export const fetchFeedback = async (filter: Partial<FeedbackFilter> = {}): Promise<FeedbackApiResponse> => {
+  return fetchFeedbackFromApi(filter)
+}
+
 /**
  * Enrich feedback item with vote data and supporters
+ * Used by fakedb operations (createFeedback, voteFeedback, etc.)
  */
 const enrichFeedbackItem = (
   item: (typeof fakeData.feedback)[0],
@@ -95,77 +165,7 @@ const enrichFeedbackItem = (
     author: author ? { ...author, avatar_url: author.avatar_url ?? undefined } : undefined
   }
 }
-/**
- * Fetch feedback items with filtering and sorting
- */
-export const fetchFeedback = async (filter: Partial<FeedbackFilter> = {}): Promise<FeedbackApiResponse> => {
-  logger.debug('Fetching feedback with filter', { filter })
 
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300))
-
-  const data = getFeedbackData()
-  const currentUserId = getCurrentUserId()
-
-  let items = data.feedback.map((item: (typeof fakeData.feedback)[0]) => enrichFeedbackItem(item, data, currentUserId))
-
-  // Apply filters
-  if (filter.type && filter.type !== 'all') {
-    items = items.filter((item: FeedbackItem) => item.type === filter.type)
-  }
-
-  if (filter.status && filter.status !== 'all') {
-    items = items.filter((item: FeedbackItem) => item.status === filter.status)
-  }
-
-  if (filter.search) {
-    const searchLower = filter.search.toLowerCase()
-    items = items.filter(
-      (item: FeedbackItem) =>
-        item.title.toLowerCase().includes(searchLower) || item.description.toLowerCase().includes(searchLower)
-    )
-  }
-
-  if (filter.myVotes) {
-    items = items.filter((item: FeedbackItem) => item.user_vote !== undefined)
-  }
-
-  // Apply sorting
-  const sortBy = filter.sortBy || 'trending'
-  if (sortBy === 'trending') {
-    // Wilson Score algorithm
-    items.sort((a: FeedbackItem, b: FeedbackItem) => {
-      const scoreA = calculateWilsonScore(a.upvotes, a.downvotes)
-      const scoreB = calculateWilsonScore(b.upvotes, b.downvotes)
-      return scoreB - scoreA
-    })
-  } else if (sortBy === 'top_voted') {
-    items.sort((a: FeedbackItem, b: FeedbackItem) => b.score - a.score)
-  } else if (sortBy === 'newest') {
-    items.sort(
-      (a: FeedbackItem, b: FeedbackItem) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )
-  }
-
-  // Apply pagination
-  const page = filter.page || 1
-  const limit = filter.limit || 10
-  const startIndex = (page - 1) * limit
-  const endIndex = startIndex + limit
-  const paginatedItems = items.slice(startIndex, endIndex)
-
-  return {
-    status: 200,
-    message: 'Feedback fetched successfully',
-    data: paginatedItems,
-    pagination: {
-      total: items.length,
-      page,
-      limit,
-      total_pages: Math.ceil(items.length / limit)
-    }
-  }
-}
 /**
  * Create new feedback item
  */

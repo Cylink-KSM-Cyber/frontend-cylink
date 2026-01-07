@@ -66,6 +66,7 @@ export interface FeedbackItem {
   user_vote?: VoteType // Current user's vote
   author?: FeedbackUser
   tags?: string[]
+  use_case?: string
 }
 /**
  * Feedback Filter Interface
