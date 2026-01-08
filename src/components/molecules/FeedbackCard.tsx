@@ -7,6 +7,7 @@ import FeedbackTypeBadge from '@/components/atoms/FeedbackTypeBadge'
 import FeedbackStatusBadge from '@/components/atoms/FeedbackStatusBadge'
 import AvatarStack from '@/components/atoms/AvatarStack'
 import { formatDistanceToNow } from 'date-fns'
+import { RiDeleteBinLine } from 'react-icons/ri'
 
 /**
  * Feedback Card Props
@@ -38,6 +39,17 @@ interface FeedbackCardProps {
   onTitleClick?: () => void
 
   /**
+   * Delete handler - called when delete button is clicked
+   */
+  onDelete?: () => void
+
+  /**
+   * Whether the current user is the owner of this feedback
+   * Controls visibility of delete button
+   */
+  isOwner?: boolean
+
+  /**
    * Whether voting is disabled
    */
   disabled?: boolean
@@ -60,6 +72,8 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
   onDownvote,
   onViewSupporters,
   onTitleClick,
+  onDelete,
+  isOwner = false,
   disabled = false,
   className = ''
 }) => {
@@ -115,13 +129,24 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
         </div>
 
         {/* Social Rail - Right */}
-        <div className='shrink-0'>
+        <div className='shrink-0 flex items-center gap-2'>
           <AvatarStack
             users={feedback.voters}
             totalCount={feedback.total_voters}
             onOverflowClick={onViewSupporters}
             size={32}
           />
+          {isOwner && onDelete && (
+            <button
+              type='button'
+              onClick={onDelete}
+              className='p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors'
+              aria-label='Delete feedback'
+              title='Delete feedback'
+            >
+              <RiDeleteBinLine size={18} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -147,8 +172,21 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
             <FeedbackStatusBadge status={feedback.status} />
           </div>
 
-          <div className='text-xs text-gray-500'>
-            {feedback.author?.name} • {timeAgo}
+          <div className='flex items-center gap-2 text-xs text-gray-500'>
+            <span>
+              {feedback.author?.name} • {timeAgo}
+            </span>
+            {isOwner && onDelete && (
+              <button
+                type='button'
+                onClick={onDelete}
+                className='p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors'
+                aria-label='Delete feedback'
+                title='Delete feedback'
+              >
+                <RiDeleteBinLine size={14} />
+              </button>
+            )}
           </div>
         </div>
 

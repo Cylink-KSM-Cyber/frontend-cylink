@@ -10,7 +10,8 @@ import {
   SimilarFeedbackResponse,
   VoteApiRequest,
   VoteApiResponse,
-  VoteApiResponseData
+  VoteApiResponseData,
+  DeleteFeedbackApiResponse
 } from '@/interfaces/feedback'
 import logger from '@/utils/logger'
 // Import fakedb data
@@ -365,31 +366,22 @@ export const searchSimilar = async (title: string): Promise<SimilarFeedbackRespo
   }
 }
 /**
- * Delete feedback item
+ * Delete feedback item from the real API
+ * @param feedbackId - Feedback ID to delete
+ * @returns Promise with delete response
+ * @throws Error if the API call fails
  */
 export const deleteFeedback = async (feedbackId: number): Promise<{ status: number; message: string }> => {
-  logger.info('Deleting feedback', { feedbackId })
+  const endpoint = `${FEEDBACK_API_ENDPOINT}/${feedbackId}`
 
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300))
-
-  const data = getFeedbackData()
-
-  const feedbackIndex = data.feedback.findIndex((f: any) => f.id === feedbackId)
-  if (feedbackIndex === -1) {
-    throw new Error('Feedback not found')
-  }
-
-  // Remove feedback
-  data.feedback.splice(feedbackIndex, 1)
-
-  // Remove associated votes
-  data.votes = data.votes.filter((v: any) => v.feedback_id !== feedbackId)
-
-  saveFeedbackData(data)
-
-  return {
-    status: 200,
-    message: 'Feedback deleted successfully'
+  try {
+    const response = await del<DeleteFeedbackApiResponse>(endpoint)
+    return {
+      status: response.status,
+      message: response.message
+    }
+  } catch (error) {
+    logger.error('Failed to delete feedback', { error, feedbackId })
+    throw error
   }
 }

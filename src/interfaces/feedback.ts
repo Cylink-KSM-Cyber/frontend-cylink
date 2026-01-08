@@ -205,3 +205,12 @@ export interface VoteApiResponse {
   message: string
   data: VoteApiResponseData
 }
+
+/**
+ * Delete Feedback API Response Interface
+ * Matches DELETE /api/v1/feedback/{id} response
+ */
+export interface DeleteFeedbackApiResponse {
+  status: number
+  message: string
+}

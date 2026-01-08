@@ -1,7 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { RiAddLine } from 'react-icons/ri'
+import Cookies from 'js-cookie'
 import useFeedback from '@/hooks/useFeedback'
 import useFeedbackVoting from '@/hooks/useFeedbackVoting'
 import useFeedbackFilter from '@/hooks/useFeedbackFilter'
@@ -11,24 +12,83 @@ import FeedbackList from '@/components/organisms/FeedbackList'
 import Modal from '@/components/atoms/Modal'
 import CreateFeedbackForm from '@/components/molecules/CreateFeedbackForm'
 import SupportersModal from '@/components/molecules/SupportersModal'
+import DeleteFeedbackModal from '@/components/molecules/DeleteFeedbackModal'
 import { fetchVoters } from '@/services/feedback'
-import { FeedbackUser, DownvoteFormData } from '@/interfaces/feedback'
+import { FeedbackUser, DownvoteFormData, FeedbackItem } from '@/interfaces/feedback'
+import { useAuth } from '@/contexts/AuthContext'
+import AuthService from '@/services/auth'
+
+/**
+ * Decode JWT token to extract user ID
+ * @param token - JWT access token
+ * @returns User ID or undefined if invalid
+ */
+const getUserIdFromToken = (token: string | undefined): number | undefined => {
+  if (!token) return undefined
+
+  try {
+    // JWT has 3 parts: header.payload.signature
+    const parts = token.split('.')
+    if (parts.length !== 3) return undefined
+
+    // Decode base64 payload (second part)
+    const payload = JSON.parse(atob(parts[1]))
+
+    // JWT typically has 'sub' (subject) as user ID, or 'user_id' / 'id'
+    const userId = payload.sub ?? payload.user_id ?? payload.id
+
+    return typeof userId === 'number' ? userId : Number(userId)
+  } catch {
+    return undefined
+  }
+}
 
 /**
  * Feedback Board Component
  * @description Complete feedback board interface with all features
  */
 const FeedbackBoard: React.FC = () => {
+  // Auth context for current user
+  const { user, isLoading: isAuthLoading } = useAuth()
+
+  // Get current user ID with multiple fallbacks
+  const currentUserId = useMemo(() => {
+    // 1. First try auth context
+    if (user?.id) {
+      console.log('currentUserId from auth context:', user.id)
+      return user.id
+    }
+
+    // 2. Fallback: try AuthService (reads from cookie)
+    const storedUser = AuthService.getUser()
+    if (storedUser?.id) {
+      console.log('currentUserId from AuthService:', storedUser.id)
+      return storedUser.id
+    }
+
+    // 3. Final fallback: decode JWT token
+    const token = Cookies.get('accessToken')
+    console.log('Attempting JWT decode, token exists:', !!token)
+    const userIdFromToken = getUserIdFromToken(token)
+    console.log('currentUserId from JWT:', userIdFromToken)
+    return userIdFromToken
+  }, [user])
+
+  // Debug auth state
+  console.log('FeedbackBoard auth state:', { user, userId: user?.id, currentUserId, isAuthLoading })
+
   // Filter state
   const { type, sortBy, search, myVotes, updateType, updateSortBy, updateSearch, toggleMyVotes, getFilterObject } =
     useFeedbackFilter()
 
   // Feedback data
-  const { feedback, isLoading, pagination, filter, updateFilter, updateFeedbackItem } = useFeedback({
-    ...getFilterObject(),
-    page: 1,
-    limit: 10
-  })
+  const { feedback, isLoading, pagination, filter, updateFilter, updateFeedbackItem, deleteFeedbackItem } = useFeedback(
+    {
+      ...getFilterObject(),
+      page: 1,
+      limit: 10
+    }
+  )
 
   // Voting functionality
   const { isVoting, handleUpvote, handleDownvote } = useFeedbackVoting()
@@ -41,8 +101,11 @@ const FeedbackBoard: React.FC = () => {
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showSupportersModal, setShowSupportersModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [supporters, setSupporters] = useState<FeedbackUser[]>([])
   const [supportersTotal, setSupportersTotal] = useState(0)
+  const [feedbackToDelete, setFeedbackToDelete] = useState<FeedbackItem | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Update filter when filter state changes
   React.useEffect(() => {
@@ -120,6 +183,30 @@ const FeedbackBoard: React.FC = () => {
     updateFilter({ ...filter, page })
   }
 
+  /**
+   * Handle delete button click - opens confirmation modal
+   */
+  const handleDeleteClick = (feedbackId: number) => {
+    const item = feedback.find(f => f.id === feedbackId)
+    if (!item) return
+    setFeedbackToDelete(item)
+    setShowDeleteModal(true)
+  }
+
+  /**
+   * Handle delete confirmation
+   */
+  const handleDeleteConfirm = async (feedbackItem: FeedbackItem) => {
+    setIsDeleting(true)
+    try {
+      await deleteFeedbackItem(feedbackItem.id)
+      setShowDeleteModal(false)
+      setFeedbackToDelete(null)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   return (
     <div className='space-y-6'>
       {/* Header */}
@@ -164,6 +251,8 @@ const FeedbackBoard: React.FC = () => {
         onUpvote={handleUpvoteClick}
         onDownvote={handleDownvoteClick}
         onViewSupporters={handleViewSupporters}
+        onDelete={handleDeleteClick}
+        currentUserId={currentUserId}
         isVoting={isVoting}
       />
 
@@ -209,6 +298,18 @@ const FeedbackBoard: React.FC = () => {
         onClose={() => setShowSupportersModal(false)}
         supporters={supporters}
         totalCount={supportersTotal}
+      />
+
+      {/* Delete Feedback Modal */}
+      <DeleteFeedbackModal
+        feedback={feedbackToDelete}
+        isOpen={showDeleteModal}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setShowDeleteModal(false)
+          setFeedbackToDelete(null)
+        }}
+        isDeleting={isDeleting}
       />
     </div>
   )
