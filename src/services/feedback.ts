@@ -9,12 +9,13 @@ import {
   VotersResponse,
   SimilarFeedbackResponse,
   VoteApiRequest,
-  VoteApiResponse
+  VoteApiResponse,
+  VoteApiResponseData
 } from '@/interfaces/feedback'
 import logger from '@/utils/logger'
 // Import fakedb data
 import fakeData from '@/fakedb/feedback.json'
-import { get, post } from './api'
+import { get, post, del } from './api'
 /**
  * Feedback Service
  * @description Service for interacting with feedback-related operations
@@ -267,53 +268,40 @@ export const voteFeedback = async (
 }
 /**
  * Remove vote from feedback item
+ * Uses the real backend API
+ * @param feedbackId - ID of the feedback to remove vote from
+ * @returns Promise with updated feedback item
  */
 export const removeVote = async (
   feedbackId: number
 ): Promise<{ status: number; message: string; data: FeedbackItem }> => {
-  logger.info('Removing vote from feedback', { feedbackId })
+  const endpoint = `${FEEDBACK_API_ENDPOINT}/${feedbackId}/vote`
 
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 200))
+  try {
+    const response = await del<{ status: number; message: string; data: VoteApiResponseData }>(endpoint)
 
-  const data = getFeedbackData()
-  const currentUserId = getCurrentUserId()
+    if (!response?.data) {
+      throw new Error('Invalid response from server')
+    }
 
-  // Find feedback item
-  const feedbackIndex = data.feedback.findIndex((f: any) => f.id === feedbackId)
-  if (feedbackIndex === -1) {
-    throw new Error('Feedback not found')
-  }
+    const updatedData: Partial<FeedbackItem> = {
+      id: response.data.id,
+      upvotes: response.data.upvotes,
+      downvotes: response.data.downvotes,
+      score: response.data.score,
+      user_vote: response.data.user_vote ?? undefined,
+      voters: response.data.voters,
+      total_voters: response.data.total_voters
+    }
 
-  // Find user's vote
-  const voteIndex = data.votes.findIndex((v: any) => v.feedback_id === feedbackId && v.user_id === currentUserId)
-
-  if (voteIndex === -1) {
-    throw new Error('Vote not found')
-  }
-
-  const vote = data.votes[voteIndex]
-
-  // Update vote counts
-  if (vote.vote_type === 'upvote') {
-    data.feedback[feedbackIndex].upvotes--
-  } else {
-    data.feedback[feedbackIndex].downvotes--
-  }
-
-  data.feedback[feedbackIndex].score = data.feedback[feedbackIndex].upvotes - data.feedback[feedbackIndex].downvotes
-
-  // Remove vote
-  data.votes.splice(voteIndex, 1)
-
-  saveFeedbackData(data)
-
-  const enrichedItem = enrichFeedbackItem(data.feedback[feedbackIndex], data, currentUserId)
-
-  return {
-    status: 200,
-    message: 'Vote removed successfully',
-    data: enrichedItem
+    return {
+      status: response.status,
+      message: response.message,
+      data: updatedData as FeedbackItem
+    }
+  } catch (error) {
+    logger.error('Failed to remove vote', { error, feedbackId })
+    throw error
   }
 }
 /**
