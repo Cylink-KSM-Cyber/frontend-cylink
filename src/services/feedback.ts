@@ -305,29 +305,31 @@ export const removeVote = async (
   }
 }
 /**
- * Fetch voters for a feedback item
+ * Fetch voters for a feedback item from the real API
+ * @param feedbackId - ID of the feedback to fetch voters for
+ * @param search - Optional search query to filter voters by name or email
+ * @returns Promise with voters response
+ * @throws Error if the API call fails
  */
-export const fetchVoters = async (feedbackId: number): Promise<VotersResponse> => {
-  logger.debug('Fetching voters for feedback', { feedbackId })
+export const fetchVoters = async (feedbackId: number, search?: string): Promise<VotersResponse> => {
+  const queryParams = search?.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''
+  const endpoint = `${FEEDBACK_API_ENDPOINT}/${feedbackId}/voters${queryParams}`
 
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 200))
+  try {
+    const response = await get<VotersResponse>(endpoint)
 
-  const data = getFeedbackData()
-
-  const votes = data.votes.filter((v: any) => v.feedback_id === feedbackId && v.vote_type === 'upvote')
-  const voters = votes
-    .map((v: any) => data.users.find((u: any) => u.id === v.user_id))
-    .filter((u: (typeof data.users)[0] | undefined): u is (typeof data.users)[0] => u !== undefined)
-    .map((u: (typeof data.users)[0]) => ({ ...u, avatar_url: u.avatar_url ?? undefined }))
-
-  return {
-    status: 200,
-    message: 'Voters fetched successfully',
-    data: {
-      voters,
-      total: voters.length
+    if (!response?.data) {
+      return {
+        status: 200,
+        message: 'No voters found',
+        data: { voters: [], total: 0 }
+      }
     }
+
+    return response
+  } catch (error) {
+    logger.error('Failed to fetch voters', { error, feedbackId, search })
+    throw error
   }
 }
 /**
