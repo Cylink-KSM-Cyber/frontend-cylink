@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import React from "react";
+import React, { useState } from 'react'
 
 /**
  * Props for Avatar component
@@ -9,34 +9,39 @@ interface AvatarProps {
   /**
    * Username to extract initials from
    */
-  username: string;
+  username: string
+
+  /**
+   * Optional avatar image URL
+   */
+  avatarUrl?: string
 
   /**
    * Size of the avatar in pixels
    * @default 40
    */
-  size?: number;
+  size?: number
 
   /**
    * Additional CSS classes to apply
    */
-  className?: string;
+  className?: string
 
   /**
    * Click handler for avatar
    */
-  onClick?: () => void;
+  onClick?: () => void
 
   /**
    * Whether the avatar is clickable
    * @default false
    */
-  isClickable?: boolean;
+  isClickable?: boolean
 
   /**
    * ARIA label for accessibility
    */
-  ariaLabel?: string;
+  ariaLabel?: string
 }
 
 /**
@@ -46,25 +51,36 @@ interface AvatarProps {
  * @returns Uppercase initials string
  */
 const extractInitials = (username: string): string => {
-  if (!username || typeof username !== "string") {
-    return "U"; // Fallback for undefined/empty usernames
+  if (!username || typeof username !== 'string') {
+    return 'U' // Fallback for undefined/empty usernames
   }
 
   // Remove special characters and numbers, keep only alphabetic characters
-  const alphabeticOnly = username.replace(/[^a-zA-Z]/g, "");
+  const alphabeticOnly = username.replaceAll(/[^a-zA-Z]/g, '')
 
   if (alphabeticOnly.length === 0) {
-    return "U"; // Fallback for usernames with no alphabetic characters
+    return 'U' // Fallback for usernames with no alphabetic characters
   }
 
   // Take first 3 characters and convert to uppercase
-  return alphabeticOnly.substring(0, 3).toUpperCase();
-};
+  return alphabeticOnly.substring(0, 3).toUpperCase()
+}
+
+/**
+ * Calculate font size based on avatar size
+ */
+const getFontSize = (size: number): string => {
+  if (size <= 32) return '0.75rem'
+  if (size <= 48) return '0.875rem'
+  return '1rem'
+}
 
 /**
  * Avatar Component
- * @description Displays a circular avatar with user initials
+ * @description Displays a circular avatar with user image or initials fallback
  * Features:
+ * - Shows user image if avatarUrl provided
+ * - Falls back to initials if no image or image fails to load
  * - Extracts up to 3 alphabetic characters from username
  * - Uses CyLink brand colors (#2563EB background, white text)
  * - Handles edge cases (empty, numeric, short usernames)
@@ -74,66 +90,84 @@ const extractInitials = (username: string): string => {
  */
 const Avatar: React.FC<AvatarProps> = ({
   username,
+  avatarUrl,
   size = 40,
-  className = "",
+  className = '',
   onClick,
   isClickable = false,
-  ariaLabel,
+  ariaLabel
 }) => {
-  const initials = extractInitials(username);
+  const [imageError, setImageError] = useState(false)
+  const initials = extractInitials(username)
+  const showImage = avatarUrl && !imageError
+  const canClick = isClickable || onClick
 
   // Generate default ARIA label if not provided
-  const defaultAriaLabel = ariaLabel || `Profile avatar for ${username}`;
-
-  // Base styles for avatar container
-  const baseStyles = `
-    inline-flex items-center justify-center
-    bg-[#2563EB] text-white
-    rounded-full flex-shrink-0
-    font-semibold text-sm
-    transition-all duration-200 ease-in-out
-    ${
-      isClickable || onClick
-        ? "cursor-pointer hover:bg-[#1D4ED8] active:bg-[#1E40AF] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2"
-        : ""
-    }
-  `;
+  const defaultAriaLabel = ariaLabel ?? `Profile avatar for ${username}`
+  const fontSize = getFontSize(size)
+  const letterSpacing = '0.5px'
 
   // Text styles for avatar initials
-  const textStyles = `
-    font-semibold text-white
-    select-none pointer-events-none
-  `;
+  const textStyles = 'font-semibold text-white select-none pointer-events-none'
 
-  // Calculate font size based on avatar size
-  const fontSize = size <= 32 ? "0.75rem" : size <= 48 ? "0.875rem" : "1rem";
-  const letterSpacing = "0.5px";
+  // Avatar content (image or initials)
+  const avatarContent = showImage ? (
+    <img src={avatarUrl} alt={username} className='w-full h-full object-cover' onError={() => setImageError(true)} />
+  ) : (
+    <span className={textStyles}>{initials}</span>
+  )
 
-  const avatarElement = (
+  // Common styles
+  const commonStyles = {
+    width: `${size}px`,
+    height: `${size}px`,
+    fontSize,
+    letterSpacing
+  }
+
+  // If clickable, render as button for proper accessibility
+  if (canClick) {
+    return (
+      <button
+        type='button'
+        className={`
+          inline-flex items-center justify-center
+          ${showImage ? 'bg-gray-200' : 'bg-[#2563EB]'} text-white
+          rounded-full shrink-0
+          font-semibold text-sm
+          transition-all duration-200 ease-in-out
+          overflow-hidden
+          cursor-pointer hover:opacity-90 active:opacity-80
+          focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-2
+          ${className}
+        `}
+        style={commonStyles}
+        onClick={onClick}
+        aria-label={defaultAriaLabel}
+      >
+        {avatarContent}
+      </button>
+    )
+  }
+
+  // Non-clickable avatar (display only)
+  return (
     <div
-      className={`${baseStyles} ${className}`}
-      style={{
-        width: `${size}px`,
-        height: `${size}px`,
-        fontSize,
-        letterSpacing,
-      }}
-      onClick={isClickable || onClick ? onClick : undefined}
-      role={isClickable || onClick ? "button" : "img"}
+      className={`
+        inline-flex items-center justify-center
+        ${showImage ? 'bg-gray-200' : 'bg-[#2563EB]'} text-white
+        rounded-full shrink-0
+        font-semibold text-sm
+        transition-all duration-200 ease-in-out
+        overflow-hidden
+        ${className}
+      `}
+      style={commonStyles}
       aria-label={defaultAriaLabel}
-      tabIndex={isClickable || onClick ? 0 : -1}
-      onKeyDown={(e) => {
-        if ((isClickable || onClick) && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
-          onClick?.();
-        }
-      }}
     >
-      <span className={textStyles}>{initials}</span>
+      {avatarContent}
     </div>
-  );
+  )
+}
 
-  return avatarElement;
-};
-
-export default Avatar;
+export default Avatar

@@ -1,25 +1,25 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import Cookies from "js-cookie";
-import logger from "@/utils/logger";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios'
+import Cookies from 'js-cookie'
+import logger from '@/utils/logger'
 
 /**
  * Base API configuration
  * @description Axios instance with base configuration for API calls
  */
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL ?? "http://localhost:3000",
+  baseURL: process.env.NEXT_PUBLIC_BASE_API_URL ?? 'http://localhost:3000',
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json'
   },
   // Add a timeout to prevent hanging requests
-  timeout: 30000,
-});
+  timeout: 30000
+})
 
 /**
  * Check if we're in a browser environment
  * @returns true if in browser, false if on server
  */
-const isBrowser = () => typeof window !== "undefined";
+const isBrowser = () => typeof window !== 'undefined'
 
 /**
  * Get token safely from Cookies
@@ -27,51 +27,49 @@ const isBrowser = () => typeof window !== "undefined";
  */
 export const getToken = (): string | null => {
   if (!isBrowser()) {
-    return null;
+    return null
   }
 
   try {
-    const token = Cookies.get("accessToken");
+    const token = Cookies.get('accessToken')
 
-    if (token && token.trim() !== "") {
-      return token;
+    if (token && token.trim() !== '') {
+      return token
     } else {
-      return null;
+      return null
     }
   } catch (error) {
-    logger.error("Error retrieving token from cookies", error);
-    return null;
+    logger.error('Error retrieving token from cookies', error)
+    return null
   }
-};
+}
 
 /**
  * Request interceptor for API calls
  * @description Adds authentication token to request headers if available
  */
 api.interceptors.request.use(
-  (config) => {
+  config => {
     try {
       if (isBrowser()) {
-        const token = getToken();
+        const token = getToken()
 
         if (token && config.headers) {
           // Set authorization header safely
-          config.headers.Authorization = `Bearer ${token}`;
+          config.headers.Authorization = `Bearer ${token}`
         }
       }
-      return config;
+      return config
     } catch (error) {
-      console.error("Request interceptor error:", error);
-      return config; // Still try to proceed with the request
+      console.error('Request interceptor error:', error)
+      return config // Still try to proceed with the request
     }
   },
-  (error) => {
-    console.error("Request interceptor rejection:", error);
-    return Promise.reject(
-      error instanceof Error ? error : new Error(String(error))
-    );
+  error => {
+    console.error('Request interceptor rejection:', error)
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)))
   }
-);
+)
 
 /**
  * Response interceptor for API calls
@@ -79,70 +77,49 @@ api.interceptors.request.use(
  */
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    try {
-      // Log successful responses for debugging
-      logger.debug(
-        `API Response: ${response.config.method?.toUpperCase()} ${
-          response.config.url
-        }`,
-        {
-          status: response.status,
-          statusText: response.statusText,
-        }
-      );
-
-      return response;
-    } catch (error) {
-      logger.error("Response interceptor error", error);
-      return response; // Still return the response
-    }
+    return response
   },
   (error: AxiosError) => {
     try {
       // Handle common error cases
       if (error.response) {
-        logger.error(
-          `API Error: ${error.config?.method?.toUpperCase()} ${
-            error.config?.url
-          }`,
-          {
-            status: error.response.status,
-            statusText: error.response.statusText,
-          }
-        );
+        logger.error(`API Error: ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
+          status: error.response.status,
+          statusText: error.response.statusText
+        })
 
         // Handle authentication errors
         if (error.response.status === 401) {
           if (isBrowser()) {
             try {
-              Cookies.remove("accessToken");
-              Cookies.remove("refreshToken");
-              logger.info("Removed tokens due to 401 response");
+              Cookies.remove('accessToken')
+              Cookies.remove('refreshToken')
+              logger.info('Removed tokens due to 401 response')
             } catch (storageError) {
-              logger.error("Error removing tokens", storageError);
+              logger.error('Error removing tokens', storageError)
             }
           }
         }
       } else if (error.request) {
         // The request was made but no response was received
-        logger.error("No response received from API", {
+        logger.error('No response received from API', {
           url: error.config?.url,
-          method: error.config?.method,
-        });
+          method: error.config?.method
+        })
       } else {
         // Something happened in setting up the request
-        logger.error("Error setting up request", {
+        logger.error('Error setting up request', {
           message: error.message,
-          url: error.config?.url,
-        });
+          url: error.config?.url
+        })
       }
     } catch (interceptorError) {
-      logger.error("Error in response error interceptor", interceptorError);
+      logger.error('Error in response error interceptor', interceptorError)
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 /**
  * Generic GET request
@@ -151,35 +128,27 @@ api.interceptors.response.use(
  * @param config - Axios request configuration
  * @returns Promise with the response data
  */
-export const get = async <T>(
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<T> => {
+export const get = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
   try {
-    logger.debug(`GET request: ${url}`);
-
     // Ensure authentication header is set (fallback if interceptor fails)
-    const enhancedConfig = { ...config };
+    const enhancedConfig = { ...config }
     if (isBrowser()) {
-      const token = getToken();
-      if (
-        token &&
-        (!enhancedConfig.headers || !enhancedConfig.headers.Authorization)
-      ) {
+      const token = getToken()
+      if (token && (!enhancedConfig.headers || !enhancedConfig.headers.Authorization)) {
         enhancedConfig.headers = {
           ...enhancedConfig.headers,
-          Authorization: `Bearer ${token}`,
-        };
+          Authorization: `Bearer ${token}`
+        }
       }
     }
 
-    const response = await api.get<T>(url, enhancedConfig);
-    return response.data;
+    const response = await api.get<T>(url, enhancedConfig)
+    return response.data
   } catch (error) {
-    logger.error(`GET request failed: ${url}`, error);
-    throw error;
+    logger.error(`GET request failed: ${url}`, error)
+    throw error
   }
-};
+}
 
 /**
  * Generic POST request
@@ -189,19 +158,15 @@ export const get = async <T>(
  * @param config - Axios request configuration
  * @returns Promise with the response data
  */
-export const post = async <T, D = unknown>(
-  url: string,
-  data?: D,
-  config?: AxiosRequestConfig
-): Promise<T> => {
+export const post = async <T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T> => {
   try {
-    const response = await api.post<T>(url, data, config);
-    return response.data;
+    const response = await api.post<T>(url, data, config)
+    return response.data
   } catch (error) {
-    console.error(`POST ${url} failed:`, error);
-    throw error;
+    console.error(`POST ${url} failed:`, error)
+    throw error
   }
-};
+}
 
 /**
  * Generic PUT request
@@ -211,19 +176,15 @@ export const post = async <T, D = unknown>(
  * @param config - Axios request configuration
  * @returns Promise with the response data
  */
-export const put = async <T, D = unknown>(
-  url: string,
-  data?: D,
-  config?: AxiosRequestConfig
-): Promise<T> => {
+export const put = async <T, D = unknown>(url: string, data?: D, config?: AxiosRequestConfig): Promise<T> => {
   try {
-    const response = await api.put<T>(url, data, config);
-    return response.data;
+    const response = await api.put<T>(url, data, config)
+    return response.data
   } catch (error) {
-    console.error(`PUT ${url} failed:`, error);
-    throw error;
+    console.error(`PUT ${url} failed:`, error)
+    throw error
   }
-};
+}
 
 /**
  * Generic DELETE request
@@ -232,18 +193,15 @@ export const put = async <T, D = unknown>(
  * @param config - Axios request configuration
  * @returns Promise with the response data
  */
-export const del = async <T>(
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<T> => {
+export const del = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
   try {
-    const response = await api.delete<T>(url, config);
-    return response.data;
+    const response = await api.delete<T>(url, config)
+    return response.data
   } catch (error) {
-    console.error(`DELETE ${url} failed:`, error);
-    throw error;
+    console.error(`DELETE ${url} failed:`, error)
+    throw error
   }
-};
+}
 
 /**
  * Generic GET request without authentication header
@@ -252,29 +210,26 @@ export const del = async <T>(
  * @param config - Axios request configuration
  * @returns Promise with the response data
  */
-export const getPublic = async <T>(
-  url: string,
-  config?: AxiosRequestConfig
-): Promise<T> => {
+export const getPublic = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
   try {
-    logger.debug(`Public GET request: ${url}`);
+    logger.debug(`Public GET request: ${url}`)
 
     // Create a custom configuration without auth token
     const publicConfig: AxiosRequestConfig = {
       ...config,
       headers: {
         ...(config?.headers || {}),
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
         // Explicitly do not include Authorization header
-      },
-    };
+      }
+    }
 
-    const response = await api.get<T>(url, publicConfig);
-    return response.data;
+    const response = await api.get<T>(url, publicConfig)
+    return response.data
   } catch (error) {
-    logger.error(`Public GET request failed: ${url}`, error);
-    throw error;
+    logger.error(`Public GET request failed: ${url}`, error)
+    throw error
   }
-};
+}
 
-export default api;
+export default api
