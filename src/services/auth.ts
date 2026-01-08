@@ -1,4 +1,4 @@
-import { post } from "./api";
+import { post } from './api'
 import {
   LoginRequest,
   ApiLoginResponse,
@@ -9,9 +9,9 @@ import {
   ForgotPasswordResponse,
   ResetPasswordRequest,
   ResetPasswordResponse,
-  User,
-} from "@/interfaces/auth";
-import Cookies from "js-cookie";
+  User
+} from '@/interfaces/auth'
+import Cookies from 'js-cookie'
 
 /**
  * Authentication Service
@@ -31,68 +31,67 @@ const AuthService = {
    */
   signup: async (credentials: RegisterRequest): Promise<RegisterResponse> => {
     try {
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Sending registration request:", {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Sending registration request:', {
           email: credentials.email,
           username: credentials.username,
           passwordLength: credentials.password?.length,
-          password_confirmationLength:
-            credentials.password_confirmation?.length,
-        });
+          password_confirmationLength: credentials.password_confirmation?.length
+        })
       }
 
       // Call API with registration data
-      const response = await post<RegisterResponse>("/api/v1/auth/register", {
+      const response = await post<RegisterResponse>('/api/v1/auth/register', {
         email: credentials.email,
         password: credentials.password,
         username: credentials.username,
-        password_confirmation: credentials.password_confirmation,
-      });
+        password_confirmation: credentials.password_confirmation
+      })
 
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Registration API response:", response);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Registration API response:', response)
       }
 
       // Validate response structure (minimal)
-      if (!response || typeof response !== "object") {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Invalid registration response structure:", response);
+      if (!response || typeof response !== 'object') {
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Invalid registration response structure:', response)
         }
-        throw new Error("Invalid response from server");
+        throw new Error('Invalid response from server')
       }
 
       // No longer expect user or verification_token fields
       // Optionally, normalize data here if needed by frontend
       // Normalisasi agar data.user selalu ada
-      let normalizedResponse = response;
+      let normalizedResponse = response
       if (
         response &&
         response.data &&
         // Gunakan optional chaining dan cek jika response.data.id ada, bukan response.data.user
-        !("user" in response.data) &&
-        "id" in response.data
+        !('user' in response.data) &&
+        'id' in response.data
       ) {
-        const data: Record<string, unknown> = response.data;
+        const data: Record<string, unknown> = response.data
         normalizedResponse = {
           ...response,
           data: {
             user: {
               id: data.id as number,
               email: data.email as string,
-              name: (data.username as string) || (data.name as string) || "",
+              name: (data.username as string) || (data.name as string) || '',
               email_verified_at: (data.email_verified_at as string) || null,
-              created_at: (data.created_at as string) || "",
-              updated_at: (data.updated_at as string) || "",
-              is_verified: (data.is_verified as boolean) || false,
+              created_at: (data.created_at as string) || '',
+              updated_at: (data.updated_at as string) || '',
+              is_verified: (data.is_verified as boolean) || false
             },
-            verification_token: (data.verification_token as string) || "",
-          },
-        };
+            verification_token: (data.verification_token as string) || ''
+          }
+        }
       }
-      return normalizedResponse;
+      return normalizedResponse
     } catch (error) {
-      console.error("Registration service error:", error);
-      throw error;
+      console.error('Registration service error:', error)
+      throw error
     }
   },
 
@@ -104,27 +103,24 @@ const AuthService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
       // Call API with original request structure
-      const apiResponse = await post<ApiLoginResponse>(
-        "/api/v1/auth/login",
-        credentials
-      );
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Raw API response:", apiResponse);
+      const apiResponse = await post<ApiLoginResponse>('/api/v1/auth/login', credentials)
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Raw API response:', apiResponse)
       }
 
       // Validate response structure (for the actual API response)
       if (!apiResponse?.data?.user || !apiResponse?.data?.token) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Invalid login response structure:", apiResponse);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Invalid login response structure:', apiResponse)
         }
-        throw new Error("Invalid response from server");
+        throw new Error('Invalid response from server')
       }
 
       if (!apiResponse.data.token.access || !apiResponse.data.token.refresh) {
-        if (process.env.NODE_ENV !== "production") {
-          console.error("Missing tokens in response:", apiResponse.data.token);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Missing tokens in response:', apiResponse.data.token)
         }
-        throw new Error("Authentication tokens missing in response");
+        throw new Error('Authentication tokens missing in response')
       }
 
       // Convert the API response to our expected format
@@ -135,16 +131,16 @@ const AuthService = {
           user: apiResponse.data.user,
           tokens: {
             access_token: apiResponse.data.token.access,
-            refresh_token: apiResponse.data.token.refresh,
+            refresh_token: apiResponse.data.token.refresh
           },
-          first_login: apiResponse.data.first_login,
-        },
-      };
+          first_login: apiResponse.data.first_login
+        }
+      }
 
-      return formattedResponse;
+      return formattedResponse
     } catch (error) {
-      console.error("Login service error:", error);
-      throw error;
+      console.error('Login service error:', error)
+      throw error
     }
   },
 
@@ -154,37 +150,33 @@ const AuthService = {
    * @param refreshToken - JWT refresh token
    * @param remember - Whether to store tokens persistently
    */
-  saveTokens: (
-    accessToken: string,
-    refreshToken: string,
-    remember: boolean = false
-  ): void => {
-    if (typeof window === "undefined") return;
+  saveTokens: (accessToken: string, refreshToken: string, remember: boolean = false): void => {
+    if (typeof window === 'undefined') return
 
     if (!accessToken || !refreshToken) {
-      if (process.env.NODE_ENV !== "production") {
-        console.error("Attempting to save invalid tokens:", {
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Attempting to save invalid tokens:', {
           hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken,
-        });
+          hasRefreshToken: !!refreshToken
+        })
       }
-      throw new Error("Cannot save invalid authentication tokens");
+      throw new Error('Cannot save invalid authentication tokens')
     }
 
     try {
-      Cookies.set("accessToken", accessToken);
-      Cookies.set("refreshToken", refreshToken);
+      Cookies.set('accessToken', accessToken)
+      Cookies.set('refreshToken', refreshToken)
 
       // Set session expiration based on remember me option
       if (remember) {
         // Store a flag to indicate "remember me" was selected
-        Cookies.set("rememberMe", "true");
+        Cookies.set('rememberMe', 'true')
       } else {
-        Cookies.remove("rememberMe");
+        Cookies.remove('rememberMe')
       }
     } catch (error) {
-      console.error("Error saving tokens to Cookies:", error);
-      throw new Error("Failed to save authentication data");
+      console.error('Error saving tokens to Cookies:', error)
+      throw new Error('Failed to save authentication data')
     }
   },
 
@@ -193,25 +185,25 @@ const AuthService = {
    * @param user - User data to save
    */
   saveUser: (user: User): void => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return
 
     try {
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Saving user data:", user);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Saving user data:', user)
       }
-      Cookies.set("userData", JSON.stringify(user));
-      if (process.env.NODE_ENV !== "production") {
-        console.log("User data saved successfully to cookies");
+      Cookies.set('userData', JSON.stringify(user))
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('User data saved successfully to cookies')
       }
 
       // Verify the data was saved correctly
-      const savedData = Cookies.get("userData");
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Verification - saved data:", savedData);
+      const savedData = Cookies.get('userData')
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('Verification - saved data:', savedData)
       }
     } catch (error) {
-      console.error("Error saving user data to Cookies:", error);
-      throw new Error("Failed to save user data");
+      console.error('Error saving user data to Cookies:', error)
+      throw new Error('Failed to save user data')
     }
   },
 
@@ -220,29 +212,20 @@ const AuthService = {
    * @returns The stored user data or null if not found
    */
   getUser: (): User | null => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === 'undefined') return null
 
     try {
-      const userData = Cookies.get("userData");
-      if (process.env.NODE_ENV !== "production") {
-        console.log("Retrieved raw user data from cookies:", userData);
-      }
+      const userData = Cookies.get('userData')
 
       if (userData) {
-        const parsedData = JSON.parse(userData);
-        if (process.env.NODE_ENV !== "production") {
-          console.log("Parsed user data:", parsedData);
-        }
-        return parsedData;
+        const parsedData = JSON.parse(userData)
+        return parsedData
       } else {
-        if (process.env.NODE_ENV !== "production") {
-          console.log("No user data found in cookies");
-        }
-        return null;
+        return null
       }
     } catch (error) {
-      console.error("Error retrieving user data from Cookies:", error);
-      return null;
+      console.error('Error retrieving user data from Cookies:', error)
+      return null
     }
   },
 
@@ -250,15 +233,15 @@ const AuthService = {
    * Clear authentication tokens from storage on logout
    */
   clearTokens: (): void => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return
 
     try {
-      Cookies.remove("accessToken");
-      Cookies.remove("refreshToken");
-      Cookies.remove("rememberMe");
-      Cookies.remove("userData");
+      Cookies.remove('accessToken')
+      Cookies.remove('refreshToken')
+      Cookies.remove('rememberMe')
+      Cookies.remove('userData')
     } catch (error) {
-      console.error("Error clearing tokens from Cookies:", error);
+      console.error('Error clearing tokens from Cookies:', error)
     }
   },
 
@@ -267,14 +250,14 @@ const AuthService = {
    * @returns Boolean indicating if user has a valid token
    */
   isAuthenticated: (): boolean => {
-    if (typeof window === "undefined") return false;
+    if (typeof window === 'undefined') return false
 
     try {
-      const token = Cookies.get("accessToken");
-      return !!token;
+      const token = Cookies.get('accessToken')
+      return !!token
     } catch (error) {
-      console.error("Error checking authentication status:", error);
-      return false;
+      console.error('Error checking authentication status:', error)
+      return false
     }
   },
 
@@ -283,14 +266,14 @@ const AuthService = {
    * @returns The stored access token or null if not found
    */
   getAccessToken: (): string | null => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === 'undefined') return null
 
     try {
-      const token = Cookies.get("accessToken");
-      return token ?? null;
+      const token = Cookies.get('accessToken')
+      return token ?? null
     } catch (error) {
-      console.error("Error retrieving token from Cookies:", error);
-      return null;
+      console.error('Error retrieving token from Cookies:', error)
+      return null
     }
   },
 
@@ -299,14 +282,14 @@ const AuthService = {
    * @returns The stored refresh token or null if not found
    */
   getRefreshToken: (): string | null => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === 'undefined') return null
 
     try {
-      const token = Cookies.get("refreshToken");
-      return token ?? null;
+      const token = Cookies.get('refreshToken')
+      return token ?? null
     } catch (error) {
-      console.error("Error retrieving token from Cookies:", error);
-      return null;
+      console.error('Error retrieving token from Cookies:', error)
+      return null
     }
   },
 
@@ -315,18 +298,13 @@ const AuthService = {
    * @param email - Email address to send reset link to
    * @returns Promise with forgot password response data
    */
-  forgotPassword: async (
-    email: ForgotPasswordRequest
-  ): Promise<ForgotPasswordResponse> => {
+  forgotPassword: async (email: ForgotPasswordRequest): Promise<ForgotPasswordResponse> => {
     try {
-      const response = await post<ForgotPasswordResponse>(
-        "/api/v1/auth/forgot-password",
-        email
-      );
-      return response;
+      const response = await post<ForgotPasswordResponse>('/api/v1/auth/forgot-password', email)
+      return response
     } catch (error) {
-      console.error("Forgot password service error:", error);
-      throw error;
+      console.error('Forgot password service error:', error)
+      throw error
     }
   },
 
@@ -336,21 +314,18 @@ const AuthService = {
    * @param token - Reset token from email
    * @returns Promise with reset password response data
    */
-  resetPassword: async (
-    resetData: ResetPasswordRequest,
-    token: string
-  ): Promise<ResetPasswordResponse> => {
+  resetPassword: async (resetData: ResetPasswordRequest, token: string): Promise<ResetPasswordResponse> => {
     try {
       const response = await post<ResetPasswordResponse>(
         `/api/v1/auth/reset-password?token=${encodeURIComponent(token)}`,
         resetData
-      );
-      return response;
+      )
+      return response
     } catch (error) {
-      console.error("Reset password service error:", error);
-      throw error;
+      console.error('Reset password service error:', error)
+      throw error
     }
-  },
-};
+  }
+}
 
-export default AuthService;
+export default AuthService

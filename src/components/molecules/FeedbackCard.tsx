@@ -140,7 +140,7 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
             <button
               type='button'
               onClick={onDelete}
-              className='p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors'
+              className='p-2 text-gray-900 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors'
               aria-label='Delete feedback'
               title='Delete feedback'
             >
@@ -180,7 +180,7 @@ const FeedbackCard: React.FC<FeedbackCardProps> = ({
               <button
                 type='button'
                 onClick={onDelete}
-                className='p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors'
+                className='p-1 text-gray-900 hover:text-red-500 hover:bg-red-50 rounded transition-colors'
                 aria-label='Delete feedback'
                 title='Delete feedback'
               >

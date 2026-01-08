@@ -49,33 +49,25 @@ const getUserIdFromToken = (token: string | undefined): number | undefined => {
  */
 const FeedbackBoard: React.FC = () => {
   // Auth context for current user
-  const { user, isLoading: isAuthLoading } = useAuth()
+  const { user } = useAuth()
 
   // Get current user ID with multiple fallbacks
   const currentUserId = useMemo(() => {
     // 1. First try auth context
     if (user?.id) {
-      console.log('currentUserId from auth context:', user.id)
       return user.id
     }
 
     // 2. Fallback: try AuthService (reads from cookie)
     const storedUser = AuthService.getUser()
     if (storedUser?.id) {
-      console.log('currentUserId from AuthService:', storedUser.id)
       return storedUser.id
     }
 
     // 3. Final fallback: decode JWT token
     const token = Cookies.get('accessToken')
-    console.log('Attempting JWT decode, token exists:', !!token)
-    const userIdFromToken = getUserIdFromToken(token)
-    console.log('currentUserId from JWT:', userIdFromToken)
-    return userIdFromToken
+    return getUserIdFromToken(token)
   }, [user])
-
-  // Debug auth state
-  console.log('FeedbackBoard auth state:', { user, userId: user?.id, currentUserId, isAuthLoading })
 
   // Filter state
   const { type, sortBy, search, myVotes, updateType, updateSortBy, updateSearch, toggleMyVotes, getFilterObject } =

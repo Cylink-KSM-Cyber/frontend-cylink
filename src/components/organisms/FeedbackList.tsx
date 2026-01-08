@@ -119,30 +119,18 @@ const FeedbackList: React.FC<FeedbackListProps> = ({
     <div className={className}>
       {/* Feedback Cards */}
       <div className='space-y-4'>
-        {feedback.map(item => {
-          // Debug logging for ownership check
-          console.log('FeedbackCard ownership check:', {
-            feedbackId: item.id,
-            feedbackUserId: item.user_id,
-            feedbackUserIdType: typeof item.user_id,
-            currentUserId: currentUserId,
-            currentUserIdType: typeof currentUserId,
-            isOwner: currentUserId !== undefined && Number(item.user_id) === Number(currentUserId)
-          })
-
-          return (
-            <FeedbackCard
-              key={item.id}
-              feedback={item}
-              onUpvote={() => onUpvote(item.id)}
-              onDownvote={data => onDownvote(item.id, data)}
-              onViewSupporters={() => onViewSupporters(item.id)}
-              onDelete={onDelete ? () => onDelete(item.id) : undefined}
-              isOwner={currentUserId !== undefined && Number(item.user_id) === Number(currentUserId)}
-              disabled={isVoting}
-            />
-          )
-        })}
+        {feedback.map(item => (
+          <FeedbackCard
+            key={item.id}
+            feedback={item}
+            onUpvote={() => onUpvote(item.id)}
+            onDownvote={data => onDownvote(item.id, data)}
+            onViewSupporters={() => onViewSupporters(item.id)}
+            onDelete={onDelete ? () => onDelete(item.id) : undefined}
+            isOwner={currentUserId !== undefined && Number(item.user_id) === Number(currentUserId)}
+            disabled={isVoting}
+          />
+        ))}
       </div>
 
       {/* Pagination */}
