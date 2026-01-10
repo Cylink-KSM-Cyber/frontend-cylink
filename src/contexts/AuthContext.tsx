@@ -1,31 +1,20 @@
-"use client";
+'use client'
 
-import React, {
-  createContext,
-  useContext,
-  ReactNode,
-  useState,
-  useEffect,
-} from "react";
-import {
-  User,
-  LoginRequest,
-  RegisterRequest,
-  AuthContextType,
-} from "@/interfaces/auth";
-import AuthService from "@/services/auth";
-import { useRouter } from "next/navigation";
-import { AxiosError } from "axios";
-import { useToast } from "@/contexts/ToastContext";
-import { ToastType } from "@/components/atoms/Toast";
-import posthogClient from "@/utils/posthogClient";
-import { useConversionTracking } from "@/hooks/useConversionTracking";
-import { useOnboarding } from "@/contexts/OnboardingContext";
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react'
+import { User, LoginRequest, RegisterRequest, AuthContextType } from '@/interfaces/auth'
+import AuthService from '@/services/auth'
+import { useRouter } from 'next/navigation'
+import { AxiosError } from 'axios'
+import { useToast } from '@/contexts/ToastContext'
+import { ToastType } from '@/components/atoms/Toast'
+import posthogClient from '@/utils/posthogClient'
+import { useConversionTracking } from '@/hooks/useConversionTracking'
+import { useOnboarding } from '@/contexts/OnboardingContext'
 
 // Navigation delay to allow toast to be visible
-const NAVIGATION_DELAY = 2000;
+const NAVIGATION_DELAY = 2000
 // Toast duration should be longer than navigation delay
-const TOAST_DURATION = NAVIGATION_DELAY + 500;
+const TOAST_DURATION = NAVIGATION_DELAY + 500
 
 /**
  * Initial authentication context state
@@ -39,21 +28,21 @@ const initialState: AuthContextType = {
   login: async () => {},
   signup: async () => {},
   logout: () => {},
-  error: null,
-};
+  error: null
+}
 
 /**
  * Authentication context
  * @description Context for authentication state and methods
  */
-export const AuthContext = createContext<AuthContextType>(initialState);
+export const AuthContext = createContext<AuthContextType>(initialState)
 
 /**
  * Authentication provider props
  * @interface AuthProviderProps
  */
 interface AuthProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 /**
@@ -63,14 +52,14 @@ interface AuthProviderProps {
  * @returns Authentication provider
  */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const router = useRouter();
-  const { showToast, clearAllToasts } = useToast();
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const { trackUserRegister } = useConversionTracking();
-  const { triggerOnboarding } = useOnboarding();
+  const router = useRouter()
+  const { showToast, clearAllToasts } = useToast()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+  const { trackUserRegister } = useConversionTracking()
+  const { triggerOnboarding } = useOnboarding()
 
   /**
    * Initialize auth state from localStorage on mount
@@ -79,46 +68,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initializeAuth = async () => {
       try {
         // Only run on client side
-        if (typeof window === "undefined") {
-          setIsLoading(false);
-          return;
+        if (typeof window === 'undefined') {
+          setIsLoading(false)
+          return
         }
 
         // Check if user is authenticated and load user data
         if (AuthService.isAuthenticated()) {
-          const userData = AuthService.getUser();
+          const userData = AuthService.getUser()
           if (userData) {
-            setUser(userData);
-            console.log("User data loaded from storage:", userData);
-          } else {
-            console.log("Token exists but no user data found - keeping tokens");
-            // Keep tokens even if user data is missing due to storage issues but tokens are still valid
+            setUser(userData)
           }
+          // Keep tokens even if user data is missing (e.g., SSO login)
         }
       } catch (error) {
-        console.error("Auth initialization error:", error);
+        console.error('Auth initialization error:', error)
         // Only clear tokens if there's a real error, not just missing user data
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    initializeAuth();
-  }, []);
+    initializeAuth()
+  }, [])
 
   /**
    * Navigate with delay function to ensure toast is seen
    * @param path - Path to navigate to
    * @param delay - Delay in milliseconds before navigation
    */
-  const navigateWithDelay = (
-    path: string,
-    delay: number = NAVIGATION_DELAY
-  ) => {
+  const navigateWithDelay = (path: string, delay: number = NAVIGATION_DELAY) => {
     setTimeout(() => {
-      router.push(path);
-    }, delay);
-  };
+      router.push(path)
+    }, delay)
+  }
 
   /**
    * Register handler
@@ -127,133 +110,120 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    */
   const signup = async (credentials: RegisterRequest) => {
     // Clear any existing toasts
-    clearAllToasts();
+    clearAllToasts()
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
-      console.log("Attempting registration with credentials:", {
+      console.log('Attempting registration with credentials:', {
         email: credentials.email,
         username: credentials.username,
         passwordLength: credentials.password?.length,
-        retype_passwordLength: credentials.password_confirmation?.length,
-      });
+        retype_passwordLength: credentials.password_confirmation?.length
+      })
 
-      const response = await AuthService.signup(credentials);
-      console.log("Registration response received:", {
-        status: "success",
-        message: response.message,
-      });
+      const response = await AuthService.signup(credentials)
+      console.log('Registration response received:', {
+        status: 'success',
+        message: response.message
+      })
 
       // Track user register conversion goal in PostHog
       if (response && response.data && response.data.user) {
-        if (process.env.NODE_ENV !== "production") {
-          console.log(
-            "[Tracking] Akan mengirim event user_registered ke PostHog",
-            {
-              user_id: response.data.user.id,
-              email: response.data.user.email,
-              username: response.data.user.name,
-              is_verified: !!response.data.user.is_verified,
-              registration_success: true,
-            }
-          );
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[Tracking] Akan mengirim event user_registered ke PostHog', {
+            user_id: response.data.user.id,
+            email: response.data.user.email,
+            username: response.data.user.name,
+            is_verified: !!response.data.user.is_verified,
+            registration_success: true
+          })
         }
         trackUserRegister({
           user_id: response.data.user.id,
           email: response.data.user.email,
           username: response.data.user.name,
           is_verified: !!response.data.user.is_verified,
-          registration_success: true,
-        });
-        await new Promise((resolve) => setTimeout(resolve, 200));
-        if (process.env.NODE_ENV !== "production") {
-          console.log("[Tracking] Event user_registered sudah dipanggil");
+          registration_success: true
+        })
+        await new Promise(resolve => setTimeout(resolve, 200))
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[Tracking] Event user_registered sudah dipanggil')
         }
       } else {
-        if (process.env.NODE_ENV !== "production") {
-          console.error(
-            "[Tracking] Tidak ada data user pada response register, event tidak dikirim"
-          );
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('[Tracking] Tidak ada data user pada response register, event tidak dikirim')
         }
       }
 
       // Show success toast with longer duration to ensure visibility before navigation
-      showToast(
-        "Registration successful! Please check your email to verify your account.",
-        "success",
-        TOAST_DURATION
-      );
-      console.log("Success toast shown, will navigate after delay");
+      showToast('Registration successful! Please check your email to verify your account.', 'success', TOAST_DURATION)
+      console.log('Success toast shown, will navigate after delay')
 
       // Set isLoading to false before navigation
-      setIsLoading(false);
-      setIsModalOpen(true);
+      setIsLoading(false)
+      setIsModalOpen(true)
 
       // Navigate to login page after a delay to ensure toast is visible
       // navigateWithDelay("/login");
     } catch (err) {
-      console.error("Registration error details:", err);
+      console.error('Registration error details:', err)
 
       // Handle different error cases
-      let errorMessage =
-        "An error occurred during registration. Please try again later.";
-      const errorType: ToastType = "error";
+      let errorMessage = 'An error occurred during registration. Please try again later.'
+      const errorType: ToastType = 'error'
 
       if (err instanceof AxiosError) {
-        const error = err as AxiosError;
+        const error = err as AxiosError
 
         if (error.response) {
-          console.log("Error response status:", error.response.status);
-          console.log("Error response data:", error.response.data);
+          console.log('Error response status:', error.response.status)
+          console.log('Error response data:', error.response.data)
 
           switch (error.response.status) {
             case 400:
-              errorMessage =
-                "Invalid registration data. Please check all fields and try again.";
-              break;
+              errorMessage = 'Invalid registration data. Please check all fields and try again.'
+              break
             case 409:
-              errorMessage =
-                "An account with this email already exists. Please try logging in instead.";
-              break;
+              errorMessage = 'An account with this email already exists. Please try logging in instead.'
+              break
             case 422:
               errorMessage =
-                "Please check that your password meets the requirements and all fields are filled correctly.";
-              break;
+                'Please check that your password meets the requirements and all fields are filled correctly.'
+              break
             default:
               // Try to get error message from response
               if (error.message) {
-                errorMessage = error.message;
+                errorMessage = error.message
               }
           }
         } else if (error.request) {
           // The request was made but no response was received
-          console.log("No response received from server");
-          errorMessage = "Server did not respond. Please try again later.";
+          console.log('No response received from server')
+          errorMessage = 'Server did not respond. Please try again later.'
         } else {
           // Something happened in setting up the request that triggered an Error
-          console.log("Error setting up request:", error.message);
-          errorMessage =
-            "Failed to connect to the server. Please check your connection.";
+          console.log('Error setting up request:', error.message)
+          errorMessage = 'Failed to connect to the server. Please check your connection.'
         }
       } else {
         // Not an Axios error
-        console.log("Non-Axios error:", err);
+        console.log('Non-Axios error:', err)
         if (err instanceof Error) {
-          errorMessage = err.message;
+          errorMessage = err.message
         }
       }
 
-      setError(errorMessage);
+      setError(errorMessage)
 
-      setIsModalOpen(false);
+      setIsModalOpen(false)
 
       // Show error toast with longer duration
-      showToast(errorMessage, errorType, 6000);
-      setIsLoading(false);
+      showToast(errorMessage, errorType, 6000)
+      setIsLoading(false)
     }
-  };
+  }
 
   /**
    * Login handler
@@ -261,134 +231,122 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    * @param credentials - Login credentials
    * @param remember - Remember login option
    */
-  const login = async (
-    credentials: LoginRequest,
-    remember: boolean = false
-  ) => {
+  const login = async (credentials: LoginRequest, remember: boolean = false) => {
     // Clear any existing toasts
-    clearAllToasts();
+    clearAllToasts()
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
-      console.log("Attempting login with credentials:", {
+      console.log('Attempting login with credentials:', {
         email: credentials.email,
-        passwordLength: credentials.password?.length,
-      });
+        passwordLength: credentials.password?.length
+      })
 
-      const response = await AuthService.login(credentials);
-      console.log("Login response received:", {
-        status: "success",
+      const response = await AuthService.login(credentials)
+      console.log('Login response received:', {
+        status: 'success',
         hasUser: !!response.data?.user,
-        hasTokens: !!response.data?.tokens,
-      });
+        hasTokens: !!response.data?.tokens
+      })
 
-      const { user, tokens, first_login } = response.data;
+      const { user, tokens, first_login } = response.data
 
       if (!user || !tokens) {
-        console.error("Invalid response structure:", {
+        console.error('Invalid response structure:', {
           hasUser: !!user,
-          hasTokens: !!tokens,
-        });
-        throw new Error("Invalid server response");
+          hasTokens: !!tokens
+        })
+        throw new Error('Invalid server response')
       }
 
       // Save authentication data
       try {
-        AuthService.saveTokens(
-          tokens.access_token,
-          tokens.refresh_token,
-          remember
-        );
-        console.log("Tokens saved successfully");
+        AuthService.saveTokens(tokens.access_token, tokens.refresh_token, remember)
+        console.log('Tokens saved successfully')
 
         // Save user data to storage
-        AuthService.saveUser(user);
-        console.log("User data saved successfully:", user);
+        AuthService.saveUser(user)
+        console.log('User data saved successfully:', user)
       } catch (tokenError) {
-        console.error("Failed to save tokens:", tokenError);
-        throw new Error("Failed to save authentication data");
+        console.error('Failed to save tokens:', tokenError)
+        throw new Error('Failed to save authentication data')
       }
 
-      setUser(user);
+      setUser(user)
 
       // Identify user in PostHog
       posthogClient.identifyUser(user.id.toString(), {
         email: user.email,
         name: user.name,
         created_at: user.created_at,
-        updated_at: user.updated_at,
-      });
+        updated_at: user.updated_at
+      })
 
       // Capture login event
-      posthogClient.captureEvent("user_logged_in", {
-        login_method: "email",
-        remember_me: remember,
-      });
+      posthogClient.captureEvent('user_logged_in', {
+        login_method: 'email',
+        remember_me: remember
+      })
 
       // Show success toast with longer duration to ensure visibility before navigation
-      showToast("Successfully logged in", "success", TOAST_DURATION);
-      console.log("Success toast shown, will navigate after delay");
-      setIsLoading(false);
+      showToast('Successfully logged in', 'success', TOAST_DURATION)
+      console.log('Success toast shown, will navigate after delay')
+      setIsLoading(false)
       // Trigger onboarding logic based on environment and first_login
-      triggerOnboarding(!!first_login);
+      triggerOnboarding(!!first_login)
       // Navigate to dashboard after a delay to ensure toast is visible
-      navigateWithDelay("/dashboard");
+      navigateWithDelay('/dashboard')
     } catch (err) {
-      console.error("Login error details:", err);
+      console.error('Login error details:', err)
 
       // Handle different error cases
-      let errorMessage =
-        "An error occurred during login. Please try again later.";
-      const errorType: ToastType = "error";
+      let errorMessage = 'An error occurred during login. Please try again later.'
+      const errorType: ToastType = 'error'
 
       if (err instanceof AxiosError) {
-        const error = err as AxiosError;
+        const error = err as AxiosError
 
         if (error.response) {
-          console.log("Error response status:", error.response.status);
-          console.log("Error response data:", error.response.data);
+          console.log('Error response status:', error.response.status)
+          console.log('Error response data:', error.response.data)
 
           switch (error.response.status) {
             case 400:
-              errorMessage =
-                "Invalid credentials. Please check your email and password.";
-              break;
+              errorMessage = 'Invalid credentials. Please check your email and password.'
+              break
             case 401:
-              errorMessage =
-                "Your account is not verified. Please check your email for verification instructions.";
-              break;
+              errorMessage = 'Your account is not verified. Please check your email for verification instructions.'
+              break
             case 404:
-              errorMessage =
-                "Account not found. Please check your email or register for a new account.";
-              break;
+              errorMessage = 'Account not found. Please check your email or register for a new account.'
+              break
           }
         } else if (error.request) {
           // The request was made but no response was received
-          console.log("No response received from server");
-          errorMessage = "Server did not respond. Please try again later.";
+          console.log('No response received from server')
+          errorMessage = 'Server did not respond. Please try again later.'
         } else {
           // Something happened in setting up the request that triggered an Error
-          console.log("Error setting up request:", error.message);
-          errorMessage =
-            "Failed to connect to the server. Please check your connection.";
+          console.log('Error setting up request:', error.message)
+          errorMessage = 'Failed to connect to the server. Please check your connection.'
         }
       } else {
         // Not an Axios error
-        console.log("Non-Axios error:", err);
+        console.log('Non-Axios error:', err)
         if (err instanceof Error) {
-          errorMessage = err.message;
+          errorMessage = err.message
         }
       }
 
-      setError(errorMessage);
+      setError(errorMessage)
 
       // Show error toast with longer duration
-      showToast(errorMessage, errorType, 6000);
-      setIsLoading(false);
+      showToast(errorMessage, errorType, 6000)
+      setIsLoading(false)
     }
-  };
+  }
 
   /**
    * Logout handler
@@ -396,28 +354,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
    */
   const logout = () => {
     // Clear any existing toasts
-    clearAllToasts();
+    clearAllToasts()
 
     // Capture logout event before resetting user
     if (user) {
-      posthogClient.captureEvent("user_logged_out", {
-        user_id: user.id,
-      });
+      posthogClient.captureEvent('user_logged_out', {
+        user_id: user.id
+      })
     }
 
     // Reset PostHog user identification
-    posthogClient.resetUser();
+    posthogClient.resetUser()
 
     // Clear tokens and user data from storage
-    AuthService.clearTokens();
-    setUser(null);
+    AuthService.clearTokens()
+    setUser(null)
 
     // Show info toast with longer duration to ensure visibility
-    showToast("You have been logged out", "info", TOAST_DURATION);
+    showToast('You have been logged out', 'info', TOAST_DURATION)
 
     // Navigate to login page after a delay to ensure toast is visible
-    navigateWithDelay("/login");
-  };
+    navigateWithDelay('/login')
+  }
 
   return (
     <AuthContext.Provider
@@ -430,13 +388,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error,
         login,
         signup,
-        logout,
+        logout
       }}
     >
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
 /**
  * Use authentication hook
@@ -444,9 +402,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
  * @returns Authentication context
  */
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
-};
+  return context
+}

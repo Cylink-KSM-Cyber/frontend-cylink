@@ -201,9 +201,43 @@ frontend-cylink/
 
 ## 📋 Changelog
 
-### Version 1.5.0 (Latest) - Google OAuth Authentication & PostHog Analytics
+### Version 1.6.0 (Latest) - Feedback Board
 
-**Release Date:** December 26, 2024
+**Release Date:** January 8, 2026
+
+**Major Features:**
+
+- 🆕 **Feedback Board**: Share ideas, report bugs, and vote on features
+- 🆕 **Voting System**: Upvote/downvote with optional reasoning
+- 🆕 **Smart Search**: Find existing ideas with duplicate detection
+- 🆕 **Community Engagement**: See who's supporting each idea with avatar stacks
+
+**New Pages:**
+
+- ✅ **Feedback Page** (`/dashboard/feedback`): Complete feedback board interface
+
+**Frontend Enhancements:**
+
+- ✅ **FeedbackBoard Component**: Full-featured feedback management
+- ✅ **FeedbackCard Component**: Individual feedback items with voting
+- ✅ **FeedbackFilterBar Component**: Filter by type, search, and sort
+- ✅ **CreateFeedbackForm Component**: Submit feature requests or bug reports
+- ✅ **VoteRail Component**: Upvote/downvote interaction
+- ✅ **AvatarStack Component**: Display supporters with facepile
+
+**User Experience:**
+
+- ✅ **One-Click Voting**: Quick upvote/downvote interaction
+- ✅ **Duplicate Prevention**: Similar feedback detection while typing
+- ✅ **Filter & Sort**: Browse by trending, top voted, or newest
+- ✅ **My Votes Filter**: Track your own voting activity
+- ✅ **Delete Own Feedback**: Remove your own submissions
+
+---
+
+### Version 1.5.0 - Google OAuth Authentication & PostHog Analytics
+
+**Release Date:** December 26, 2025
 
 **Major Features:**
 

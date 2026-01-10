@@ -1,24 +1,25 @@
-"use client";
+'use client'
 
-import React from "react";
-import Image from "next/image";
-import Link from "next/link";
+import React from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import {
   RiDashboardLine,
   RiLinkM,
   RiQrCodeLine,
+  RiFeedbackLine,
   RiSettings4Line,
   RiLogoutBoxRLine,
   RiMenuFoldLine,
   RiMenuUnfoldLine,
   RiArrowLeftSLine,
-  RiArrowRightSLine,
-} from "react-icons/ri";
-import { NavItem, UserProfileProps } from "@/interfaces/sidebar";
-import { useSidebar } from "@/contexts/SidebarContext";
-import LogoutConfirmationModal from "@/components/molecules/LogoutConfirmationModal";
-import useLogoutConfirmation from "@/hooks/useLogoutConfirmation";
-import Avatar from "@/components/atoms/Avatar";
+  RiArrowRightSLine
+} from 'react-icons/ri'
+import { NavItem, UserProfileProps } from '@/interfaces/sidebar'
+import { useSidebar } from '@/contexts/SidebarContext'
+import LogoutConfirmationModal from '@/components/molecules/LogoutConfirmationModal'
+import useLogoutConfirmation from '@/hooks/useLogoutConfirmation'
+import Avatar from '@/components/atoms/Avatar'
 
 /**
  * Theme constants for consistent styling across the sidebar
@@ -26,19 +27,19 @@ import Avatar from "@/components/atoms/Avatar";
  */
 const THEME = {
   // Active state styling
-  ACTIVE_BG_CLASS: "bg-black",
-  ACTIVE_TEXT_CLASS: "text-white",
+  ACTIVE_BG_CLASS: 'bg-black',
+  ACTIVE_TEXT_CLASS: 'text-white',
 
   // Badge styling
-  BADGE_BG_CLASS: "bg-gray-200",
-  BADGE_TEXT_CLASS: "text-black",
+  BADGE_BG_CLASS: 'bg-gray-200',
+  BADGE_TEXT_CLASS: 'text-black',
 
   // Button styling for mobile
-  MOBILE_BUTTON_CLASS: "bg-black text-white",
+  MOBILE_BUTTON_CLASS: 'bg-black text-white',
 
   // Logo text color
-  LOGO_TEXT_CLASS: "text-black",
-};
+  LOGO_TEXT_CLASS: 'text-black'
+}
 
 /**
  * User profile component for displaying user information in the sidebar
@@ -48,29 +49,17 @@ const THEME = {
  * @param isCollapsed - Whether the sidebar is in collapsed state
  * @param onProfileClick - Function to handle profile click
  */
-const UserProfile: React.FC<UserProfileProps> = ({
-  name,
-  email,
-  avatarUrl,
-  isCollapsed,
-  onProfileClick,
-}) => {
+const UserProfile: React.FC<UserProfileProps> = ({ name, email, avatarUrl, isCollapsed, onProfileClick }) => {
   return (
     <div
       className={`flex items-center p-4 cursor-pointer hover:bg-gray-100 transition-all duration-200 ${
-        isCollapsed ? "justify-center" : "mb-2"
+        isCollapsed ? 'justify-center' : 'mb-2'
       }`}
       onClick={onProfileClick}
     >
       {avatarUrl ? (
-        <div className="relative h-10 w-10 rounded-full overflow-hidden bg-gray-200">
-          <Image
-            src={avatarUrl}
-            alt={name}
-            fill
-            sizes="40px"
-            className="object-cover"
-          />
+        <div className='relative h-10 w-10 rounded-full overflow-hidden bg-gray-200'>
+          <Image src={avatarUrl} alt={name} fill sizes='40px' className='object-cover' />
         </div>
       ) : (
         <Avatar
@@ -83,14 +72,14 @@ const UserProfile: React.FC<UserProfileProps> = ({
       )}
 
       {!isCollapsed && (
-        <div className="ml-3 overflow-hidden">
-          <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
-          <p className="text-xs text-gray-500 truncate">{email}</p>
+        <div className='ml-3 overflow-hidden'>
+          <p className='text-sm font-medium text-gray-900 truncate'>{name}</p>
+          <p className='text-xs text-gray-500 truncate'>{email}</p>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
 /**
  * Navigation item component
@@ -102,37 +91,27 @@ const UserProfile: React.FC<UserProfileProps> = ({
  * @param onClick - Function to handle item click
  */
 const NavItemComponent: React.FC<{
-  item: NavItem;
-  isActive: boolean;
-  isCollapsed: boolean;
-  onClick: () => void;
+  item: NavItem
+  isActive: boolean
+  isCollapsed: boolean
+  onClick: () => void
 }> = ({ item, isActive, isCollapsed, onClick }) => {
   return (
     <Link
       href={item.path}
-      className={`flex items-center px-4 py-3 ${
-        isCollapsed ? "justify-center" : ""
-      } ${
-        isActive
-          ? `${THEME.ACTIVE_BG_CLASS} ${THEME.ACTIVE_TEXT_CLASS}`
-          : "text-gray-700 hover:bg-gray-100"
+      className={`flex items-center px-4 py-3 ${isCollapsed ? 'justify-center' : ''} ${
+        isActive ? `${THEME.ACTIVE_BG_CLASS} ${THEME.ACTIVE_TEXT_CLASS}` : 'text-gray-700 hover:bg-gray-100'
       } rounded-lg transition-all duration-200`}
       onClick={() => {
         // Call onClick to set active item before navigation happens
-        onClick();
+        onClick()
       }}
     >
-      <span
-        className={`text-xl ${
-          isActive ? THEME.ACTIVE_TEXT_CLASS : "text-gray-500"
-        }`}
-      >
-        {item.icon}
-      </span>
+      <span className={`text-xl ${isActive ? THEME.ACTIVE_TEXT_CLASS : 'text-gray-500'}`}>{item.icon}</span>
 
       {!isCollapsed && (
         <>
-          <span className="ml-3 text-sm font-medium">{item.label}</span>
+          <span className='ml-3 text-sm font-medium'>{item.label}</span>
           {item.badge && (
             <span
               className={`ml-auto ${THEME.BADGE_BG_CLASS} ${THEME.BADGE_TEXT_CLASS} text-xs font-medium px-2 py-0.5 rounded`}
@@ -143,39 +122,39 @@ const NavItemComponent: React.FC<{
         </>
       )}
     </Link>
-  );
-};
+  )
+}
 
 interface SidebarProps {
   /**
    * User's display name
    */
-  userName: string;
+  userName: string
 
   /**
    * User's email
    */
-  userEmail: string;
+  userEmail: string
 
   /**
    * URL to user's avatar image
    */
-  userAvatar?: string;
+  userAvatar?: string
 
   /**
    * Function to handle logout
    */
-  onLogout: () => void;
+  onLogout: () => void
 
   /**
    * Function to handle profile click
    */
-  onProfileClick: () => void;
+  onProfileClick: () => void
 
   /**
    * CSS class to apply to container
    */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -195,85 +174,80 @@ const Sidebar: React.FC<SidebarProps> = ({
   userAvatar,
   onLogout,
   onProfileClick,
-  className = "",
+  className = ''
 }) => {
   // Get sidebar state from context
-  const {
-    isCollapsed,
-    toggleSidebar,
-    isMobileOpen,
-    toggleMobileSidebar,
-    activeItemId,
-    setActiveItemId,
-  } = useSidebar();
+  const { isCollapsed, toggleSidebar, isMobileOpen, toggleMobileSidebar, activeItemId, setActiveItemId } = useSidebar()
 
   // Use logout confirmation hook
-  const { isModalOpen, isLoggingOut, openModal, closeModal, handleLogout } =
-    useLogoutConfirmation();
+  const { isModalOpen, isLoggingOut, openModal, closeModal, handleLogout } = useLogoutConfirmation()
 
   // Navigation items
   const navItems: NavItem[] = [
     {
-      id: "dashboard",
-      label: "Dashboard",
-      path: "/dashboard",
-      icon: <RiDashboardLine />,
+      id: 'dashboard',
+      label: 'Dashboard',
+      path: '/dashboard',
+      icon: <RiDashboardLine />
     },
     {
-      id: "urls",
-      label: "My URLs",
-      path: "/dashboard/urls",
-      icon: <RiLinkM />,
+      id: 'urls',
+      label: 'My URLs',
+      path: '/dashboard/urls',
+      icon: <RiLinkM />
     },
     {
-      id: "qrcodes",
-      label: "QR Codes",
-      path: "/dashboard/qr-codes",
-      icon: <RiQrCodeLine />,
+      id: 'qrcodes',
+      label: 'QR Codes',
+      path: '/dashboard/qr-codes',
+      icon: <RiQrCodeLine />
     },
-  ];
+    {
+      id: 'feedback',
+      label: 'Feedback',
+      path: '/dashboard/feedback',
+      icon: <RiFeedbackLine />
+    }
+  ]
 
   const settingsItems: NavItem[] = [
     {
-      id: "settings",
-      label: "Settings",
-      path: "/dashboard/settings?under-development=true",
+      id: 'settings',
+      label: 'Settings',
+      path: '/dashboard/settings?under-development=true',
       icon: <RiSettings4Line />,
-      isSetting: true,
+      isSetting: true
     },
     {
-      id: "logout",
-      label: "Logout",
-      path: "#",
+      id: 'logout',
+      label: 'Logout',
+      path: '#',
       icon: <RiLogoutBoxRLine />,
-      isSetting: true,
-    },
-  ];
+      isSetting: true
+    }
+  ]
 
   // Handle navigation item click
   const handleNavItemClick = (id: string) => {
-    setActiveItemId(id);
+    setActiveItemId(id)
 
     // Handle logout with confirmation
-    if (id === "logout") {
-      openModal();
+    if (id === 'logout') {
+      openModal()
     }
-  };
+  }
 
   // Set up custom logout handler
   const handleConfirmLogout = async () => {
-    await handleLogout();
-    onLogout();
-  };
+    await handleLogout()
+    onLogout()
+  }
 
   return (
     <>
       {/* Mobile Backdrop */}
       {isMobileOpen && (
-        <div
-          className="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"
-          onClick={toggleMobileSidebar}
-        />
+        <div className='fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden' onClick={toggleMobileSidebar} />
       )}
 
       {/* Sidebar */}
@@ -283,8 +257,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           flex flex-col
           bg-white border-r border-gray-200
           transition-all duration-300 ease-in-out
-          ${isCollapsed ? "w-20" : "w-64"}
-          ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+          ${isCollapsed ? 'w-20' : 'w-64'}
+          ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
           ${className}
         `}
@@ -293,45 +267,35 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div
           className={`
             flex items-center h-16 px-4 border-b border-gray-100
-            ${isCollapsed ? "justify-between" : "justify-between"}
+            ${isCollapsed ? 'justify-between' : 'justify-between'}
           `}
         >
           <Link
-            href="/dashboard"
+            href='/dashboard'
             className={`
               flex items-center 
-              ${isCollapsed ? "justify-center" : ""}
+              ${isCollapsed ? 'justify-center' : ''}
             `}
           >
-            <div className="relative flex-shrink-0 w-8 h-8">
+            <div className='relative flex-shrink-0 w-8 h-8'>
               <Image
-                src="/logo/logo-cylink.png"
-                alt="CyLink Logo"
-                className="object-contain"
+                src='/logo/logo-cylink.png'
+                alt='CyLink Logo'
+                className='object-contain'
                 fill
-                sizes="32px"
+                sizes='32px'
                 priority
               />
             </div>
-            {!isCollapsed && (
-              <span
-                className={`ml-2.5 text-xl font-bold ${THEME.LOGO_TEXT_CLASS}`}
-              >
-                CyLink
-              </span>
-            )}
+            {!isCollapsed && <span className={`ml-2.5 text-xl font-bold ${THEME.LOGO_TEXT_CLASS}`}>CyLink</span>}
           </Link>
 
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className='p-2 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200'
+            aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {isCollapsed ? (
-              <RiArrowRightSLine size={18} />
-            ) : (
-              <RiArrowLeftSLine size={18} />
-            )}
+            {isCollapsed ? <RiArrowRightSLine size={18} /> : <RiArrowLeftSLine size={18} />}
           </button>
         </div>
 
@@ -345,8 +309,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         />
 
         {/* Main Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {navItems.map((item) => (
+        <nav className='flex-1 px-3 py-4 space-y-1 overflow-y-auto'>
+          {navItems.map(item => (
             <NavItemComponent
               key={item.id}
               item={item}
@@ -358,8 +322,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Settings Navigation */}
-        <div className="px-3 py-4 border-t border-gray-200 space-y-1">
-          {settingsItems.map((item) => (
+        <div className='px-3 py-4 border-t border-gray-200 space-y-1'>
+          {settingsItems.map(item => (
             <NavItemComponent
               key={item.id}
               item={item}
@@ -375,13 +339,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       <button
         className={`fixed z-20 bottom-4 right-4 lg:hidden p-3 ${THEME.ACTIVE_BG_CLASS} ${THEME.ACTIVE_TEXT_CLASS} rounded-full shadow-lg`}
         onClick={toggleMobileSidebar}
-        aria-label={isMobileOpen ? "Close sidebar" : "Open sidebar"}
+        aria-label={isMobileOpen ? 'Close sidebar' : 'Open sidebar'}
       >
-        {isMobileOpen ? (
-          <RiMenuFoldLine size={24} />
-        ) : (
-          <RiMenuUnfoldLine size={24} />
-        )}
+        {isMobileOpen ? <RiMenuFoldLine size={24} /> : <RiMenuUnfoldLine size={24} />}
       </button>
 
       {/* Logout Confirmation Modal */}
@@ -392,7 +352,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         isLoading={isLoggingOut}
       />
     </>
-  );
-};
+  )
+}
 
-export default Sidebar;
+export default Sidebar
