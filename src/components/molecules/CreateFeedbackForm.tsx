@@ -11,7 +11,7 @@ import { RiLightbulbLine, RiBugLine } from 'react-icons/ri'
  * Form validation schema - Simplified to encourage participation
  */
 const feedbackSchema = z.object({
-  title: z.string().min(5, 'Title must be at least 5 characters').max(100, 'Title must be less than 100 characters'),
+  title: z.string().min(10, 'Title must be at least 10 characters').max(100, 'Title must be less than 100 characters'),
   description: z
     .string()
     .min(10, 'Description must be at least 10 characters')
