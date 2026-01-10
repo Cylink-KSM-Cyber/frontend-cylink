@@ -248,14 +248,14 @@ const FeedbackBoard: React.FC = () => {
         isVoting={isVoting}
       />
 
-      {/* Floating Action Button - Mobile */}
+      {/* Floating Action Button - Mobile (positioned above sidebar toggle to avoid overlap) */}
       <button
         type='button'
         onClick={() => {
           clearSimilar()
           setShowCreateModal(true)
         }}
-        className='lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-black text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-colors z-10'
+        className='lg:hidden fixed bottom-20 right-4 w-14 h-14 bg-black text-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-800 transition-colors z-10'
         aria-label='Create feedback'
       >
         <RiAddLine size={24} />
