@@ -201,7 +201,19 @@ frontend-cylink/
 
 ## 📋 Changelog
 
-### Version 1.6.0 (Latest) - Feedback Board
+### Version 1.6.1 (Latest) - Mobile Feedback Board Fix
+
+**Release Date:** January 10, 2026
+
+**Bug Fixes:**
+
+- 🐛 **Mobile Button Overlap**: Fixed overlapping buttons on the Feedback Board mobile view
+  - Create Feedback and Menu buttons no longer collide
+  - Improved touch target accessibility on mobile devices
+
+---
+
+### Version 1.6.0 - Feedback Board
 
 **Release Date:** January 8, 2026
 
