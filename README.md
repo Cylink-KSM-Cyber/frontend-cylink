@@ -201,7 +201,20 @@ frontend-cylink/
 
 ## 📋 Changelog
 
-### Version 1.6.0 (Latest) - Feedback Board
+### Version 1.6.1 (Latest) - Mobile Feedback UX Improvement
+
+**Release Date:** January 16, 2026
+
+**Improvements:**
+
+- ✅ **Three-Row Mobile Layout**: Separated filters into dedicated rows for easier navigation
+- ✅ **Larger Tap Targets**: Bigger buttons for comfortable touch interaction
+- ✅ **My Votes Label**: Now shows icon + text for better clarity
+- ✅ **Horizontal Scroll Filters**: Type filters (All, Features, Bugs) now have room to breathe
+
+---
+
+### Version 1.6.0 - Feedback Board
 
 **Release Date:** January 8, 2026
 
