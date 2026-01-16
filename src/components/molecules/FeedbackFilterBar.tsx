@@ -207,9 +207,9 @@ const FeedbackFilterBar: React.FC<FeedbackFilterBarProps> = ({
         </div>
       </div>
 
-      {/* Mobile Layout */}
+      {/* Mobile Layout - Three-row design for better UX */}
       <div className='lg:hidden space-y-3'>
-        {/* Search */}
+        {/* Row 1: Search */}
         <SearchInput
           onSearch={onSearchChange}
           initialValue={search}
@@ -217,75 +217,72 @@ const FeedbackFilterBar: React.FC<FeedbackFilterBarProps> = ({
           className='w-full'
         />
 
-        {/* Type Tabs + My Votes + Sort */}
-        <div className='flex items-center justify-between gap-2'>
-          {/* Type Tabs */}
-          <div className='flex items-center gap-1 overflow-x-auto'>
-            {TYPE_TABS.map(tab => (
-              <button
-                key={tab.value}
-                type='button'
-                onClick={() => onTypeChange(tab.value)}
-                className={`
-                  flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200 shrink-0
-                  ${type === tab.value ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}
-                `}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* My Votes + Sort */}
-          <div className='flex items-center gap-2 shrink-0'>
+        {/* Row 2: Type Filters - Full width horizontal scroll */}
+        <div className='flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide'>
+          {TYPE_TABS.map(tab => (
             <button
+              key={tab.value}
               type='button'
-              onClick={onMyVotesToggle}
+              onClick={() => onTypeChange(tab.value)}
               className={`
-                flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-200
-                ${myVotes ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}
+                flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg 
+                whitespace-nowrap transition-all duration-200 shrink-0
+                ${type === tab.value ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}
               `}
             >
-              <RiUserLine size={14} />
+              {tab.icon}
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Row 3: My Votes + Sort - Separated row with better spacing */}
+        <div className='flex items-center justify-between'>
+          {/* My Votes Toggle - with visible label */}
+          <button
+            type='button'
+            onClick={onMyVotesToggle}
+            className={`
+              flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200
+              ${myVotes ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'}
+            `}
+          >
+            <RiUserLine size={16} />
+            <span>My Votes</span>
+          </button>
+
+          {/* Sort Dropdown Mobile - Larger tap target */}
+          <div className='relative' ref={mobileDropdownRef}>
+            <button
+              type='button'
+              onClick={() => setShowSortDropdown(!showSortDropdown)}
+              className='flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all duration-200'
+            >
+              {selectedSortLabel}
+              <RiArrowDownSLine size={16} className={`transition-transform ${showSortDropdown ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Sort Dropdown Mobile */}
-            <div className='relative' ref={mobileDropdownRef}>
-              <button
-                type='button'
-                onClick={() => setShowSortDropdown(!showSortDropdown)}
-                className='flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-gray-700 border border-gray-200 rounded-md hover:bg-gray-50 transition-all duration-200'
-              >
-                {selectedSortLabel}
-                <RiArrowDownSLine
-                  size={14}
-                  className={`transition-transform ${showSortDropdown ? 'rotate-180' : ''}`}
-                />
-              </button>
-
-              {showSortDropdown && (
-                <div className='absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[120px] z-50'>
-                  {SORT_OPTIONS.map(option => (
-                    <button
-                      key={option.value}
-                      type='button'
-                      onClick={() => handleSortSelect(option.value)}
-                      className={`
-                        w-full text-left px-3 py-1.5 text-xs transition-colors
-                        ${
-                          sortBy === option.value
-                            ? 'bg-gray-100 text-gray-900 font-medium'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }
-                      `}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {showSortDropdown && (
+              <div className='absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[140px] z-50'>
+                {SORT_OPTIONS.map(option => (
+                  <button
+                    key={option.value}
+                    type='button'
+                    onClick={() => handleSortSelect(option.value)}
+                    className={`
+                      w-full text-left px-3 py-2 text-sm transition-colors
+                      ${
+                        sortBy === option.value
+                          ? 'bg-gray-100 text-gray-900 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
